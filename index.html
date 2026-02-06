@@ -261,8 +261,30 @@
         .qa-a { color: var(--white-sec); padding-left: 3.2em; text-indent: -1.2em; }
 
         /* Nav */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg) !important; border-top: 1px solid var(--border-base); z-index: 1000; height: 50px; padding-bottom: env(safe-area-inset-bottom); display: flex; justify-content: center; box-shadow: var(--nav-shadow); }
-        .nav-inner { display: flex; width: 100%; max-width: 600px; height: 100%; }
+        /* [修改] 底部導航欄：加高、固定高度 */
+        .bottom-nav { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: var(--nav-bg) !important; 
+            border-top: 1px solid var(--border-base); 
+            z-index: 1000; 
+            height: 80px !important; /* 這裡改高了 (原本50) */
+            padding-bottom: env(safe-area-inset-bottom); 
+            display: flex; 
+            justify-content: center; 
+            box-shadow: var(--nav-shadow); 
+        }
+
+        .nav-inner { 
+            display: flex; 
+            width: 100%; 
+            max-width: 600px; 
+            height: 100%; 
+        }
+
+        /* [修改] 按鈕樣式：取消縮放動畫，改為純色塊區分 */
         .tab-button { 
             flex: 1; 
             height: 100%; 
@@ -270,14 +292,20 @@
             align-items: center; 
             justify-content: center; 
             color: var(--nav-text-unselect) !important; 
-            font-size: 14px; 
-            font-weight: 600;
+            font-size: 15px; /* 字體稍微加大 */
+            font-weight: 500; 
             text-align: center; 
             cursor: pointer; 
-            transition: all 0.3s ease;
-            border-top: 4px solid transparent;
+            transition: color 0.2s ease; /* 只做顏色漸變，不改變大小 */
+            border: none !important; /* 移除邊框避免跳動 */
         }
-        .tab-button.active { color: var(--white-main); border-top: 4px solid var(--gold-main); font-weight: 700; background: rgba(255,255,255,0.05); }
+
+        /* 選中狀態：字變亮，加底色，不改變大小 */
+        .tab-button.active { 
+            color: var(--white-main) !important; 
+            font-weight: 700; 
+            background: rgba(255, 255, 255, 0.08); 
+        }
 
         /* Login Overlay */
         #admin-login-overlay {
@@ -616,6 +644,24 @@
             color: #ff6b6b; font-weight: bold; padding: 2px 8px;
             cursor: pointer; opacity: 0.7;
         }
+        /* [新增] 清單內的小型價格輸入框 */
+        .item-price-input {
+            width: 60px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #ccc; /* 底部有線，暗示可編輯 */
+            text-align: right;
+            font-weight: bold;
+            color: #1a3a2e; /* 深綠色 */
+            font-size: 13px;
+            padding: 0 2px;
+            border-radius: 0;
+        }
+        .item-price-input:focus {
+            outline: none;
+            border-bottom: 2px solid var(--gold-main); /* 點擊時變金色 */
+            background: rgba(255, 255, 255, 0.5);
+        }
         
         /* 類別切換按鈕 */
         .cat-tab-btn {
@@ -655,29 +701,56 @@
         .overlay-message p { font-size: 14px; opacity: 0.9; }
 
         /* Top Button */
+        /* [修改] Top 按鈕：縮小尺寸與字體，增加精緻感 */
         .scroll-top-btn {
-            position: fixed;
-            bottom: 70px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            background: var(--gold-main);
-            color: var(--forest-bg);
+            position: fixed; bottom: 90px; right: 20px; /* 位置微調 */
+            width: 36px !important; height: 36px !important; /* 變小 */
+            background: rgba(201, 184, 150, 0.9); /* 半透明金 */
+            color: #1a3a2e;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            z-index: 999;
-            cursor: pointer;
-            opacity: 0;
-            visibility: hidden;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 10px !important; /* 字變小 */
+            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4); /* 懸浮陰影 */
+            z-index: 999; cursor: pointer; opacity: 0; visibility: hidden;
             transition: all 0.3s;
-            border: 2px solid var(--forest-bg);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
         }
         .scroll-top-btn.show { opacity: 1; visibility: visible; }
+
+        /* [新增] 高級立體質感 (High-End 3D) - 用於卡片 */
+        .m-card { 
+            background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.15) !important; /* 頂部高光 */
+            border-bottom: 1px solid rgba(0, 0, 0, 0.3) !important; /* 底部陰影 */
+            border-radius: 16px !important; 
+            padding: 25px !important; margin: 0 8% 25px 8% !important; 
+            box-shadow: 0 15px 35px -5px rgba(0,0,0,0.4) !important; /* 深邃陰影 */
+            width: auto !important; 
+            backdrop-filter: blur(10px);
+        }
+
+        /* [新增] 輸入框立體凹陷感 */
+        .edit-input, #admin-pwd, textarea {
+            background: rgba(0, 0, 0, 0.2) !important;
+            border: none !important;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); /* 內部陰影 */
+            color: #fff !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+        }
+        
+        /* [新增] 按鈕立體浮起感 */
+        .ask-action-btn, .confirm-action-btn, .login-action-btn, .setting-btn {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-top: 1px solid rgba(255,255,255,0.2) !important;
+            transition: transform 0.1s;
+        }
+        .ask-action-btn:active, .confirm-action-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -2335,29 +2408,31 @@
             const isSat = dayOfWeek === 6;
             const holidayName = holidayMap[dateStr];
             const isManualOff = financeStore.manualOffDays.includes(dateStr);
-            // 取得備註陣列
             const notes = safeArray(financeStore.offDayNotes ? financeStore.offDayNotes[dateStr] : []);
             const entries = safeArray(financeStore.data[dateStr]);
 
-            // 統計
+            // [修改] 統計邏輯
+            // 1. 應休：包含週六 (isSat)
             if (isSun || isSat || holidayName || isManualOff) offDays++; 
-            if ((isSun || isSat || holidayName || isManualOff) && entries.length === 0) realOff++;
+            
+            // 2. 實休：移除 isSat。週六必須手動排休 (isManualOff) 才會算實休
+            if ((isSun || holidayName || isManualOff) && entries.length === 0) realOff++;
 
             const box = document.createElement('div');
             const isRedDay = isSun || isSat || holidayName || isManualOff;
             
-            // --- 右上角狀態文字 ---
+            // --- 右上角小標籤文字 ---
             let labelText = "";
             if (isManualOff) {
-                labelText = "休"; // 右上角只顯示簡單的"休"
+                labelText = "休"; 
             } else if (holidayName) {
                 labelText = holidayName;
             } else if (isSun) {
                 labelText = "公休";
             }
 
-            // [修改] 置中邏輯：只有在「沒有預約」且「沒有備註」的紅字日子才置中
-            // 只要有寫備註，就會變成列表模式
+            // 置中條件：是紅字日子 且 沒有行程 且 沒有備註 且 有文字標籤
+            // (週六如果不手動按休假，labelText 會是空字串，所以不會置中，只會顯示紅字日期)
             const isCentered = isRedDay && entries.length === 0 && notes.length === 0 && labelText !== "";
 
             box.className = `fin-day-box ${isRedDay ? 'is-holiday-bg' : ''} ${isCentered ? 'centered-state' : ''}`;
@@ -2369,13 +2444,13 @@
             let labelColor = isRedDay ? 'text-[#ff6b6b] font-bold' : 'opacity-30';
 
             if (isCentered) {
-                // [模式 A] 純粹的假日/公休 (無備註)：置中大字
+                // [模式 A] 純假日/公休 (無備註)：置中大字
                 contentHtml = `
                     <div class="date-corner ${dateColor}">${d}</div>
                     <div class="center-text ${labelColor}">${labelText}</div>
                 `;
             } else {
-                // [模式 B] 有行程 或 有備註：列表顯示
+                // [模式 B] 列表模式 (有行程 或 有備註 或 只是單純週六)
                 contentHtml = `
                     <div class="fin-day-header">
                         <span class="${dateColor} font-bold">${d}</span>
@@ -2384,12 +2459,12 @@
                     <div class="flex-1">
                 `;
                 
-                // 1. 先顯示休假備註 (紅色列表)
+                // 1. 休假備註 (紅色列表)
                 notes.forEach(note => {
                     contentHtml += `<div class="fin-item is-note">${note}</div>`;
                 });
 
-                // 2. 再顯示預約行程 (一般列表)
+                // 2. 預約行程 (一般列表)
                 entries.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
                     count++;
                     let p = parsePrice(e.price);
@@ -2398,7 +2473,6 @@
                     
                     let itemName = e.items[0] || '項目';
                     const txt = financeStore.viewMode === 'price' ? `$${e.price}` : itemName;
-                    // 若 viewMode 是 price，加上綠色邊框樣式
                     const priceClass = financeStore.viewMode === 'price' ? 'is-price-view' : '';
                     contentHtml += `<div class="fin-item ${priceClass}">${txt}</div>`;
                 });
@@ -2512,15 +2586,15 @@
                 div.innerHTML = `
                     <div class="flex-1">
                         <div class="flex items-baseline gap-2">
-                            <span class="text-[#1a3a2e] font-extrabold text-xl">${e.time}</span>
-                            <span class="text-gray-500 text-xs font-bold">$${e.price}</span>
+                            <span class="text-[#c9b896] font-extrabold text-xl font-serif">${e.time}</span>
+                            <span class="text-gray-400 text-xs font-bold tracking-wider">$${e.price}</span>
                         </div>
-                        <div class="text-sm text-gray-600 font-medium mt-1">
+                        <div class="text-sm text-gray-300 font-medium mt-1">
                             ${safeArray(e.items).join(' + ')}
                         </div>
                     </div>
-                    <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
-                        <button class="del-btn text-red-400 font-bold text-lg px-2 py-1 hover:text-red-600 transition-colors" onclick="deleteSingleEntry('${e.id}')">✕</button>
+                    <div class="flex items-center gap-3 pl-3 border-l border-gray-600">
+                        <button class="del-btn text-red-400 font-bold text-lg px-2 py-1 hover:text-red-300 transition-colors" onclick="deleteSingleEntry('${e.id}')">✕</button>
                     </div>
                 `;
                 container.appendChild(div);
@@ -2685,7 +2759,7 @@
         if(modal) modal.classList.add('hidden');
     }
 
-    // [修復] 儲存資料
+    // [修復] 儲存帳務資料 (確保儲存後刷新列表)
     function saveFinData() {
         if (!activeDateStr) return;
         if (!financeStore.data[activeDateStr]) financeStore.data[activeDateStr] = [];
@@ -2695,7 +2769,7 @@
         const h = document.getElementById('fe-h').value;
         const m = document.getElementById('fe-m').value;
         const timeStr = `${h}:${m}`;
-        const rawPrice = document.getElementById('fe-price').value; // 支援文字價格
+        const rawPrice = document.getElementById('fe-price').value; 
 
         const newData = {
             id: editingEntryId || Date.now(),
@@ -2713,44 +2787,17 @@
             currentEntries.push(newData);
         }
         
+        // 1. 更新記憶體中的資料
         financeStore.data[activeDateStr] = currentEntries;
 
-        saveFinanceV2(); // 寫入資料庫
-        closeFinEditModal(); // 關閉視窗
-        renderDayDetailList(); // 刷新當日詳情
-    }
-    function saveFinData() {
-        if (!activeDateStr) return;
-        if (!financeStore.data[activeDateStr]) financeStore.data[activeDateStr] = [];
-        
-        let currentEntries = safeArray(financeStore.data[activeDateStr]);
+        // 2. 寫入資料庫
+        saveFinanceV2(); 
 
-        // [修改] 讀取下拉選單組合成時間字串
-        const h = document.getElementById('fe-h').value;
-        const m = document.getElementById('fe-m').value;
-        const timeStr = `${h}:${m}`;
+        // 3. [關鍵] 先刷新底下的「當日行程列表」，確保看得到新資料
+        renderDayDetailList(); 
 
-        const newData = {
-            id: editingEntryId || Date.now(),
-            time: timeStr,
-            items: tempItems.length > 0 ? tempItems.map(i=>i.name) : ['自訂項目'],
-            price: parseInt(document.getElementById('fe-price').value) || 0,
-            duration: parseInt(document.getElementById('fe-duration').value) || 0,
-            hasDeposit: document.getElementById('fe-deposit').checked
-        };
-
-        if (editingEntryId) {
-            const idx = currentEntries.findIndex(e => String(e.id) === String(editingEntryId));
-            if(idx > -1) currentEntries[idx] = newData;
-        } else {
-            currentEntries.push(newData);
-        }
-        
-        financeStore.data[activeDateStr] = currentEntries;
-
-        saveFinanceV2();
-        closeFinEditForm();
-        renderDayDetailList();
+        // 4. 最後關閉「新增/編輯」視窗 (回到當日行程頁)
+        closeFinEditModal(); 
     }
 
     // 1. 切換類別：讀取價目表並顯示按鈕
@@ -2789,29 +2836,24 @@
         `).join('');
     };
 
-    // 2. 點選項目後加入清單並計算
+    // 2. 點選項目後加入清單
     window.addItemToTemp = function(name, priceStr, dur) {
-        // 解析價格 (過濾符號)
         const priceVal = parsePrice(priceStr);
         const durVal = parseInt(dur) || 0;
 
         // 加入暫存
         tempItems.push({name: name, price: priceVal, duration: durVal});
 
-        // 自動累加
-        const currentPrice = parsePrice(document.getElementById('fe-price').value);
+        // 更新時間 (累加)
         const currentDur = parseInt(document.getElementById('fe-duration').value) || 0;
-
-        document.getElementById('fe-price').value = currentPrice + priceVal;
         document.getElementById('fe-duration').value = currentDur + durVal;
 
-        const defaultBtn = document.querySelector('.cat-tab-btn');
-        if(defaultBtn) switchFinCat('nail', defaultBtn);  // 補上這行
-
+        // 更新金額 (重算)
+        recalcTotal(); 
         renderSelectedList();
     };
 
-    // 3. 渲染已選項目清單 (含刪除功能)
+    // 3. 渲染已選項目清單 (含價格編輯 & 刪除)
     window.renderSelectedList = function() {
         const list = document.getElementById('fe-selected-list');
         const count = document.getElementById('fe-count');
@@ -2819,32 +2861,59 @@
 
         list.innerHTML = tempItems.map((item, idx) => `
             <div class="selected-list-item">
-                <span class="selected-name">${item.name}</span>
-                <span class="del-item-btn" onclick="removeItemFromTemp(${idx})">✕</span>
+                <span class="selected-name flex-1">${item.name}</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-gray-400">$</span>
+                    <input type="number" inputmode="numeric" 
+                           class="item-price-input" 
+                           value="${item.price}" 
+                           onfocus="this.select()" 
+                           onchange="updateListPrice(${idx}, this.value)">
+                    <span class="del-item-btn ml-2" onclick="removeItemFromTemp(${idx})">✕</span>
+                </div>
             </div>
         `).join('');
         
         if(count) count.innerText = `${tempItems.length} 項`;
     };
 
-    // 4. 刪除暫存項目並扣除金額
+    // [新增] 更新單一項目的價格 (並重新計算總額)
+    window.updateListPrice = function(idx, newPriceStr) {
+        const newPrice = parseInt(newPriceStr) || 0;
+        
+        // 更新陣列中的價格
+        if (tempItems[idx]) {
+            tempItems[idx].price = newPrice;
+        }
+        
+        // 重新計算總金額
+        recalcTotal();
+    };
+
+    // [新增] 重新計算總金額 (加總所有項目)
+    window.recalcTotal = function() {
+        let total = 0;
+        tempItems.forEach(item => {
+            total += (item.price || 0);
+        });
+        document.getElementById('fe-price').value = total;
+    };
+
+    // 4. 刪除暫存項目
     window.removeItemFromTemp = function(idx) {
         const item = tempItems[idx];
         if(!item) return;
 
-        // 扣除金額
-        const currentPrice = parsePrice(document.getElementById('fe-price').value);
+        // 扣除時間
         const currentDur = parseInt(document.getElementById('fe-duration').value) || 0;
-
-        // 確保不會變成負數
-        const newPrice = Math.max(0, currentPrice - item.price);
         const newDur = Math.max(0, currentDur - item.duration);
-
-        document.getElementById('fe-price').value = newPrice;
         document.getElementById('fe-duration').value = newDur;
 
         // 移除陣列元素
         tempItems.splice(idx, 1);
+        
+        // 更新金額 (重算)
+        recalcTotal();
         renderSelectedList();
     };
 
