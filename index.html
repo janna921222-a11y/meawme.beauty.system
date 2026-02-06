@@ -2396,7 +2396,12 @@
         
         const holidayMap = window.getTaiwanHolidays(); 
 
+        // 月總計變數
         let totalRev = 0, realRev = 0, count = 0, offDays = 0, realOff = 0;
+        
+        // [新增] 週結算累計變數
+        let currentWeekTotal = 0;
+        let currentWeekReal = 0;
 
         for(let i=0; i<offset; i++) grid.innerHTML += `<div></div>`;
 
@@ -2411,19 +2416,21 @@
             const notes = safeArray(financeStore.offDayNotes ? financeStore.offDayNotes[dateStr] : []);
             const entries = safeArray(financeStore.data[dateStr]);
 
-            // [修改] 統計邏輯
-            // 1. 應休：包含週六 (isSat)
+            // 1. 月統計邏輯
             if (isSun || isSat || holidayName || isManualOff) offDays++; 
-            
-            // 2. 實休：移除 isSat。週六必須手動排休 (isManualOff) 才會算實休
-            if ((isSun || holidayName || isManualOff) && entries.length === 0) realOff++;
+            if ((isSun || holidayName || isManualOff) && entries.length === 0) realOff++; // 週六不算自動實休
 
             const box = document.createElement('div');
             const isRedDay = isSun || isSat || holidayName || isManualOff;
             
-            // --- 右上角小標籤文字 ---
+            // 文字顯示邏輯
             let labelText = "";
-            if (isManualOff) {
+            let isNote = false;
+
+            if (notes.length > 0) {
+                labelText = notes[0] + (notes.length > 1 ? "+" : ""); 
+                isNote = true; 
+            } else if (isManualOff) {
                 labelText = "休"; 
             } else if (holidayName) {
                 labelText = holidayName;
@@ -2431,8 +2438,7 @@
                 labelText = "公休";
             }
 
-            // 置中條件：是紅字日子 且 沒有行程 且 沒有備註 且 有文字標籤
-            // (週六如果不手動按休假，labelText 會是空字串，所以不會置中，只會顯示紅字日期)
+            // 置中邏輯
             const isCentered = isRedDay && entries.length === 0 && notes.length === 0 && labelText !== "";
 
             box.className = `fin-day-box ${isRedDay ? 'is-holiday-bg' : ''} ${isCentered ? 'centered-state' : ''}`;
@@ -2444,13 +2450,13 @@
             let labelColor = isRedDay ? 'text-[#ff6b6b] font-bold' : 'opacity-30';
 
             if (isCentered) {
-                // [模式 A] 純假日/公休 (無備註)：置中大字
+                // 模式 A：置中大字
                 contentHtml = `
                     <div class="date-corner ${dateColor}">${d}</div>
                     <div class="center-text ${labelColor}">${labelText}</div>
                 `;
             } else {
-                // [模式 B] 列表模式 (有行程 或 有備註 或 只是單純週六)
+                // 模式 B：列表顯示
                 contentHtml = `
                     <div class="fin-day-header">
                         <span class="${dateColor} font-bold">${d}</span>
@@ -2459,17 +2465,24 @@
                     <div class="flex-1">
                 `;
                 
-                // 1. 休假備註 (紅色列表)
+                // 顯示紅色備註
                 notes.forEach(note => {
                     contentHtml += `<div class="fin-item is-note">${note}</div>`;
                 });
 
-                // 2. 預約行程 (一般列表)
+                // 顯示行程 (並計算金額)
                 entries.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
                     count++;
                     let p = parsePrice(e.price);
+                    let r = (p - (e.hasDeposit?100:0));
+
+                    // 月累計
                     totalRev += p;
-                    realRev += (p - (e.hasDeposit?100:0));
+                    realRev += r;
+
+                    // [新增] 週累計
+                    currentWeekTotal += p;
+                    currentWeekReal += r;
                     
                     let itemName = e.items[0] || '項目';
                     const txt = financeStore.viewMode === 'price' ? `$${e.price}` : itemName;
@@ -2482,24 +2495,19 @@
             box.innerHTML = contentHtml;
             grid.appendChild(box);
 
-            // 週結算
-            if (isSun) {
-                 let wTotal = 0, wReal = 0;
-                 for(let k=0; k<7; k++) {
-                     let pastD = d - k;
-                     if(pastD > 0) {
-                         let pDate = `${y}-${String(m+1).padStart(2,'0')}-${String(pastD).padStart(2,'0')}`;
-                         safeArray(financeStore.data[pDate]).forEach(e => {
-                             let val = parsePrice(e.price);
-                             wTotal += val;
-                             wReal += (val - (e.hasDeposit?100:0));
-                         });
-                     }
-                 }
+            // 2. 週結算邏輯修正：如果是週日 OR 該月最後一天，就印出結算列
+            if (isSun || d === daysInMonth) {
                  const row = document.createElement('div');
                  row.className = 'weekly-row';
-                 row.innerHTML = `<span>📅 本週結算</span> <span>總: $${wTotal.toLocaleString()} / 實: $${wReal.toLocaleString()}</span>`;
+                 // 如果是月底最後一天且不是週日，顯示「月底結算」以示區隔
+                 const rowTitle = (d === daysInMonth && !isSun) ? "📅 月底結算" : "📅 本週結算";
+                 
+                 row.innerHTML = `<span>${rowTitle}</span> <span>總: $${currentWeekTotal.toLocaleString()} / 實: $${currentWeekReal.toLocaleString()}</span>`;
                  grid.appendChild(row);
+
+                 // 印完後歸零，準備算下一週
+                 currentWeekTotal = 0;
+                 currentWeekReal = 0;
             }
         }
         
