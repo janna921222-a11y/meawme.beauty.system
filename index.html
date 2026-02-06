@@ -1,0 +1,3032 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    // 妳提供的金鑰
+    const firebaseConfig = {
+        apiKey: "AIzaSyC58dtm6RX_Ew-xEwusvq113m1hMq68JIo",
+        authDomain: "meawmesystem.firebaseapp.com",
+        databaseURL: "https://meawmesystem-default-rtdb.firebaseio.com",
+        projectId: "meawmesystem",
+        storageBucket: "meawmesystem.firebasestorage.app",
+        messagingSenderId: "436649468308",
+        appId: "1:436649468308:web:438437ac8d97ab56d06f81",
+        measurementId: "G-27RC3VTZZJ"
+    };
+
+    // 初始化連接
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // 把雲端功能掛載到 window，讓原本的 script 可以抓到
+    window.firebaseDB = db;
+    window.dbRef = ref;
+    window.dbSet = set;
+    window.dbOnValue = onValue;
+</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>| 繆米美學系統 |</title>
+
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* --- 核心視覺系統 --- */
+        :root {
+            --forest-bg: #1a3a2e;
+            --border-base: #2d5a47;
+            --border-hover: #3d6a57;
+            --border-trans: rgba(45, 90, 71, 0.8);
+            --nav-bg: rgba(26, 58, 46, 0.98);
+            --btn-bg: rgba(15, 40, 33, 0.95);
+            --btn-hover: rgba(22, 53, 48, 0.9);
+            --text-shadow: rgba(0, 0, 0, 0.5);
+            --nav-text-unselect: rgba(245, 241, 232, 0.4);
+            --nav-text-active: #f5f1e8;
+            --card-bg: rgba(245, 241, 232, 0.08);
+            --white-main: #f5f1e8;
+            --white-sec: #d4cfc4;
+            --gold-main: #c9b896;
+            --grey-green: #8b9d8a;
+            --nav-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+            
+            /* 日曆系統專用變數對應 */
+            --cal-gold: #c9b896;
+            --cal-red: #800020;
+            --cal-green: #1a4731;
+        }
+
+        /* 後台高辨識度模式 */
+        body.admin-mode {
+            --forest-bg: #f5f1e8;
+            --white-main: #1a3a2e;
+            --white-sec: #4a5a54;
+            --gold-main: #8a6d3b;
+            --border-base: #c9b896;
+            --card-bg: rgba(26, 58, 46, 0.05);
+            --nav-bg: #f5f1e8;
+            --nav-text-unselect: rgba(26, 58, 46, 0.4);
+            --nav-text-active: #1a3a2e;
+            --nav-shadow: 0 -4px 15px rgba(26, 58, 46, 0.1);
+        }
+
+        body { 
+            background-color: var(--forest-bg); 
+            color: var(--white-main); 
+            font-family: 'Noto Sans TC', 'Zen Maru Gothic', sans-serif;
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden; 
+            line-height: 1.8; 
+            letter-spacing: 1.5px; 
+            font-size: 15px;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .app-wrapper { width: 100%; max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; }
+        .brand-header { padding: 45px 0 25px; text-align: center; }
+        .logo-box { width: 85%; max-width: 380px; margin: 0 auto 12px; }
+        .logo-img { width: 100%; height: auto; mix-blend-mode: lighten; }
+        body.admin-mode #logo-guest {
+            display: none !important; /* 隱藏前台 Logo */
+        }
+
+        body.admin-mode #logo-admin {
+            display: block !important; /* 顯示後台 Logo */
+            mix-blend-mode: multiply;  /* 後台淺色底用 multiply */
+        }
+
+        .studio-name { font-size: 32px; font-weight: 700; color: var(--white-main); text-shadow: 0 2px 10px rgba(0,0,0,0.3); letter-spacing: 4px; margin-bottom: 8px; }
+        .studio-name2 { font-size: 20px; font-weight: 700; color: var(--white-main); text-shadow: 0 2px 8px rgba(0,0,0,0.3); letter-spacing: 4px; margin-bottom: 8px; }
+        .studio-subtitle { font-size: 14px; color: var(--gold-main); letter-spacing: 4px; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+
+        /* 分頁系統 */
+        .page-content { display: none; padding-bottom: 150px; }
+        .page-content.active { display: block !important; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        #nav-admin.active-flex {
+            display: flex !important;
+        }
+
+        /* 卡片樣式 */
+        .m-card { 
+            background: var(--card-bg) !important; border: 1px solid var(--border-base) !important; border-radius: 14px !important; 
+            padding: 25px !important; margin: 0 8% 20px 8% !important; box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important; width: auto !important; 
+        }
+        .info-title, .m-card h2 { 
+            font-size: 20px !important; 
+            font-weight: 700 !important; 
+            color: var(--gold-main) !important; 
+            margin-bottom: 15px !important; 
+            display: block !important;
+            letter-spacing: 2px !important;
+            text-align: left !important;
+        }
+
+        [id^="page-admin"] h2 {
+            font-size: 28px !important;
+            text-align: center !important;
+            margin: 30px 0 10px !important;
+            color: var(--gold-main);
+            font-weight: 800;
+            letter-spacing: 3px;
+        }
+
+        /* Admin Styles */
+        .admin-setting-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .setting-btn {
+            padding: 10px 40px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-base);
+            border-radius: 30px;
+            color: var(--gold-main);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .setting-btn.editing { background: var(--gold-main); color: white; border-color: var(--gold-main); }
+        .admin-section-label { font-size: 12px; color: var(--gold-main); font-weight: 700; margin: 20px 8% 10px; padding-left: 10px; border-left: 3px solid var(--gold-main); opacity: 0.7; }
+        /* --- [修正後的] 後台排版 --- */
+        .admin-item-row {
+            margin: 0 8% 8px 8%;
+            padding: 12px 15px;
+            background: rgba(128, 128, 128, 0.08);
+            border-radius: 12px;
+            display: flex;
+            align-items: center; 
+            gap: 12px; /* 這裡改用 gap，東西才不會打架 */
+            flex-wrap: wrap; /* 空間不夠時自動換行 */
+            border: 1px solid rgba(201, 184, 150, 0.1);
+        }
+
+        .admin-item-row .info {
+            flex: 1;
+            min-width: 120px; /* 這裡保證輸入框至少有寬度，不會消失 */
+        }
+        
+        .admin-item-row .edit-input {
+            width: 100% !important; /* 讓輸入框填滿 */
+            background: rgba(255,255,255,0.9) !important;
+            border: 1px solid #ccc !important;
+            border-radius: 4px !important;
+            padding: 4px 8px !important;
+            color: #333 !important;
+            font-size: 13px !important;
+        }
+
+        .admin-item-row .info small {
+            display: block;
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 2px;
+        }
+
+        .admin-item-row .price {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--gold-main);
+            margin-left: auto; /* 讓價格靠右邊 */
+            white-space: nowrap;
+        }
+        
+        /* 避免按鈕被壓扁 */
+        .admin-item-row button {
+            flex-shrink: 0;
+        }
+        /* 確保輸入框樣式正確 */
+        .admin-item-row .edit-input {
+            background: rgba(255, 255, 255, 0.9) !important; 
+            border: 1px solid #ccc !important; 
+            width: 100%;
+            padding: 4px 8px !important;
+            color: #333 !important;
+        }
+        /* 防止按鈕被擠壓 */
+        .admin-item-row button {
+            flex-shrink: 0;
+        }
+        .check-toggle { width: 26px; height: 26px; border: 2px solid var(--gold-main); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: transparent; }
+        .check-toggle.active { background: var(--gold-main); color: white; }
+        .edit-input { background: rgba(255,255,255,0.9); border: 1px solid #ccc; border-radius: 4px; padding: 2px 5px; color: #333; font-size: 13px; }
+        .gear-circle {
+            width: 50px;
+            height: 50px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-base);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .gear-circle:hover {
+            background: rgba(201, 184, 150, 0.1);
+        }
+        
+        /* Dropdown & Table */
+        .dropdown-container { margin: 0 1.2rem 12px 1.2rem; }
+        .dropdown-header { background: var(--card-bg); border: 1px solid var(--border-base); border-radius: 8px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .dropdown-title { font-size: 16px; font-weight: 600; color: var(--gold-main); letter-spacing: 1.5px; }
+        .dropdown-arrow { font-size: 16px; transition: transform 0.4s; color: var(--gold-main); font-weight: bold; }
+        .dropdown-content { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0, 1, 0, 1); background: rgba(245, 241, 232, 0.03); border-radius: 0 0 8px 8px; margin: 0 1px; }
+        .dropdown-container.open .dropdown-content { max-height: 5000px; padding: 20px 18px; border: 1px solid var(--border-base); border-top: none; }
+        .dropdown-container.open .dropdown-arrow { transform: rotate(180deg); }
+        .price-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .price-table td { border-bottom: 1px solid rgba(201, 184, 150, 0.1); padding: 12px 5px; color: var(--white-sec); }
+        .price-value { color: var(--white-main); font-weight: 500; text-align: left; padding-left: 10px !important; }
+
+        /* --- QA 樣式 --- */
+        .qa-item { margin-bottom: 18px; }
+        .qa-q { color: var(--gold-main); font-weight: 600; display: flex; align-items: flex-start; margin-bottom: 8px; }
+        .qa-q::before { content: '?'; background: var(--gold-main); color: var(--forest-bg); width: 18px; height: 18px; min-width: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 11px; margin-top: 3px; }
+        .qa-a { color: var(--white-sec); padding-left: 3.2em; text-indent: -1.2em; }
+
+        /* Nav */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--nav-bg) !important; border-top: 1px solid var(--border-base); z-index: 1000; height: 50px; padding-bottom: env(safe-area-inset-bottom); display: flex; justify-content: center; box-shadow: var(--nav-shadow); }
+        .nav-inner { display: flex; width: 100%; max-width: 600px; height: 100%; }
+        .tab-button { 
+            flex: 1; 
+            height: 100%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: var(--nav-text-unselect) !important; 
+            font-size: 14px; 
+            font-weight: 600;
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            border-top: 4px solid transparent;
+        }
+        .tab-button.active { color: var(--white-main); border-top: 4px solid var(--gold-main); font-weight: 700; background: rgba(255,255,255,0.05); }
+
+        /* Login Overlay */
+        #admin-login-overlay {
+            position: fixed; 
+            inset: 0; 
+            background: rgba(10, 20, 15, 0.98) !important;
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            z-index: 5000;
+        }
+        #admin-login-overlay.active { display: flex; animation: fadeIn 0.5s ease forwards; }
+        .login-container { text-align: center; width: 100%; max-width: 450px; padding: 20px;}
+        .login-title { font-family: 'Zen Maru Gothic', sans-serif;color: var(--gold-main); font-size: 18px; letter-spacing: 6px; margin-bottom: 40px; opacity: 0.8;}
+        .pwd-input {
+            background: transparent !important; 
+            border: none !important; 
+            border-bottom: 2px solid var(--gold-main) !important;
+            color: white !important; 
+            text-align: center !important; 
+            font-size: 22px !important; 
+            width: 95% !important; 
+            padding: 10px 0 !important; 
+            margin-bottom: 40px !important; 
+            outline: none !important;
+            letter-spacing: 8px !important; 
+        }
+        .login-action-btn { 
+            background: transparent; 
+            color: var(--gold-main); 
+            border: 1px solid var(--gold-main);
+            padding: 12px 60px; 
+            font-size: 13px; 
+            letter-spacing: 4px; 
+            cursor: pointer; 
+            transition: all 0.3s;
+        }        
+        .login-action-btn:hover { background: var(--gold-main); color: var(--forest-bg); }
+
+        /* 計算機 Styles (保留) */
+        #page-admin-calc .k-card { background: #ffffff !important; color: #1a3a2e !important; margin: 0 4% 15px 4% !important; padding: 15px !important; border-radius: 18px !important; }
+        #page-admin-calc .label-zh { font-size: 22px !important; font-weight: 800 !important; color: #1a3a2e !important; margin-bottom: 12px !important; display: block !important; letter-spacing: 1px !important;}
+        #page-admin-calc .option-btn { background: #f8f6f2 !important; color: #1a3a2e !important; padding: 6px 2px; border-radius: 8px; border: 1px solid rgba(26,58,46,0.1); font-size: 11px; font-weight: 700; }
+        #page-admin-calc .option-btn.active { background: #1a3a2e !important; color: white !important; }
+        #page-admin-calc .addon-card { background-color: #f5f2ee; border-radius: 18px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; border: 1.5px solid transparent; cursor: pointer; }
+        #page-admin-calc .addon-card.selected { background-color: #1a3a2e; color: white; }
+        .stepper-btn { width: 20px; height: 20px; border-radius: 50%; background: #c9b896; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
+        .design-row { display: grid; grid-template-columns: 1.5fr 1fr 1.2fr 40px; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid rgba(26, 58, 46, 0.05);}
+        .design-row span { font-size: 14px !important; font-weight: 600; }
+        .design-row .price-input { font-size: 14px !important; padding: 6px !important; height: 35px; }
+        .delete-btn {color: #ff6b6b;font-size: 20px;cursor: pointer;text-align: center;font-weight: bold;}
+        .k-input { background: #f5f2ee; border-radius: 20px; padding: 4px 10px; width: 100%; font-size: 12px; border: 1px solid transparent; }
+        .k-input-readonly { background: transparent; border: none; width: 40px; text-align: center; font-size: 10px; font-weight: 700; color: #c9b896; }
+        #page-admin-calc .design-btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        #page-admin-calc .design-btn-grid .option-btn {padding: 10px 4px; font-size: 12px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+        #page-admin-calc .design-row { 
+            display: grid !important; grid-template-columns: 1fr 55px 70px 20px !important; 
+            align-items: center !important; gap: 5px !important; padding: 4px 0 !important; border-bottom: none !important; 
+        }
+        #copyBtn { background-color: #2d4639 !important; color: white !important; }
+        .admin-form {background: rgba(255,255,255,0.03) !important;border: 1px solid rgba(201,184,150,0.1) !important;}
+        .admin-item-card {display: flex;justify-content: space-between;align-items: center;padding: 12px 15px;background: rgba(128, 128, 128, 0.05);border-radius: 10px; margin-bottom: 8px; border: 1px solid rgba(201, 184, 150, 0.05);}
+        .admin-item-card .item-info {flex: 1;}
+        .admin-item-card .name {font-size: 14px;font-weight: 600;color: var(--white-main);}
+        .admin-item-card .detail { font-size: 11px; opacity: 0.6;margin-top: 2px;}
+        .admin-item-card button { padding: 4px 8px; background: transparent; border: 1px solid #ff6b6b;border-radius: 6px; color: #ff6b6b;font-size: 11px;cursor: pointer;transition: all 0.3s;}
+        .admin-item-card button:hover { background: rgba(255, 107, 107, 0.1);}
+        
+        /* 讓滑鼠移到三條線時顯示抓取手勢 */
+        .admin-item-row .text-\[var\(--gold-main\)\] {
+            cursor: grab !important;
+        }
+        .admin-item-row .text-\[var\(--gold-main\)\]:active {
+            cursor: grabbing !important;
+        }
+
+        /* 編輯模式下，禁止文字選取以利拖拽 */
+        body.admin-mode .admin-item-row {
+            user-select: none !important;
+            -webkit-user-select: none !important;
+        }
+
+        /* 確保輸入框還是可以點進去打字 */
+        body.admin-mode .edit-input {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+
+        /* 抓取手勢 */
+        .drag-handle {
+            cursor: grab !important;
+            padding: 10px; /* 增加好抓的範圍 */
+        }
+        .drag-handle:active {
+            cursor: grabbing !important;
+        }
+        
+        /* --- 編輯面板 (隱藏) --- */
+        #global-edit-panel { display: none; }
+        .hidden { display: none !important; }
+        /* 強制拔除所有白色方塊背景 */
+        #page-admin-calc .k-card, 
+        #page-admin-calc .app-container,
+        #page-admin-calc section { background: transparent !important; background-color: transparent !important; box-shadow: none !important; border: none !important;}
+        #page-admin-calc .sticky-calc-footer {
+            position: fixed !important;
+            bottom: 60px !important;  
+            
+            /* --- 置中核心設定 --- */
+            width: 60% !important;     /* 這裡可以改成妳想要的寬度，例如 80% 或 70% */
+            left: 50% !important;      /* 先靠左對齊螢幕的 50% 線 */
+            transform: translateX(-50%) !important; /* 再往左拉回自己寬度的一半，達成置中 */
+            /* -------------------- */
+
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(15px) !important;
+            border-radius: 50px !important;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1) !important;
+            z-index: 900 !important; 
+            
+            /* 妳剛才調整的窄長參數 */
+            padding: 20px 25px !important; /* 第一個數字控制高矮，第二個控制左右間距 */
+            
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            border: 1px solid rgba(181, 164, 137, 0.2) !important;
+        }
+                
+        /* ------------------------------------------- */
+        /* --- [NEW] 行事曆系統專用樣式 --- */
+        /* ------------------------------------------- */
+        .calendar-section { width: 100%; position: relative; }
+        .serif { font-family: 'Playfair Display', serif; }
+        .blur-target { filter: blur(8px); pointer-events: none; opacity: 0.1; transition: all 0.4s ease; }
+        
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 100%; padding: 0 10px; box-sizing: border-box; }
+        
+        .day-box { 
+            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-base); 
+            border-radius: 6px; padding: 2px 1px; display: flex; flex-direction: column; 
+            min-height: 50px; /* 改這裡 */
+            position: relative;
+        }
+        body.admin-mode .day-box { background: rgba(0,0,0,0.03); border-color: var(--gold-main); }
+
+        /* [新增] 財務頁面：置中顯示專用樣式 */
+        .fin-day-box.centered-state {
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+        .fin-day-box.centered-state .date-corner {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 10px;
+        }
+        .fin-day-box.centered-state .center-text {
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .sunday-bg { background: rgba(255, 0, 0, 0.05); }
+        .past-day { opacity: 0.3; pointer-events: none; }
+
+        .time-label { 
+            display: flex; align-items: center; justify-content: center; width: 94%; 
+            background: rgba(201, 184, 150, 0.15); color: var(--gold-main); 
+            margin: 1.5px auto; height: 20px; border-radius: 3px; font-size: 9px; 
+            line-height: 1; cursor: pointer; transition: 0.2s;
+        }
+        body.admin-mode .time-label { background: rgba(0,0,0,0.1); color: var(--gold-main); font-weight: bold; }
+        
+        /* 選中狀態 (前台) */
+        .ask-mode .time-label.selected { background: #800020 !important; color: white !important; transform: scale(1.05); }
+        
+        /* 後台管理按鈕 */
+        .admin-day-controls { display: none; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: auto; }
+        body.admin-mode .admin-day-controls { display: grid; }
+        .tiny-btn { font-size: 8px; text-align: center; padding: 2px 0; cursor: pointer; background: rgba(0,0,0,0.1); }
+        .tiny-btn.edit { background: var(--gold-main); color: white; }
+
+        /* 詢問按鈕 */
+        .ask-action-btn { 
+            background: #800020; color: white; padding: 12px 30px; border-radius: 30px; 
+            font-weight: bold; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: inline-block;
+        }
+        .confirm-action-btn {
+            background: #1a4731; color: white; padding: 12px 30px; border-radius: 30px; 
+            font-weight: bold; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: none;
+        }
+
+        /* 模態視窗 (Modal) */
+        .cal-modal-overlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 6000; 
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .cal-modal-content {
+            background: var(--forest-bg); border: 1px solid var(--gold-main); 
+            border-radius: 20px; padding: 25px; width: 100%; max-width: 320px;
+            color: var(--white-main); text-align: center; position: relative;
+        }
+        body.admin-mode .cal-modal-content { background: #fff; color: #333; }
+        
+        .copy-btn { width: 100%; padding: 12px; background: #1a4731; color: white; border-radius: 10px; margin-top: 10px; }
+
+        /* --- [NEW] 財務行事曆專用樣式 --- */
+        .fin-stat-header { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 15px 15px; border-bottom: 1px solid rgba(201, 184, 150, 0.2); margin-bottom: 15px; }
+        .fin-stat-group { text-align: right; }
+        .fin-stat-label { font-size: 10px; color: var(--gold-main); opacity: 0.8; letter-spacing: 1px; }
+        .fin-stat-val { font-size: 16px; font-weight: 700; color: var(--white-main); font-family: 'Playfair Display', serif; }
+        
+        /* 行事曆格子 */
+        .fin-day-box { 
+            min-height: 100px; 
+            background: transparent; 
+            border: 1px solid rgba(201, 184, 150, 0.15); 
+            border-radius: 4px; 
+            padding: 4px; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .fin-day-header { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 4px; color: var(--white-sec); }
+        .is-holiday { color: #ff6b6b !important; }
+        .is-holiday-bg { background: rgba(255, 107, 107, 0.05); border-color: rgba(255, 107, 107, 0.3); }
+        
+        /* 預約條目 */
+        .fin-item { 
+            font-size: 9px; 
+            background: rgba(201, 184, 150, 0.1); 
+            color: var(--white-main); 
+            margin-bottom: 2px; 
+            padding: 2px 4px; 
+            border-radius: 3px; 
+            cursor: pointer; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis;
+        }
+        .fin-item.is-price-view { 
+            background: transparent !important; 
+            border: 1px solid #1a4731 !important; /* 綠色框線 */
+            color: var(--gold-main) !important; 
+            font-weight: bold; 
+            text-align: right; 
+        }
+        .fin-item.is-note {
+            background: rgba(255, 107, 107, 0.15) !important; /* 淡紅底 */
+            color: #ff6b6b !important; /* 紅字 */
+            font-weight: 700 !important;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        /* 週結算列 */
+        .weekly-row { 
+            grid-column: 1 / -1; 
+            background: rgba(201, 184, 150, 0.1); 
+            border-radius: 6px; 
+            margin: 5px 0 15px; 
+            padding: 8px 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 11px;
+        }
+        
+        /* 底部總結 */
+        .fin-footer {
+            display: flex; gap: 15px; justify-content: center; margin-top: 20px;
+            font-size: 11px; color: var(--gold-main);
+        }
+        .fin-footer div span { display: block; font-size: 15px; font-weight: 700; color: var(--white-main); margin-top: 2px; }
+
+        /* 切換按鈕 */
+        .view-toggle-btn { 
+            background: transparent; border: 1px solid var(--gold-main); color: var(--gold-main); 
+            border-radius: 20px; padding: 4px 12px; font-size: 11px; cursor: pointer; 
+        }
+        .view-toggle-btn.active { background: var(--gold-main); color: var(--forest-bg); font-weight: bold; }
+    
+        /* --- [更新] 財務系統樣式優化 --- */
+        
+        /* 1. 當日詳情彈窗樣式 */
+        .day-detail-list { max-height: 300px; overflow-y: auto; margin-bottom: 15px; }
+        .day-detail-item { 
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(201, 184, 150, 0.1);
+            padding: 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .day-detail-item:active { transform: scale(0.98); background: rgba(201, 184, 150, 0.1); }
+
+        /* 2. 服務項目按鈕 (解決看不清字的問題) */
+        .item-option-btn {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--white-sec);
+            background: transparent;
+            padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 500;
+            cursor: pointer; text-align: left;
+            transition: all 0.2s;
+            /* 強制文字單行並截斷 */
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        /* 滑鼠移入或選中：深藍底 + 白字 */
+        .item-option-btn:hover, .item-option-btn.active {
+            background-color: #0f241d !important; /* 深藍/深綠色 */
+            color: #ffffff !important;
+            border-color: var(--gold-main);
+            font-weight: 700;
+        }
+
+        /* 3. 已選項目列表 (固定格式 + 刪除) */
+        .selected-list-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+        .selected-name {
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            color: var(--gold-main);
+        }
+        .del-item-btn {
+            color: #ff6b6b; font-weight: bold; padding: 2px 8px;
+            cursor: pointer; opacity: 0.7;
+        }
+        
+        /* 類別切換按鈕 */
+        .cat-tab-btn {
+            flex: 1; padding: 6px 0; font-size: 11px; text-align: center;
+            background: rgba(255,255,255,0.05); color: var(--white-sec);
+            border: 1px solid transparent; cursor: pointer;
+        }
+        .cat-tab-btn.active {
+            background: var(--gold-main); color: var(--forest-bg); font-weight: bold;
+        }
+        .cat-tab-group {
+            display: flex; border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* 滿版提示 (Overlay Message) */
+        .overlay-message-container {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .overlay-message {
+            text-align: center;
+            font-weight: bold;
+            color: var(--gold-main);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            padding: 20px;
+            background: rgba(26, 58, 46, 0.9);
+            border-radius: 12px;
+            border: 1px solid var(--gold-main);
+            margin: 0 20px;
+            line-height: 1.6;
+        }
+        .overlay-message h3 { font-size: 20px; margin-bottom: 10px; color: #fff; }
+        .overlay-message p { font-size: 14px; opacity: 0.9; }
+
+        /* Top Button */
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: var(--gold-main);
+            color: var(--forest-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 999;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            border: 2px solid var(--forest-bg);
+        }
+        .scroll-top-btn.show { opacity: 1; visibility: visible; }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <header class="brand-header">
+        <div class="logo-box">
+    <img id="logo-guest" src="logo-1.png" alt="MEAW ME" class="logo-img">
+    <img id="logo-admin" src="logo-2.png" alt="MEAW ME ADMIN" class="logo-img" style="display: none;">
+</div>
+        <h1 class="studio-name">繆米美學</h1>
+        <h1 class="studio-name2">｜MEAW ME BEAUTY｜</h1>
+
+        <div class="studio-subtitle">｜美甲｜美睫｜美容｜</div>
+    </header>
+
+    <div id="scrollTopBtn" class="scroll-top-btn" onclick="scrollToTop()">ᴛᴏᴘ</div>
+
+    <section id="page-home" class="page-content active pb-32">
+    <div class="text-center px-8 py-4">
+        <p style="font-size: 14px; color: #faf3e0; line-height: 1.8; letter-spacing: 1.5px;">
+            店內有兩位貓店店長 會神出鬼沒的視察、陪伴及療癒客人。<br><br>
+            致力於提供最舒適的一站式美業工作室<br>
+            結合美甲、美睫、美容三個項目<br>
+            讓每位客人都能以最高的品質 輕鬆還原美貌。
+        </p>
+    </div>
+    
+    <div class="m-card">
+        <h2 class="info-title">營業時間</h2>
+        <div class="flex justify-between text-[14px] mb-2">
+            <span>週一至週六</span>
+            <span style="color: #faf3e0;">10:00 - 22:00</span>
+        </div>
+        <div class="flex justify-between text-[14px]">
+            <span>週日</span>
+            <span style="color: #faf3e0;">公休</span>
+        </div>
+    </div>
+
+    <div class="m-card">
+        <h2 class="info-title">付款方式</h2>
+        <div class="text-[14px] space-y-1" style="color: #faf3e0;">
+            <div>現金</div>
+            <div>轉帳</div>
+            <div>街口支付</div>
+            <div>LINE PAY</div>
+        </div>
+    </div>
+
+    <div class="m-card">
+        <h2 class="info-title">地址</h2>
+        <p class="text-[14px]" style="color: #faf3e0;">中壢SOGO附近</p>
+        <a href="https://maps.app.goo.gl/zhXE9N28NodmVeHf7?g_st=ipc" class="map-button" style="background: var(--gold-main); color: var(--forest-bg); width: 100%; padding: 10px; border-radius: 8px; text-align: center; font-size: 14px; font-weight: 600; display: block; margin-top: 15px; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.2);">開啟 Google 地圖</a>
+    </div>
+
+    <div class="m-card">
+        <h2 class="info-title">聯絡我們</h2>
+        <a href="https://www.instagram.com/meawme.beauty?igsh=eDRjZGFtNTcyY28y" target="_blank" class="contact-card" style="display: flex; align-items: center; background: var(--btn-bg); border: 1px solid var(--border-base); padding: 12px; border-radius: 10px; margin-top: 10px; text-decoration: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+            <svg class="social-icon" style="width: 26px; height: 26px; stroke: var(--gold-main); fill: none; margin-right: 15px;" viewBox="0 0 24 24" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            <div>
+                <div class="text-[15px] font-semibold text-white">Instagram</div>
+                <div class="text-[12px] text-[var(--grey-green)]">｜作品集｜不回覆訊息｜</div>
+            </div>
+        </a>
+        <a href="https://lin.ee/kv6nqyW" target="_blank" class="contact-card" style="display: flex; align-items: center; background: var(--btn-bg); border: 1px solid var(--border-base); padding: 12px; border-radius: 10px; margin-top: 10px; text-decoration: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+            <svg class="social-icon" style="width: 26px; height: 26px; stroke: var(--gold-main); fill: none; margin-right: 15px;" viewBox="0 0 24 24" stroke-width="1.5" fill="none" stroke="currentColor"><path d="M21 11.5C21 7.02 16.97 3.5 12 3.5S3 7.02 3 11.5C3 15.48 6.15 18.73 10.35 19.38C10.74 19.45 11.02 19.64 10.92 20.03C10.82 20.42 10.45 21.68 10.45 21.68C10.35 22.07 10.66 21.82 11.16 21.49C11.66 21.16 14.16 19.49 15.34 18.73C18.66 18.15 21 15.11 21 11.5Z"></path><text x="12" y="13" font-family="Arial" font-size="4" font-weight="bold" fill="currentColor" text-anchor="middle">LINE</text></svg>
+            <div>
+                <div class="text-[15px] font-semibold text-white">LINE</div>
+                <div class="text-[12px] text-[var(--grey-green)]">｜加入LINE@詢問｜</div>
+            </div>
+        </a>
+    </div>
+</section>
+
+    <section id="page-notice" class="page-content pb-32">
+    <h2 class="section-title" style="font-size: 22px; font-weight: 600; color: var(--gold-main); text-align: center; margin: 25px 0 15px; letter-spacing: 2px;">預約須知</h2>
+    <p class="text-[13px] text-center text-[#8b9d8a] mb-6">（預約視同同意）</p>
+    
+    <div class="m-card">
+        <h3 class="info-title">預約方式</h3>
+        <ul class="bullet-list" style="list-style: none; padding: 0; margin: 0;">
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">〚全預約制〛需提前3天預約</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">請加入LINE@，進入預約系統</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">時段可上預約系統查看</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">釋出空檔會在LINE VOOM當月優惠的留言區</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">定金需於12小時內完成支付，會於當日消費折抵</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">當天請『準時』抵達，請勿〚遲到/提早〛超過10分鐘</li>
+        </ul>
+    </div>
+
+    <div class="m-card">
+        <h3 class="info-title">預約規範</h3>
+        <ul class="bullet-list" style="list-style: none; padding: 0; margin: 0;">
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">遲到超過10分鐘視為取消</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">取消、更改需提前3天告知</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">臨時取消、更改或無故未到，定金不退</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">當月取消三次，則無法預約</li>
+        </ul>
+    </div>
+
+    <div class="m-card">
+        <h3 class="info-title">付款方式</h3>
+        <ul class="bullet-list" style="list-style: none; padding: 0; margin: 0;">
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">接受現金、轉帳、街口支付、LINE PAY</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">服務完成於現場結帳</li>
+        </ul>
+    </div>
+
+    <div class="m-card">
+        <h3 class="info-title">重要提醒</h3>
+        <ul class="bullet-list" style="list-style: none; padding: 0; margin: 0;">
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">禁止攜伴</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">店內有貓，如會過敏請三思</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">工作室禁止吃東西，請提前用餐</li>
+            <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">過程中若有不適、不滿意的情況請當下即反應</li>
+        </ul>
+    </div>
+</section>
+
+    <section id="page-nail" class="page-content pb-32">
+    <h2 class="section-title" style="font-size: 22px; font-weight: 600; color: var(--gold-main); text-align: center; margin: 25px 0 15px; letter-spacing: 2px;">美甲服務</h2>
+    
+    <div class="dropdown-container">
+        <div class="dropdown-header" onclick="toggleDropdown(this)">
+            <span class="dropdown-title">預約須知 <small style="font-size:12px; color:var(--grey-green)">*預約視同同意</small></span>
+            <span class="dropdown-arrow">﹀</span>
+        </div>
+        <div class="dropdown-content">
+            <ul class="bullet-list" style="list-style: none; padding: 0; margin: 0;">
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>請保持預約當天指甲超過指肉至少3mm</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>不然修出來的形狀不好看</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>操作時無法包邊，導致牢固性不佳</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>只要指甲上殘有凝膠，都需預約卸甲</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>若未預約當天會加收$500趕工費或取消不退定金。</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>無足部美甲</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>病甲、問題甲預約請先溝通再預約</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>未溝通者一律取消，定金不退</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>延甲需提前預約</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>不接受當天臨時告知</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>不挑款，請備註色系或風格／喜好</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>由我設計，不得干涉</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>開運設計需備註提供出生年月日、時間及加強方向</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>由我設計，不得干涉</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>自帶圖需先傳圖報價、討論後做預約</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>未溝通則一律取消，定金不退</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>每一店使用的膠、素材皆不同，無法做到百分之百完美複刻</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="dropdown-container">
+        <div class="dropdown-header" onclick="toggleDropdown(this)"><span class="dropdown-title">價目表</span><span class="dropdown-arrow">﹀</span></div>
+        <div class="dropdown-content">
+            <table class="price-table" style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                <tr><th style="font-size: 14px; color: var(--gold-main); text-align: left; padding: 10px 5px; border-bottom: 1px solid var(--border-base);">項目名稱</th><th class="price-value" style="font-size: 14px; color: var(--gold-main); text-align: left; padding: 10px 5px; border-bottom: 1px solid var(--border-base);">價格</th></tr>
+                <tr><td>指甲護理〚裸色〛</td><td class="price-value">$600</td></tr>
+                <tr><td>純色〚單色/跳色〛</td><td class="price-value">$700</td></tr>
+                <tr><td>貓眼/漸層/法式/鏡面/碎鑽</td><td class="price-value">$800</td></tr>
+                <tr><td>自帶圖</td><td class="price-value">$900↑</td></tr>
+                <tr><td>不挑款 - 簡約</td><td class="price-value">$900</td></tr>
+                <tr><td>不挑款 - 輕奢</td><td class="price-value">$1,000</td></tr>
+                <tr><td>開運設計</td><td class="price-value">$1,200</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="dropdown-container">
+                <div class="dropdown-header" onclick="toggleDropdown(this)"><span class="dropdown-title">加購項目</span><span class="dropdown-arrow">﹀</span></div>
+                <div class="dropdown-content">
+                    <div class="subsection-title">卸甲續作</div>
+                    <table class="price-table">
+                        <tr><td>本店</td><td class="price-value">$200</td></tr>
+                        <tr><td>他店</td><td class="price-value">$300</td></tr>
+                    </table>
+                    <div class="subsection-title">純卸甲</div>
+                    <table class="price-table">
+                        <tr><td>本店</td><td class="price-value">$300</td></tr>
+                        <tr><td>他店</td><td class="price-value">$500</td></tr>
+                    </table>
+                    <div class="subsection-title">延甲</div>
+                    <table class="price-table">
+                        <tr><td>甲片</td><td class="price-value">$50/指</td></tr>
+                    </table>
+                    <div class="subsection-title">手部SPA護理</div>
+                    <table class="price-table">
+                        <tr><td>基礎</td><td class="price-value">$500</td></tr>
+                        <tr><td>進階</td><td class="price-value">$800</td></tr>
+                    </table>
+                 </div>
+            </div>
+            <div class="dropdown-container">
+                <div class="dropdown-header" onclick="toggleDropdown(this)"><span class="dropdown-title">常見問題</span><span class="dropdown-arrow">﹀</span></div>
+                <div class="dropdown-content">
+                    <div class="qa-item"><div class="qa-q">美甲可以維持多久？</div><div class="qa-a">｜ 凝膠美甲通常可以維持 3-4 週，實際時間依個人指甲生長速度及用手習慣決定。建議每 3-4 週回來修補，以保持最佳狀態。</div></div>
+                    <div class="qa-item"><div class="qa-q">做完美甲後如何保養？</div><div class="qa-a">｜ 避免使用指甲做事，多多使用指腹。手部易乾燥、起屑，建議多擦指緣油、護手霜來保持手部滋潤。</div></div>
+                    <div class="qa-item"><div class="qa-q">為什麼每次做完沒多久指甲都會翹或進空氣？</div><div class="qa-a">｜ 常常使用指尖（包含：敲打、按鍵、摳東西等），凝膠的硬度會比指甲硬，所以受力程度不同，就會導致凝膠與指甲分離。</div></div>
+                    <div class="qa-item"><div class="qa-q">為什麼每次卸甲後指甲都會變薄？</div><div class="qa-a">｜ 在美甲師的正常操作下，會在上膠前用海綿拋光輕微刻磨甲面，增加凝膠與甲面的摩擦力，增加其牢固度，但不會導致指甲變薄變軟。會覺得變薄變軟是因為習慣凝膠的硬度與厚度，少了凝膠就會覺得變薄變軟了。</div></div>
+                    <div class="qa-item"><div class="qa-q">做指甲後大約多久需要讓指甲休息、呼吸？</div><div class="qa-a">｜ 指甲是代謝出的老廢角質，不需要呼吸。休息與否可聽從美甲師、醫生建議，或是看個人情況。</div></div>
+                    <div class="qa-item"><div class="qa-q">美甲太長可以自己剪短嗎？</div><div class="qa-a">｜ 不可以唷！這會讓凝膠與指甲分離導致綠膿桿菌。可用美甲磨板修到合適位置，不可修太短或自行修型。</div></div>
+                </div>
+            </div>
+        </section>
+
+    <section id="page-eyelash" class="page-content pb-32">
+    <h2 class="section-title" style="font-size: 22px; font-weight: 600; color: var(--gold-main); text-align: center; margin: 25px 0 15px; letter-spacing: 2px;">美睫服務</h2>
+    
+            <div class="dropdown-container">
+        <div class="dropdown-header" onclick="toggleDropdown(this)">
+            <span class="dropdown-title">預約須知 <small style="font-size:12px; color:var(--grey-green)">*預約視同同意</small></span>
+            <span class="dropdown-arrow">﹀</span>
+        </div>
+        <div class="dropdown-content">
+            <ul class="bullet-list" style="list-style: none; padding: 0; margin: 0;">
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>當天請勿化妝</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>避免化妝殘留，導致牢固性降低</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>以下情況請勿預約美睫，避免無法操作</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>眼睛容易過敏</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>雷射未滿一年</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>雙眼皮手術未滿三個月</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>睫毛稀疏狀況嚴重</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>有眼部疾病、傷口</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>避免碰水/水氣</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>嫁接後3至6小時內請勿碰水</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>2天內避免蒸氣室、烤箱、游泳</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>日常維護</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>避免高溫、揉眼、拉扯、使用睫毛夾</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>避免使用油性產品</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>如卸妝油、睫毛膏、或是含油的彩妝</li>
+            </ul>
+                </div>
+            </div>
+            <div class="dropdown-container">
+                <div class="dropdown-header" onclick="toggleDropdown(this)">
+                    <span class="dropdown-title">價目表</span>
+                    <span class="dropdown-arrow">﹀</span>
+                </div>
+                <div class="dropdown-content">
+                    <table class="price-table"></table> 
+
+                   <div class="subsection-title" style="color:var(--gold-main); font-weight:700; margin-top:20px; margin-bottom:10px; border-left:3px solid var(--gold-main); padding-left:10px;">
+                        睫毛管理
+                    </div>
+                    <div id="front-eyelash-management"></div> 
+                </div>
+            </div>
+            <div class="dropdown-container">
+                <div class="dropdown-header" onclick="toggleDropdown(this)"><span class="dropdown-title">加購項目</span><span class="dropdown-arrow">﹀</span></div>
+                <div class="dropdown-content">
+                    <div class="subsection-title">下睫毛</div>
+                    <table class="price-table"><tr><td>下睫毛</td><td class="price-value">$100</td></tr></table>
+                    <div class="subsection-title">卸睫續作</div>
+                    <table class="price-table"><tr><td>本店</td><td class="price-value">Free</td></tr><tr><td>他店</td><td class="price-value">$200</td></tr></table>
+                    <div class="subsection-title">補睫</div>
+                    <table class="price-table">
+                        <tr><td>一週內</td><td class="price-value">三折</td></tr>
+                        <tr><td>兩週內</td><td class="price-value">五折</td></tr>
+                        <tr><td>三週內</td><td class="price-value">七折</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="dropdown-container">
+                <div class="dropdown-header" onclick="toggleDropdown(this)"><span class="dropdown-title">常見問題</span><span class="dropdown-arrow">﹀</span></div>
+                <div class="dropdown-content">
+                    <div class="qa-item"><div class="qa-q">睫毛可以維持多久？</div><div class="qa-a">｜ 嫁接通常可維持3-4週，建議2-3週回來補。睫毛管理可維持6-8週。</div></div>
+                    <div class="qa-item"><div class="qa-q">接睫毛後如何保養？</div><div class="qa-a">｜ 避免揉眼，溫柔清潔。嫁接後3-6小時不碰水，不使用油性卸妝產品。睡覺時盡量側睡，避免壓到睫毛。</div></div>
+                    <div class="qa-item"><div class="qa-q">美睫可以自行卸除嗎？</div><div class="qa-a">｜ 不建議唷！需專業卸睫劑，自行卸除可能會傷到睫毛與眼睛。</div></div>
+                    <div class="qa-item"><div class="qa-q">可以畫眼妝嗎？</div><div class="qa-a">｜ 可以，但不可使用睫毛膏、睫毛夾與防水眼線液。卸妝時避免使用油性卸妝產品。</div></div>
+                    <div class="qa-item"><div class="qa-q">為什麼接完睫毛過後連自己的睫毛也會掉？</div><div class="qa-a">｜ 這是正常的。睫毛有生長週期約28天左右，時間到了就會自然脫落再重新生長，會建議客人大約2-3週回來補睫，以維持美睫的最佳狀態。</div></div>                     
+                </div>
+            </div>
+        </section>
+
+    <section id="page-skin" class="page-content pb-32">
+    <h2 class="section-title" style="font-size: 22px; font-weight: 600; color: var(--gold-main); text-align: center; margin: 25px 0 15px; letter-spacing: 2px;">美容服務</h2>
+    
+            <div class="dropdown-container">
+        <div class="dropdown-header" onclick="toggleDropdown(this)">
+            <span class="dropdown-title">預約須知 <small style="font-size:12px; color:var(--grey-green)">*預約視同同意</small></span>
+            <span class="dropdown-arrow">﹀</span>
+        </div>
+        <div class="dropdown-content">
+            <ul class="bullet-list" style="list-style: none; padding: 0; margin: 0;">
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>預約前請先私訊LINE@</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>需先諮詢美容師評估狀況</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>定期回來保養</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>效果是長期評估，不能只看單次，肌膚週期為28天</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>加強防曬與補水</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>建議物理防曬，停止使用酸類、美白、去角質產品一週</li>
+                <li class="main-item" style="color: var(--white-main); font-weight: 500;"><span class="symbol" style="display: inline-block; width: 1.2em; text-align: center;">｜</span>生活習慣調整</li>
+                <li class="sub-item" style="color: var(--grey-green); font-size: 13px;"><span class="symbol-dot" style="display: inline-block; width: 1.2em; text-align: center; margin-left: 1em;">．</span>避免抽菸、喝酒、辛辣食物。一週內避免去溫泉、三溫暖</li>
+            </ul>
+                </div>
+            </div>
+            <div class="dropdown-container">
+                <div class="dropdown-header" onclick="toggleDropdown(this)"><span class="dropdown-title">價目表</span><span class="dropdown-arrow">﹀</span></div>
+                <div class="dropdown-content">
+                    <table class="price-table">
+                        <tr><th>服務項目</th><th class="price-value">原價</th><th class="price-value">體驗價</th></tr>
+                        <tr><td>復活保濕修護</td><td class="price-value">$1,000</td><td class="price-value">$800</td></tr>
+                        <tr><td>耳燭舒壓</td><td class="price-value">$1,100</td><td class="price-value">$900</td></tr>
+                        <tr><td>面部撥筋</td><td class="price-value">$1,200</td><td class="price-value">$1,000</td></tr>
+                        <tr><td>手工清粉刺</td><td class="price-value">$1,300</td><td class="price-value">$1,100</td></tr>
+                        <tr><td>ES皮膚管理</td><td class="price-value">$1,500</td><td class="price-value">$1,300</td></tr>
+                        <tr><td>藻針喚膚</td><td class="price-value">$1,600</td><td class="price-value">$1,400</td></tr>
+                        <tr><td>MTS駐顏粉底</td><td class="price-value">$1,800</td><td class="price-value">$1,500</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="dropdown-container">
+                <div class="dropdown-header" onclick="toggleDropdown(this)"><span class="dropdown-title">加購項目</span><span class="dropdown-arrow">﹀</span></div>
+                <div class="dropdown-content">
+                    <table class="price-table">
+                        <tr>
+                            <td>撥筋〚局部｜臉部〛</td>
+                            <td class="price-value" style="text-align: right; width: auto;">$300／$500</td>
+                        </tr>
+                        <tr>
+                            <td>耳燭舒壓</td>
+                            <td class="price-value" style="text-align: right; width: auto;">$500</td>
+                        </tr>
+                        <tr>
+                            <td>頭部釋壓</td>
+                            <td class="price-value" style="text-align: right; width: auto;">$500</td>
+                        </tr>
+                        <tr>
+                            <td>手工清粉刺〚局部〛</td>
+                            <td class="price-value" style="text-align: right; width: auto;">$500</td>
+                        </tr>
+                        <tr>
+                            <td>藻針喚膚〚局部〛</td>
+                            <td class="price-value" style="text-align: right; width: auto;">$600</td>
+                        </tr>
+                        <tr>
+                            <td>MTS駐顏粉底〚局部〛</td>
+                            <td class="price-value" style="text-align: right; width: auto;">$700</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="dropdown-container">
+                <div class="dropdown-header" onclick="toggleDropdown(this)"><span class="dropdown-title">常見問題</span><span class="dropdown-arrow">﹀</span></div>
+                <div class="dropdown-content">
+                    <div class="qa-item"><div class="qa-q">多久做一次臉部護理比較好？</div><div class="qa-a">｜ 正常情況下一個月深度清潔保養一次即可。膚況不穩建議一兩週一次。</div></div>
+                    <div class="qa-item"><div class="qa-q">為什麼剛做完臉會長痘痘？</div><div class="qa-a">｜ 部分課程是幫助肌膚加速代謝，屬暫時代謝反應，多補水保濕後會逐漸改善。建議療程中有任何不適請向美容師反應，做完保養盡量簡單清爽。</div></div>
+                    <div class="qa-item"><div class="qa-q">孕婦可以做美容療程嗎？</div><div class="qa-a">｜ 請預約時告知懷孕狀況，我們會選用溫和產品並調整療程內容。</div></div>
+                </div>
+            </div>
+        </section>
+
+    <section id="page-method" class="page-content pb-32">
+            <h2 class="section-title" style="font-size: 22px; font-weight: 600; color: var(--gold-main); text-align: center; margin: 25px 0 15px; letter-spacing: 2px;">預約方式</h2>
+            
+            <div class="m-card">
+                <h3 class="info-title">如何預約</h3>
+                <p class="text-[13px] text-[#8b9d8a] mb-4">預約前請詳閱預約須知，預約視同同意</p>
+                <ul class="bullet-list" style="list-style: none; padding: 0; margin: 0;">
+                    <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">〚全預約制〛需提前3天預約</li>
+                    <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">請加入LINE@，進入預約系統</li>
+                    <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">時段可上預約系統查看</li>
+                    <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">釋出空檔會在LINE VOOM當月優惠的留言區</li>
+                    <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">定金需於12小時內完成支付，會於當日消費折抵</li>
+                    <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">當天請『準時』抵達，請勿〚遲到/提早〛超過10分鐘</li>
+                </ul>
+            </div>
+
+            <div class="m-card">
+                <h2 class="info-title">聯絡我們</h2>
+                <a href="https://www.instagram.com/meawme.beauty?igsh=eDRjZGFtNTcyY28y" target="_blank" class="contact-card" style="display: flex; align-items: center; background: var(--btn-bg); border: 1px solid var(--border-base); padding: 12px; border-radius: 10px; margin-top: 10px; text-decoration: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                    <svg class="social-icon" style="width: 26px; height: 26px; stroke: var(--gold-main); fill: none; margin-right: 15px;" viewBox="0 0 24 24" stroke-width="1.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                    <div>
+                        <div class="text-[15px] font-semibold text-white">Instagram</div>
+                        <div class="text-[12px] text-[var(--grey-green)]">｜作品集｜不回覆訊息｜</div>
+                    </div>
+                </a>
+                <a href="https://lin.ee/kv6nqyW" target="_blank" class="contact-card" style="display: flex; align-items: center; background: var(--btn-bg); border: 1px solid var(--border-base); padding: 12px; border-radius: 10px; margin-top: 10px; text-decoration: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                    <svg class="social-icon" style="width: 26px; height: 26px; stroke: var(--gold-main); fill: none; margin-right: 15px;" viewBox="0 0 24 24" stroke-width="1.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 11.5C21 7.02 16.97 3.5 12 3.5S3 7.02 3 11.5C3 15.48 6.15 18.73 10.35 19.38C10.74 19.45 11.02 19.64 10.92 20.03C10.82 20.42 10.45 21.68 10.45 21.68C10.35 22.07 10.66 21.82 11.16 21.49C11.66 21.16 14.16 19.49 15.34 18.73C18.66 18.15 21 15.11 21 11.5Z"></path>
+                        <text x="12" y="13" font-family="Arial" font-size="4" font-weight="bold" fill="currentColor" text-anchor="middle">LINE</text>
+                    </svg>
+                    <div>
+                        <div class="text-[15px] font-semibold text-white">LINE</div>
+                        <div class="text-[12px] text-[var(--grey-green)]">｜加入LINE@詢問｜</div>
+                    </div>
+                </a>
+                <a href="https://liff.line.me/2006698321-314ABPEZ" target="_blank" class="contact-card" style="display: flex; align-items: center; background: var(--btn-bg); border: 1px solid var(--border-base); padding: 12px; border-radius: 10px; margin-top: 10px; text-decoration: none; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                    <svg class="social-icon" style="width: 26px; height: 26px; stroke: var(--gold-main); fill: none; margin-right: 15px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"></path>
+                    </svg>
+                    <div>
+                        <div class="text-[15px] font-semibold text-white">夯客</div>
+                        <div class="text-[12px] text-[var(--grey-green)]">｜預約系統｜</div>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="m-card">
+                <h3 class="info-title">重要提醒</h3>
+                <ul class="bullet-list" style="list-style: none; padding: 0; margin: 0;">
+                    <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">禁止攜伴</li>
+                    <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">店內有貓，如會過敏請三思</li>
+                    <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">工作室禁止吃東西，請提前用餐</li>
+                    <li style="font-size: 13.5px; color: var(--white-sec); letter-spacing: 1.2px; margin-bottom: 8px;">過程中若有不適、不滿意的情況請當下即反應</li>
+                </ul>
+            </div>
+        </section>
+
+    <section id="page-booking" class="page-content pb-32">
+        <h2 class="text-center text-[22px] text-[var(--gold-main)] font-bold my-6 tracking-widest">查詢可預約時段</h2>
+        
+        <div class="flex justify-between items-center mb-6 px-8 max-w-sm mx-auto">
+            <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
+            <div id="booking-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
+            <button onclick="changeBookingMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+        </div>
+
+        <div style="position: relative; min-height: 300px;">
+            <div class="grid grid-cols-7 gap-1 mb-2 px-2 text-center text-[9px] opacity-50 font-bold">
+                <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
+                <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
+            </div>
+            <div id="booking-calendar-grid" class="calendar-grid"></div>
+            
+            <div id="calendar-overlay-msg" class="overlay-message-container hidden">
+                <div class="overlay-message">
+                    <h3 id="overlay-title"></h3>
+                    <p id="overlay-desc"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button id="askBtn" onclick="toggleAskMode()" class="ask-action-btn">詢問時段</button>
+            <button id="confirmSelectionBtn" onclick="openAskDialog()" class="confirm-action-btn">確定選取</button>
+        </div>
+    </section>
+
+    <section id="page-admin-nail" class="page-content pb-32">
+            <h2>美甲項目管理</h2>
+            <div class="admin-setting-container">
+                <button id="btn-set-nail" class="setting-btn" onclick="toggleEditMode('nail')">⚙️ 設置系統</button>
+            </div>
+            <div class="admin-section-label">主項目 (價目表)</div>
+            <div id="list-nail-main"></div>
+            <div id="add-nail-main"></div> 
+
+            <div class="admin-section-label">加購項目</div>
+            <div id="list-nail-addon"></div>
+            <div id="add-nail-addon"></div>
+
+            <div class="admin-section-label">手模專區</div>
+            <div id="list-nail-model"></div>
+            <div id="add-nail-model"></div> 
+        </section>
+
+        <section id="page-admin-eyelash" class="page-content pb-32">
+            <h2>美睫項目管理</h2>
+            <div class="admin-setting-container">
+                <button id="btn-set-eyelash" class="setting-btn" onclick="toggleEditMode('eyelash')">⚙️ 設置系統</button>
+            </div>
+            <div class="admin-section-label">主項目 (價目表)</div>
+            <div id="list-eyelash-main"></div>
+            <div id="add-eyelash-main"></div> 
+
+            <div class="admin-section-label">睫毛管理項目 (同步前台)</div>
+            <div id="list-eyelash-model"></div> <div id="add-eyelash-model"></div>
+
+            <div class="admin-section-label">加購項目</div>
+            <div id="list-eyelash-addon"></div>
+            <div id="add-eyelash-addon"></div> 
+        </section>
+
+        <section id="page-admin-skin" class="page-content pb-32">
+            <h2>美容項目管理</h2>
+            <div class="admin-setting-container">
+                <button id="btn-set-skin" class="setting-btn" onclick="toggleEditMode('skin')">⚙️ 設置系統</button>
+            </div>
+            <div class="admin-section-label">主項目 (價目表)</div>
+            <div id="list-skin-main"></div>
+            <div id="add-skin-main"></div> <div class="admin-section-label">加購項目</div>
+            <div id="list-skin-addon"></div>
+            <div id="add-skin-addon"></div> 
+        </section>
+
+        <section id="page-admin-calc" class="page-content pb-32">
+            <header class="text-center pt-4 mb-4">
+                <h1 class="text-sm font-bold tracking-[0.2em] text-[#2d4639]">美甲款式計算機</h1>
+            </header>
+            <div class="app-container px-4">
+                <div class="flex bg-white rounded-full p-1 mb-4 shadow-sm border border-gray-100 mx-[4%]">
+                    <button id="tab-regular" onclick="switchMode('regular')" class="flex-1 py-1.5 text-[10px] rounded-full transition-all tab-active font-bold">一般顧客</button>
+                    <button id="tab-model" onclick="switchMode('model')" class="flex-1 py-1.5 text-[10px] rounded-full transition-all text-gray-400 font-bold">手模專區</button>
+                </div>
+                <div class="space-y-4">
+                     <section>
+                        <label class="label-group"><span class="label-zh">款式底價</span></label>
+                        <div class="k-card p-2"><div id="basePriceOptions" class="grid grid-cols-2 gap-2"></div></div>
+                    </section>
+                    <section>
+                        <label class="label-group"><span class="label-zh">造型加價</span></label>
+                        <div class="k-card p-2.5">
+                            <div id="designSelectionGrid" class="design-btn-grid mb-2.5"></div>
+                            <div id="designList" class="space-y-1"></div>
+                        </div>
+                    </section>
+                     <section id="section-addons">
+                        <label class="label-group"><span class="label-zh">固定加購</span></label>
+                        <div class="k-card p-2.5 grid grid-cols-3 gap-2" id="addOnsList"></div>
+                    </section>
+                    <section>
+                        <label class="label-group"><span class="label-zh">卸甲服務</span></label>
+                        <div class="k-card p-3">
+                            <div class="flex gap-1.5 mb-3" id="removalButtons"></div>
+                            <div id="specialRemovalList" class="space-y-2.5 border-t border-gray-50 pt-3"></div>
+                        </div>
+                    </section>
+                    <section>
+                        <label class="label-group"><span class="label-zh">額外調整</span></label>
+                        <div class="k-card p-2.5">
+                            <input type="number" id="adjAmount" class="k-input text-right font-bold" placeholder="輸入金額" oninput="calculate()">
+                        </div>
+                    </section>
+                </div>
+            </div>
+            <div class="sticky-calc-footer">
+                <div class="flex flex-col">
+                    <p class="text-[7px] text-gray-400 uppercase font-bold tracking-tighter">Amount</p>
+                    <p class="text-xl font-bold text-[#2d4639] leading-none">$<span id="totalDisplay">0</span></p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="resetCalculator()" class="text-[10px] text-gray-400 font-bold px-2">清除</button>
+                    <button onclick="toggleSheet('bottomSheet', true)" class="px-4 py-1.5 text-[11px] font-bold bg-[#f5f2ee] text-[#2d4639] rounded-full">明細</button>
+                    <button id="copyBtn" onclick="copyBill()" class="px-5 py-1.5 text-[11px] font-bold bg-[#2d4639] text-white rounded-full">複製</button>
+                </div>
+            </div>
+        </section>
+
+    <section id="page-budget" class="page-content pb-32">
+        <h2 class="text-center text-[22px] font-bold my-6 text-[var(--gold-main)]">行事曆管理</h2>
+        
+        <div class="flex justify-between items-center mb-6 px-8 max-w-sm mx-auto">
+            <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
+            <div id="admin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
+            <button onclick="changeBookingMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+        </div>
+
+        <div class="text-center mb-4">
+            <button onclick="toggleMonthStatus()" id="admin-month-status-btn" class="border border-[var(--gold-main)] text-[var(--gold-main)] px-4 py-2 rounded-full text-xs font-bold mr-2">狀態讀取中</button>
+            <button onclick="exportAvailableSlots()" class="bg-[var(--gold-main)] text-[#1a3a2e] px-4 py-2 rounded-full text-xs font-bold shadow-lg">匯出空檔</button>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 mb-2 px-2 text-center text-[9px] opacity-50 font-bold">
+            <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
+            <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
+        </div>
+        <div id="admin-calendar-grid" class="calendar-grid"></div>
+    </section>
+
+    <section id="page-admin-finance" class="page-content pb-32">
+        <div class="flex justify-between items-center px-4 pt-6 mb-4">
+            <h2 style="margin:0 !important; font-size:20px !important;">財務管理</h2>
+            <button id="finViewToggle" onclick="toggleFinView()" class="view-toggle-btn">顯示: 金額</button>
+        </div>
+
+        <div class="fin-stat-header">
+            <div>
+                <div class="fin-stat-label">應休 / 實休</div>
+                <div class="fin-stat-val"><span id="stat-target-off">0</span> / <span id="stat-real-off" class="text-[#ff6b6b]">0</span></div>
+            </div>
+            <div class="text-center">
+                <div class="fin-stat-label">服務人數</div>
+                <div class="fin-stat-val" id="stat-count">0</div>
+            </div>
+            <div class="fin-stat-group">
+                <div class="fin-stat-label">平均單價</div>
+                <div class="fin-stat-val">$<span id="stat-avg">0</span></div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-4 px-8 max-w-sm mx-auto">
+            <button onclick="changeFinMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
+            <div id="fin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
+            <button onclick="changeFinMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 mb-2 px-2 text-center text-[9px] opacity-50 font-bold">
+            <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
+            <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
+        </div>
+
+        <div id="finance-calendar-grid" class="calendar-grid"></div>
+
+        <div class="fin-footer">
+            <div class="text-center">
+                總計 (本月)
+                <span id="stat-month-total">$0</span>
+            </div>
+            <div class="text-center">
+                預估實收 (扣定金)
+                <span id="stat-month-real">$0</span>
+            </div>
+        </div>
+    </section>
+
+<section>
+    <div id="dayDetailModal" class="cal-modal-overlay hidden">
+        <div class="cal-modal-content" style="max-width: 340px; text-align: left; padding: 20px;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="dd-title" class="text-[var(--gold-main)] font-bold text-lg font-serif"></h3>
+                <button onclick="closeDayDetail()" class="text-2xl opacity-50">×</button>
+            </div>
+            <div id="dd-list" class="day-detail-list"></div>
+            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/10">
+                <button onclick="toggleDayOff()" id="btn-day-off" class="py-3 rounded-lg border border-[#ff6b6b] text-[#ff6b6b] font-bold text-sm transition-all">休假</button>
+                <button onclick="openEditForm()" class="py-3 rounded-lg bg-[var(--gold-main)] text-[#1a3a2e] font-bold text-sm shadow-lg">＋ 新增帳務</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="finEditModal" class="cal-modal-overlay hidden">
+        <div class="cal-modal-content" style="max-width: 360px; text-align: left;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="fe-title" class="text-center text-[var(--gold-main)] font-bold text-lg">新增帳務</h3>
+                <button onclick="closeFinEditModal()" class="opacity-50 text-2xl">✕</button>
+            </div>
+            
+            <div class="mb-4 flex items-center gap-3 bg-gray-100 p-2 rounded border border-gray-300">
+                <label class="text-xs text-gray-500 font-bold">預約時間</label>
+                <div class="flex-1 flex items-center justify-center gap-1">
+                    <select id="fe-h" class="bg-transparent text-[#1a3a2e] font-bold text-xl outline-none text-center appearance-none w-16 border-b border-gray-400">
+                        </select>
+                    <span class="text-gray-400 font-bold">:</span>
+                    <select id="fe-m" class="bg-transparent text-[#1a3a2e] font-bold text-xl outline-none text-center appearance-none w-16 border-b border-gray-400">
+                        <option value="00">00</option>
+                        <option value="30">30</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <label class="text-xs text-gray-400 block mb-1">選擇類別</label>
+                <div class="cat-tab-group">
+                    <div class="cat-tab-btn active" onclick="switchFinCat('nail', this)">美甲</div>
+                    <div class="cat-tab-btn" onclick="switchFinCat('eyelash', this)">美睫</div>
+                    <div class="cat-tab-btn" onclick="switchFinCat('skin', this)">美容</div>
+                    <div class="cat-tab-btn" onclick="switchFinCat('model', this)">手模</div>
+                </div>
+                <div id="fe-item-grid" class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1"></div>
+            </div>
+
+            <div class="mb-2 bg-gray-50 p-3 rounded border border-gray-200">
+                <div class="flex justify-between text-xs mb-2 text-gray-500">
+                    <span>已選項目清單</span>
+                    <span id="fe-count">0 項</span>
+                </div>
+                <div id="fe-selected-list" class="max-h-24 overflow-y-auto mb-3"></div>
+
+                <div class="flex justify-between items-center mb-3 pt-2 border-t border-gray-200">
+                    <label class="flex items-center gap-2 text-xs cursor-pointer text-gray-600 font-bold">
+                        <input type="checkbox" id="fe-deposit" checked class="w-4 h-4 accent-[var(--gold-main)]">
+                        已付定金 ($100)
+                    </label>
+                </div>
+
+                <div class="flex gap-2 items-center">
+                    <div class="flex-1">
+                        <label class="text-[10px] block text-gray-400">總金額</label>
+                        <input type="number" id="fe-price" class="edit-input w-full font-bold text-[#2d4639] text-lg bg-white border border-gray-300">
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-[10px] block text-gray-400">總時長(分)</label>
+                        <input type="number" id="fe-duration" class="edit-input w-full text-center bg-white border border-gray-300">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mt-2">
+                <button onclick="saveFinData()" class="w-full py-3 bg-[var(--gold-main)] text-[#1a3a2e] rounded-full text-sm font-bold shadow-md hover:opacity-90">確認儲存</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+    <nav class="bottom-nav">
+        <div id="nav-guest" class="nav-inner">
+            <div class="tab-button active" onclick="switchPage('home', this)">首頁</div>
+            <div class="tab-button" onclick="switchPage('notice', this)">須知</div>
+            <div class="tab-button" onclick="switchPage('nail', this)">美甲</div>
+            <div class="tab-button" onclick="switchPage('eyelash', this)">美睫</div>
+            <div class="tab-button" onclick="switchPage('skin', this)">美容</div>
+            <div class="tab-button" onclick="switchPage('method', this)">方式</div>
+            <div class="tab-button" onclick="switchPage('booking', this)">時段</div>
+            <div class="tab-button" onclick="showAdminLogin()">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/></svg>
+            </div>
+        </div>
+        <div id="nav-admin" class="nav-inner hidden">
+            <div class="tab-button" onclick="switchPage('admin-nail', this)">美甲</div>
+            <div class="tab-button" onclick="switchPage('admin-eyelash', this)">美睫</div>
+            <div class="tab-button" onclick="switchPage('admin-skin', this)">美容</div>
+            <div class="tab-button" onclick="switchPage('admin-calc', this)">計算</div>
+            <div class="tab-button" onclick="switchPage('budget', this)">行事曆</div>
+            <div class="tab-button" onclick="switchPage('admin-finance', this)">財務</div>
+            <div class="tab-button" onclick="logout()" style="color:#ff6b6b">儲存</div>
+        </div>
+    </nav>
+
+    <div id="admin-login-overlay">
+        <div class="login-container">
+            <div class="login-title">身份驗證</div>
+            <input type="password" id="admin-pwd" class="pwd-input" placeholder="ACCESS CODE" inputmode="numeric" pattern="[0-9]*">
+            <div class="flex flex-col gap-6 items-center">
+                <button onclick="checkAdminNew()" class="login-action-btn">VERIFY</button>
+                <button onclick="hideAdminLogin()" style="color:rgba(255,255,255,0.3); font-size: 11px; letter-spacing: 2px;">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="askDialog" class="cal-modal-overlay hidden">
+        <div class="cal-modal-content">
+            <textarea id="serviceInput" placeholder="欲預約項目（例如：美甲指定款A+卸甲）" rows="3" class="w-full bg-black/10 border border-gray-500 rounded-lg p-3 text-sm outline-none mb-4 text-[#333] dark:text-white"></textarea>
+            <div id="selectedTimesPreview" class="text-xs opacity-60 mb-6 bg-white/5 p-4 rounded-lg text-left"></div>
+            <button onclick="copyToLine()" class="copy-btn">複製文字並前往 LINE 貼上</button>
+            <button onclick="document.getElementById('askDialog').classList.add('hidden')" class="mt-4 text-xs opacity-50">返回修改</button>
+        </div>
+    </div>
+
+    <div id="editTimeModal" class="cal-modal-overlay hidden">
+        <div class="cal-modal-content">
+            <h3 id="editTitle" class="mb-6 font-bold text-lg">編輯時段</h3>
+            <div id="timeChips" class="grid grid-cols-3 gap-2 mb-6"></div>
+            <div class="flex gap-2 mb-6">
+                <select id="hSel" class="bg-gray-100 text-black p-2 rounded w-1/2"></select>
+                <select id="mSel" class="bg-gray-100 text-black p-2 rounded w-1/2"><option value="00">00</option><option value="30">30</option></select>
+                <button onclick="addCustomTime()" class="bg-[var(--gold-main)] text-white px-4 rounded">+</button>
+            </div>
+            <button onclick="closeEditModal()" class="w-full py-3 border border-[var(--gold-main)] text-[var(--gold-main)] font-bold rounded-lg">完成</button>
+        </div>
+    </div>
+</div>
+
+<div id="overlay" onclick="toggleSheet('bottomSheet', false)" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;"></div>
+<div id="bottomSheet" style="position: fixed; bottom: 0; left: 0; width: 100%; background: #ffffff; border-radius: 20px 20px 0 0; padding: 20px; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); transform: translateY(100%); transition: transform 0.3s ease-out; z-index: 2001; max-height: 80vh; overflow-y: auto;">
+    <div style="width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; margin: 0 auto 15px;"></div>
+    <h3 style="font-size: 16px; font-weight: 700; color: #1a3a2e; margin-bottom: 15px; text-align: center;">費用明細</h3>
+    <div id="billContent" class="space-y-2"></div>
+    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 14px; font-weight: 700; color: #1a3a2e;">總計</span>
+        <span style="font-size: 20px; font-weight: 800; color: #1a3a2e;">$<span id="sheetTotal">0</span></span>
+    </div>
+    <button onclick="copyBill()" style="width: 100%; background: #1a3a2e; color: white; padding: 12px; border-radius: 12px; font-weight: 700; margin-top: 15px;">複製明細</button>
+</div>
+
+<script>
+    // =========================================================================
+    // 核心資料清洗工具
+    // =========================================================================
+    function safeArray(data) {
+        if (!data) return [];
+        if (Array.isArray(data)) return data.filter(item => item !== null && item !== undefined);
+        if (typeof data === 'object') return Object.values(data);
+        return [];
+    }
+
+    function parsePrice(val) {
+        if (!val) return 0;
+        const num = parseInt(String(val).replace(/[^0-9]/g, '')); 
+        return isNaN(num) ? 0 : num;
+    }
+
+    // --- 1. 資料核心與初始化 ---
+    let rawData = null;
+    try {
+        rawData = JSON.parse(localStorage.getItem('nailServiceData'));
+    } catch (e) {
+        console.error("本地資料讀取失敗，使用預設值");
+    }
+
+    const defaultData = {
+        nail: { main: [{name:"單色凝膠", duration:60, price:700, selectedForCalc:true}], addon: [], model: [] },
+        eyelash: { main: [], addon: [], model: [] },
+        skin: { main: [], addon: [] }
+    };
+
+    let serviceData = rawData || JSON.parse(JSON.stringify(defaultData));
+    let editStates = { nail: false, eyelash: false, skin: false };
+    let currentMode = 'regular';
+    let selectedBasePrice = 0, selectedBaseName = "", currentRemovalPrice = 0;
+    
+    // 行事曆變數
+    const DEFAULTS_TIMES = ["10:00", "13:00", "16:00", "19:00"];
+    let bookingState = {
+        viewDate: new Date(),
+        isAskMode: false,
+        selectedTimes: [],
+        data: { openMonths: [], bookings: {} }, 
+        editingKey: '' 
+    };
+
+    // 計算機 Config
+    const calcUIConfigs = {
+        regular: {
+            designItems: ["貓眼", "跳色", "漸層", "鏡面", "暈染", "法式", "手繪", "立體", "鑽飾", "貼紙", "延甲", "補甲"],
+            fixedAdd: [{name: "基礎保養", price: 500},{name: "深層保養", price: 800},{name: "全延甲", price: 500}],
+            defaultDesignPrice: 25,
+            removalOptions: [{n: "無", p: 0}, {n: "本店卸甲", p: 200}, {n: "他店卸甲", p: 300}],
+            specialRemoval: [{ id: 'bigDiamond', name: '大鑽', defaultPrice: 20 }, { id: '3d', name: '立體', defaultPrice: 20 }]
+        },
+        model: {
+            designItems: ["貓眼", "跳色", "漸層", "鏡面", "暈染", "法式", "手繪", "立體", "鑽飾", "貼紙", "補甲"],
+            fixedAdd: [],
+            defaultDesignPrice: 15,
+            removalOptions: [{n: "無", p: 0}, {n: "卸甲", p: 100}],
+            specialRemoval: [{ id: 'bigDiamond', name: '大鑽', defaultPrice: 10 }, { id: '3d', name: '立體', defaultPrice: 10 }, { id: 'ext', name: '延甲', defaultPrice: 10 }]
+        }
+    };
+
+    // --- Firebase Sync Functions ---
+    function syncServiceData() {
+        if (window.dbOnValue && window.dbRef) {
+            window.dbOnValue(window.dbRef(window.firebaseDB, 'meawMeData'), (snapshot) => {
+                const val = snapshot.val();
+                if (val) {
+                    let cleanData = val;
+                    ['nail', 'eyelash', 'skin'].forEach(cat => {
+                        if (!cleanData[cat]) cleanData[cat] = { main: [], addon: [], model: [] };
+                        ['main', 'addon', 'model'].forEach(type => {
+                            cleanData[cat][type] = safeArray(cleanData[cat][type]);
+                        });
+                    });
+                    serviceData = cleanData;
+                } else {
+                      ['nail', 'eyelash', 'skin'].forEach(cat => {
+                        if (!serviceData[cat]) serviceData[cat] = { main: [], addon: [], model: [] };
+                    });
+                }
+                try { renderServiceFront(); } catch(e) { console.error("Front render fail", e); }
+                try { renderAdminList(); } catch(e) { console.error("Admin render fail", e); }
+                try { initCalc(); } catch(e) { console.error("Calc init fail", e); }
+            });
+        }
+    }
+
+    function syncBookingData() {
+        if (window.dbOnValue && window.dbRef) {
+            window.dbOnValue(window.dbRef(window.firebaseDB, 'meawMeBooking'), (snapshot) => {
+                const val = snapshot.val();
+                if (val) {
+                    bookingState.data = val;
+                    if (!bookingState.data.openMonths) bookingState.data.openMonths = [];
+                    if (!bookingState.data.bookings) bookingState.data.bookings = {};
+                }
+                renderCalendar();
+            });
+        }
+    }
+
+    function saveBookingData() {
+        if (window.dbSet && window.dbRef) {
+            window.dbSet(window.dbRef(window.firebaseDB, 'meawMeBooking'), bookingState.data);
+        }
+        renderCalendar();
+    }
+
+    // --- Render Functions ---
+    function renderServiceFront() {
+        const categories = ['nail', 'eyelash', 'skin'];
+        categories.forEach(cat => {
+            const categoryData = serviceData[cat] || { main: [], addon: [], model: [] };
+            const mainItems = safeArray(categoryData.main);
+            const addonItems = safeArray(categoryData.addon);
+            const modelItems = safeArray(categoryData.model);
+
+            const mainTable = document.querySelector(`#page-${cat} .price-table:first-of-type`);
+            if (mainTable) {
+                let html = "";
+                if (cat === 'nail') {
+                    html = `<tr><th style="text-align:left;">項目名稱</th><th class="price-value">價格</th></tr>`;
+                    mainItems.forEach(item => {
+                        html += `<tr><td>${item.name}</td><td class="price-value">$${item.price}</td></tr>`;
+                    });
+                } else {
+                    const h1 = cat === 'eyelash' ? '自然款' : '原價';
+                    const h2 = cat === 'eyelash' ? '濃密款' : '體驗價';
+                    html = `<tr><th style="text-align:left;">服務項目</th><th class="price-value">${h1}</th><th class="price-value">${h2}</th></tr>`;
+                    mainItems.forEach(item => {
+                        let p2 = (item.price2 && item.price2.toString().trim()) ? `$${item.price2}` : '-';
+                        let note = (item.note1 || item.note2) ? `<div class="text-[10px] opacity-60">${item.note1||''} ${item.note2||''}</div>` : "";
+                        html += `<tr><td><div class="font-bold">${item.name}</div>${note}</td><td class="price-value">$${item.price}</td><td class="price-value">${p2}</td></tr>`;
+                    });
+                }
+                mainTable.innerHTML = mainItems.length ? html : `<tr><td colspan="3" class="text-center opacity-30">暫無項目</td></tr>`;
+            }
+
+            const dropdowns = document.querySelectorAll(`#page-${cat} .dropdown-container`);
+            dropdowns.forEach(dropdown => {
+                if (dropdown.textContent.includes("加購")) {
+                    const content = dropdown.querySelector('.dropdown-content');
+                    let h = `<table class="price-table" style="width:100%">`;
+                    addonItems.forEach(i => {
+                        h += `<tr><td style="border-bottom:1px solid rgba(201,184,150,0.1);">${i.name}</td><td class="price-value">$${i.price}</td></tr>`;
+                    });
+                    h += `</table>`;
+                    if(content) content.innerHTML = addonItems.length ? h : `<div class="text-center opacity-30 p-4">暫無加購項目</div>`;
+                }
+            });
+
+            if (cat === 'eyelash') {
+                const mgmt = document.getElementById('front-eyelash-management');
+                if (mgmt) {
+                    mgmt.innerHTML = `<table class="price-table">` + modelItems.map(i=>`<tr><td>${i.name}</td><td class="price-value">$${i.price}</td></tr>`).join('') + `</table>`;
+                }
+            }
+        });
+        initCalc();
+    }
+
+    function renderAdminList() {
+        const categories = ['nail', 'eyelash', 'skin'];
+        categories.forEach(cat => {
+            if (!serviceData[cat]) return;
+            ['main', 'addon', 'model'].forEach(type => {
+                const listContainer = document.getElementById(`list-${cat}-${type}`);
+                const addContainer = document.getElementById(`add-${cat}-${type}`);
+                if (!listContainer) return;
+                const items = safeArray(serviceData[cat][type]);
+                const isEditing = editStates[cat]; 
+
+                listContainer.innerHTML = items.map((item, index) => {
+                    if (!item) return '';
+                    
+                    if (isEditing) {
+                        const showCalcCheck = (cat === 'nail' && (type === 'main' || type === 'model'));
+                        const checkHtml = showCalcCheck ? 
+                            `<div class="flex flex-col items-center ml-2 cursor-pointer" onclick="toggleCalcOption('${cat}', '${type}', ${index})">
+                                <span class="text-[9px] text-[var(--gold-main)] mb-1">計算機</span>
+                                <div class="check-toggle ${item.selectedForCalc ? 'active' : ''}">✔</div>
+                             </div>` : '';
+                        const showPrice2 = (type === 'main' && cat !== 'nail');
+
+                        return `
+                        <div class="admin-item-row">
+                            <div class="drag-handle text-[var(--gold-main)] mr-2">☰</div>
+                            <div class="info">
+                                <label class="text-[9px] opacity-50 block">項目名稱</label>
+                                <input type="text" class="edit-input w-full font-bold mb-2" value="${item.name||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'name', this.value)">
+                                <div class="flex gap-2">
+                                    <div class="flex-1">
+                                        <label class="text-[9px] opacity-50 block">價格 (可填符號)</label>
+                                        <input type="text" class="edit-input w-full" value="${item.price||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price', this.value)">
+                                    </div>
+                                    ${showPrice2 ? `
+                                    <div class="flex-1">
+                                        <label class="text-[9px] opacity-50 block">體驗/濃密</label>
+                                        <input type="text" class="edit-input w-full" value="${item.price2 || ''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price2', this.value)">
+                                    </div>` : ''}
+                                    </div> 
+                            </div> 
+                            ${checkHtml}
+                            <button onclick="deleteService('${cat}', '${type}', ${index})" class="ml-2 text-red-400 text-xs border border-red-400 px-2 py-4 rounded hover:bg-red-400 hover:text-white transition-all">刪除</button>
+                        </div>`;
+                    } else {
+                        const calcBadge = item.selectedForCalc ? '<span class="text-[8px] bg-[#1a4731] text-[#c9b896] px-1 rounded ml-1">計</span>' : '';
+                        const p2Display = item.price2 ? ` / $${item.price2}` : '';
+                        return `
+                        <div class="admin-item-row">
+                            <div class="info">
+                                <div class="name flex items-center">${item.name||'(無名稱)'} ${calcBadge}</div>
+                            </div>
+                            <div class="price">$${item.price||0}${p2Display}</div>
+                        </div>`;
+                    }
+                }).join('');
+
+                if (addContainer) {
+                    addContainer.innerHTML = isEditing ? 
+                        `<button onclick="addNewBlankItem('${cat}', '${type}')" class="w-full py-3 border-2 border-dashed border-[#c9b896] text-[#c9b896] rounded-xl text-sm font-bold opacity-60 hover:opacity-100 transition-all my-2">+ 新增項目</button>` 
+                        : '';
+                }
+            });
+        });
+    }
+
+    // --- Admin Logic ---
+    function toggleEditMode(cat) {
+        editStates[cat] = !editStates[cat];
+        const btn = document.getElementById(`btn-set-${cat}`);
+        if(btn) {
+            if(editStates[cat]) {
+                btn.innerHTML = "💾 儲存並發佈";
+                btn.classList.add('editing');
+            } else {
+                btn.innerHTML = "⚙️ 設置系統";
+                btn.classList.remove('editing');
+                saveAndSync();
+            }
+        }
+        renderAdminList();
+    }
+
+    function addNewBlankItem(cat, type) {
+        if(!serviceData[cat][type]) serviceData[cat][type] = [];
+        serviceData[cat][type].push({ name: "新項目", price: 0, selectedForCalc: false });
+        renderAdminList();
+    }
+    
+    function updateItemValue(cat, type, index, field, value) {
+        if (field === 'duration' || field === 'price' && !isNaN(value)) value = parseInt(value) || 0;
+        serviceData[cat][type][index][field] = value;
+    }
+    
+    function deleteService(cat, type, index) {
+        if(confirm("確定刪除？")) { 
+            serviceData[cat][type].splice(index, 1); 
+            serviceData[cat][type] = safeArray(serviceData[cat][type]);
+            renderAdminList(); 
+        }
+    }
+    
+    function toggleCalcOption(cat, type, index) {
+        serviceData[cat][type][index].selectedForCalc = !serviceData[cat][type][index].selectedForCalc;
+        renderAdminList();
+        saveAndSync();
+    }
+
+    function saveAndSync() {
+        if (window.dbSet && window.dbRef) {
+            let cleanData = JSON.parse(JSON.stringify(serviceData));
+            ['nail', 'eyelash', 'skin'].forEach(cat => {
+                ['main', 'addon', 'model'].forEach(type => {
+                    cleanData[cat][type] = safeArray(cleanData[cat][type]);
+                });
+            });
+            window.dbSet(window.dbRef(window.firebaseDB, 'meawMeData'), cleanData);
+        }
+        renderServiceFront();
+        renderAdminList();
+        initCalc();
+    }
+
+    // --- Calculator Logic ---
+    function initCalc() { 
+        if(!serviceData.nail) return;
+
+        const config = calcUIConfigs[currentMode];
+        const mainItems = safeArray(serviceData.nail.main);
+        const modelItems = safeArray(serviceData.nail.model);
+        
+        const dataSource = currentMode === 'regular' ? mainItems : modelItems;
+        const activeBases = dataSource.filter(i => i && i.selectedForCalc);
+        
+        const baseContainer = document.getElementById('basePriceOptions');
+        if (baseContainer) {
+            if (activeBases.length > 0) {
+                baseContainer.innerHTML = activeBases.map(i => `
+                    <button onclick="setBasePrice('${i.price}', '${i.name}', this)" class="base-btn py-1.5 option-btn">
+                        <div>${i.name}</div><div class="opacity-60 text-[8px]">$${i.price}</div>
+                    </button>
+                `).join('');
+            } else {
+                baseContainer.innerHTML = `<div class="col-span-2 text-center opacity-40 text-xs py-2">後台未設定項目</div>`;
+            }
+        }
+
+        document.getElementById('designSelectionGrid').innerHTML = config.designItems.map(n => 
+            `<button onclick="addDesignItem('${n}')" class="option-btn text-[10px] font-bold !rounded-full py-1">${n}</button>`
+        ).join('');
+
+        const addOnsList = document.getElementById('addOnsList');
+        if (config.fixedAdd && config.fixedAdd.length > 0) {
+            document.getElementById('section-addons').style.display = 'block';
+            addOnsList.innerHTML = config.fixedAdd.map(i => `
+                <div onclick="toggleAddon(this)" class="addon-card">
+                    <span class="addon-name text-[9px] font-bold">${i.name}</span>
+                    <span class="addon-price text-[8px]">$${i.price}</span>
+                </div>`).join('');
+        } else { 
+            document.getElementById('section-addons').style.display = 'none'; 
+        }
+
+        document.getElementById('specialRemovalList').innerHTML = config.specialRemoval.map(item => `
+            <div class="flex justify-between items-center"><span class="text-[10px] font-bold text-gray-400">${item.name}</span>
+            <div class="flex items-center gap-3">
+                <input type="number" id="price_${item.id}" class="k-input-readonly" value="${item.defaultPrice}" readonly>
+                <div class="flex items-center gap-2.5 bg-gray-50 p-1 px-2 rounded-full">
+                    <button onclick="changeStep('val_${item.id}', -1)" class="stepper-btn">-</button>
+                    <span id="val_${item.id}" class="font-bold text-[10px] w-4 text-center">0</span>
+                    <button onclick="changeStep('val_${item.id}', 1)" class="stepper-btn">+</button>
+                </div>
+            </div></div>`).join('');
+
+        document.getElementById('removalButtons').innerHTML = config.removalOptions.map((opt, idx) => `
+            <button onclick="setRemoval(${opt.p}, this)" class="removal-btn flex-1 py-1 option-btn">
+                <div class="text-[10px]">${opt.n}</div>
+                <div class="text-[9px] opacity-60">$${opt.p}</div>
+            </button>`).join('');
+
+        document.getElementById('designList').innerHTML = '';
+        calculate(); 
+    }
+
+    function setBasePrice(p, n, btn) { 
+        selectedBasePrice = p; selectedBaseName = n; 
+        document.querySelectorAll('.base-btn').forEach(b => b.classList.remove('active')); 
+        if(btn) btn.classList.add('active'); 
+        calculate(); 
+    }
+
+    function setRemoval(p, btn) { 
+        currentRemovalPrice = p; 
+        document.querySelectorAll('.removal-btn').forEach(b => b.classList.remove('active')); 
+        if(btn) btn.classList.add('active'); 
+        calculate(); 
+    }
+
+    function toggleAddon(el) { el.classList.toggle('selected'); calculate(); }
+    
+    function changeStep(id, delta) { 
+        const el = document.getElementById(id); 
+        if(el) {
+            el.innerText = Math.max(0, parseInt(el.innerText) + delta); 
+            calculate(); 
+        }
+    }
+
+    function addDesignItem(name) {
+        const id = 'd_' + Date.now();
+        const config = calcUIConfigs[currentMode];
+        const html = `
+            <div id="${id}" class="design-row">
+                <span class="font-bold text-[10px] text-gray-500 truncate bg-[#f5f2ee]/50 px-2 py-0.5 rounded-full">${name}</span>
+                <input type="number" class="price-input k-input !py-0.5 !text-center !text-[11px] font-bold" value="${config.defaultDesignPrice}" oninput="calculate()">
+                <div class="flex items-center justify-between bg-[#f5f2ee]/80 rounded-full px-2 py-0.5">
+                    <button onclick="changeQty('${id}', -1)" class="text-[#2d4639] font-bold text-[12px] w-4">-</button>
+                    <span class="qty font-bold text-[11px] w-4 text-center">1</span>
+                    <button onclick="changeQty('${id}', 1)" class="text-[#2d4639] font-bold text-[12px] w-4">+</button>
+                </div>
+                <button onclick="this.parentElement.remove();calculate()" class="text-gray-300 text-[12px] font-bold">✕</button>
+            </div>`;
+        document.getElementById('designList').insertAdjacentHTML('beforeend', html);
+        calculate();
+    }
+
+    function changeQty(id, delta) { 
+        const el = document.querySelector(`#${id} .qty`); 
+        if(el) {
+            el.innerText = Math.max(1, parseInt(el.innerText) + delta); 
+            calculate(); 
+        }
+    }
+
+    function switchMode(mode) {
+        currentMode = mode;
+        document.getElementById('tab-regular').className = mode === 'regular' ? 'flex-1 py-1.5 text-[10px] rounded-full transition-all tab-active font-bold' : 'flex-1 py-1.5 text-[10px] rounded-full transition-all text-gray-400 font-bold';
+        document.getElementById('tab-model').className = mode === 'model' ? 'flex-1 py-1.5 text-[10px] rounded-full transition-all tab-active font-bold' : 'flex-1 py-1.5 text-[10px] rounded-full transition-all text-gray-400 font-bold';
+        
+        selectedBasePrice = 0;
+        selectedBaseName = "";
+        currentRemovalPrice = 0;
+        document.getElementById('adjAmount').value = '';
+        initCalc();
+    }
+
+    function calculate() {
+        let total = 0;
+        let items = []; 
+        
+        // [修改] 解析價格時，移除所有非數字字符
+        const parsePrice = (val) => {
+            if(!val) return 0;
+            const str = String(val).replace(/[^0-9]/g, ''); // 只留數字
+            return parseInt(str) || 0;
+        };
+
+        let base = parsePrice(selectedBasePrice);
+        total += base;
+        if (base > 0 || selectedBaseName) {
+            // 顯示時保留原始字串 (含符號)
+            let displayPrice = String(selectedBasePrice).includes('$') ? selectedBasePrice : `$${selectedBasePrice}`;
+            items.push({ n: selectedBaseName || '基本款式', display: displayPrice });
+        }
+
+        document.querySelectorAll('#designList > div').forEach(row => {
+            const name = row.querySelector('span').innerText;
+            const qty = parseInt(row.querySelector('.qty').innerText) || 1;
+            const price = parsePrice(row.querySelector('.price-input').value); // 使用新的解析函數
+            const subtotal = qty * price;
+            total += subtotal;
+            items.push({ n: `✨ ${name} (${qty}指)`, display: `$${subtotal}` });
+        });
+
+        document.querySelectorAll('.addon-card.selected').forEach(card => {
+            const name = card.querySelector('.addon-name').innerText;
+            const price = parsePrice(card.querySelector('.addon-price').innerText);
+            total += price;
+            items.push({ n: `➕ ${name}`, display: `$${price}` });
+        });
+
+        const remPrice = parsePrice(currentRemovalPrice);
+        if (remPrice > 0) {
+            total += remPrice;
+            items.push({ n: `🧼 卸甲服務`, display: `$${remPrice}` });
+        }
+
+        calcUIConfigs[currentMode].specialRemoval.forEach(item => {
+            const count = parseInt(document.getElementById('val_' + item.id)?.innerText || 0);
+            const price = parsePrice(document.getElementById('price_' + item.id)?.value);
+            if (count > 0) {
+                const subtotal = count * price;
+                total += subtotal;
+                items.push({ n: `💎 ${item.name}卸除 (${count}指)`, display: `$${subtotal}` });
+            }
+        });
+
+        const adj = parseInt(document.getElementById('adjAmount').value) || 0;
+        if (adj !== 0) {
+            total += adj;
+            items.push({ n: adj > 0 ? '⚙️ 額外加價' : '🎁 優惠折扣', display: `$${adj}` });
+        }
+
+        document.getElementById('totalDisplay').innerText = total.toLocaleString();
+        const sheetTotal = document.getElementById('sheetTotal');
+        if(sheetTotal) sheetTotal.innerText = total.toLocaleString();
+
+        const billContent = document.getElementById('billContent');
+        if(billContent) {
+            billContent.innerHTML = items.map(i => `
+                <div class="flex justify-between border-b border-gray-50 py-3">
+                    <span class="text-gray-500">${i.n}</span>
+                    <b class="text-[#2d4639]">${i.display}</b>
+                </div>
+            `).join('');
+        }
+    }
+
+    function copyBill() {
+        const mode = currentMode === 'regular' ? '一般顧客' : '手模專區';
+        calculate(); 
+        const rows = document.querySelectorAll('#billContent > div');
+        if(rows.length === 0) return alert("目前沒有項目");
+
+        const itemsText = Array.from(rows).map(row => `${row.querySelector('span').innerText}：${row.querySelector('b').innerText}`).join('\n');
+        const total = document.getElementById('totalDisplay').innerText;
+        const text = `【 繆米美學 𝑴𝑬𝑨𝑾 𝑴𝑬 𝑩𝑬𝑨𝑼𝑻𝒀 】\n服務類型：${mode}\n\n結帳明細：\n------------------------\n${itemsText}\n------------------------\n總計金額：$${total}\n\n感謝您的預約 ✨`;
+        
+        navigator.clipboard.writeText(text).then(() => { 
+            const btn = document.getElementById('copyBtn'); 
+            btn.innerText = "COPIED"; 
+            setTimeout(() => btn.innerText = "複製", 2000); 
+        }).catch(err => {
+            alert("複製失敗，請手動截圖");
+        });
+    }
+
+    function resetCalculator() { 
+        if (confirm('要清除嗎？')) { 
+            document.getElementById('adjAmount').value = ''; 
+            initCalc(); 
+        } 
+    }
+    
+    function toggleSheet(id, s) { 
+        const sheet = document.getElementById(id);
+        const overlay = document.getElementById('overlay'); 
+        if(sheet) sheet.style.transform = s ? 'translateY(0)' : 'translateY(100%)'; 
+        if(overlay) overlay.style.display = s ? 'block' : 'none'; 
+    }
+
+    // --- Calendar System Logic ---
+    function initCalendarTimeSelect() {
+        const h = document.getElementById('hSel');
+        for(let i=9; i<=22; i++) h.innerHTML += `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
+    }
+
+    function renderCalendar() {
+        const isUserPage = document.getElementById('page-booking').classList.contains('active');
+        const isAdminPage = document.getElementById('page-budget').classList.contains('active');
+        let targetGridId = isUserPage ? 'booking-calendar-grid' : 'admin-calendar-grid';
+        let targetDisplayId = isUserPage ? 'booking-month-display' : 'admin-month-display';
+        if (!isUserPage && !isAdminPage) return; 
+
+        const y = bookingState.viewDate.getFullYear();
+        const m = bookingState.viewDate.getMonth();
+        const mKey = `${y}-${m}`;
+        const isOpened = (bookingState.data.openMonths || []).includes(mKey);
+        
+        const holidayMap = window.getTaiwanHolidays(); 
+
+        document.getElementById(targetDisplayId).textContent = `${y} / ${String(m+1).padStart(2,'0')}`;
+
+        if (isAdminPage) {
+            const btn = document.getElementById('admin-month-status-btn');
+            btn.textContent = isOpened ? "● 開放預約中 (點擊關閉)" : "○ 關閉中 (點擊開放)";
+            btn.style.opacity = isOpened ? "1" : "0.5";
+        }
+
+        const overlayContainer = document.getElementById('calendar-overlay-msg');
+        const grid = document.getElementById(targetGridId);
+
+        if (isUserPage && overlayContainer) {
+            const askBtn = document.getElementById('askBtn');
+            const now = new Date();
+            const currentY = now.getFullYear();
+            const currentM = now.getMonth();
+            const isPast = (y < currentY) || (y === currentY && m < currentM);
+
+            if (isPast) {
+                overlayContainer.classList.remove('hidden');
+                document.getElementById('overlay-title').innerText = "當月預約已滿";
+                document.getElementById('overlay-desc').innerText = "感謝大家的支持！";
+                askBtn.classList.add('hidden');
+                grid.classList.add('blur-target'); 
+            } else if (!isOpened) {
+                overlayContainer.classList.remove('hidden');
+                document.getElementById('overlay-title').innerText = "當月預約尚未開放";
+                document.getElementById('overlay-desc').innerHTML = "＊每月20號開放下月預約<br>實際依照官方LINE公告為主";
+                askBtn.classList.add('hidden');
+                grid.classList.add('blur-target');
+            } else {
+                overlayContainer.classList.add('hidden');
+                askBtn.classList.remove('hidden');
+                grid.classList.remove('blur-target');
+            }
+
+            if (bookingState.isAskMode) grid.classList.add('ask-mode'); else grid.classList.remove('ask-mode');
+        }
+
+        grid.innerHTML = '';
+
+        const offset = (new Date(y, m, 1).getDay() || 7) - 1;
+        const lastDate = new Date(y, m + 1, 0).getDate();
+        const todayNum = new Date().setHours(0,0,0,0);
+
+        for(let i=0; i<offset; i++) grid.innerHTML += `<div></div>`;
+
+        for(let d=1; d<=lastDate; d++) {
+            const key = `${y}-${m}-${d}`;
+            const dateObj = new Date(y, m, d);
+            const isSun = dateObj.getDay() === 0;
+            const isSat = dateObj.getDay() === 6; // [新增] 判斷週六
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isHoliday = !!holidayMap[dateStr];
+            
+            const isPastDay = dateObj.getTime() < todayNum;
+            const slots = bookingState.data.bookings[key] || [];
+
+            // 背景邏輯：週日維持淡紅底 (若週六也要淡紅底，可在此加入 || isSat)
+            const div = document.createElement('div');
+            div.className = `day-box ${isSun ? 'sunday-bg' : ''}`;
+            if (isPastDay && isUserPage) div.classList.add('past-day');
+
+            // [修改] 紅字邏輯：週日 OR 週六 OR 國定假日
+            let dateClass = "font-bold text-[12px] ";
+            if (isSun || isSat || isHoliday) {
+                dateClass += "text-[#ff6b6b]";
+            }
+
+            let html = `<div class="flex justify-between px-1"><span class="${dateClass}">${d}</span></div>`;
+
+            if (isSun) {
+                html += `<div class="text-red-400 text-[10px] text-center font-bold mt-2">公休</div>`;
+            } else {
+                if (slots.length === 0) {
+                     html += `<div class="text-[10px] text-center opacity-40 mt-2">約滿</div>`;
+                } else {
+                    slots.sort().forEach(t => {
+                        const labelId = `${m+1}/${d} ${t}`;
+                        const isSelected = bookingState.selectedTimes.includes(labelId);
+                        const clickAttr = isUserPage ? `onclick="toggleTimeSelection('${labelId}')"` : '';
+                        html += `<div class="time-label ${isSelected ? 'selected' : ''}" ${clickAttr}>${t}</div>`;
+                    });
+                }
+            }
+
+            if (isAdminPage) {
+                html += `
+                <div class="admin-day-controls">
+                    <div class="tiny-btn" onclick="toggleDaySlots('${key}')">${slots.length>0?'全關':'預設'}</div>
+                    <div class="tiny-btn edit" onclick="openTimeEditor('${key}', ${d})">編輯</div>
+                </div>`;
+            }
+
+            div.innerHTML = html;
+            grid.appendChild(div);
+        }
+    }
+
+    function changeBookingMonth(dir) {
+        bookingState.viewDate.setMonth(bookingState.viewDate.getMonth() + dir);
+        renderCalendar();
+    }
+
+    function toggleMonthStatus() {
+        const y = bookingState.viewDate.getFullYear();
+        const m = bookingState.viewDate.getMonth();
+        const mKey = `${y}-${m}`;
+        const idx = bookingState.data.openMonths.indexOf(mKey);
+        
+        if (idx > -1) {
+            bookingState.data.openMonths.splice(idx, 1);
+        } else {
+            bookingState.data.openMonths.push(mKey);
+            const lastDate = new Date(y, m + 1, 0).getDate();
+            for(let d=1; d<=lastDate; d++) {
+                const day = new Date(y, m, d).getDay();
+                const key = `${y}-${m}-${d}`;
+                if (day !== 0 && (!bookingState.data.bookings[key] || bookingState.data.bookings[key].length === 0)) {
+                      if (!bookingState.data.bookings[key]) bookingState.data.bookings[key] = [...DEFAULTS_TIMES];
+                }
+            }
+        }
+        saveBookingData();
+    }
+
+    function toggleDaySlots(key) {
+        if (bookingState.data.bookings[key] && bookingState.data.bookings[key].length > 0) {
+            bookingState.data.bookings[key] = [];
+        } else {
+            bookingState.data.bookings[key] = [...DEFAULTS_TIMES];
+        }
+        saveBookingData();
+    }
+
+    function openTimeEditor(key, d) {
+        bookingState.editingKey = key;
+        document.getElementById('editTitle').textContent = `編輯 ${key} 時段`;
+        document.getElementById('editTimeModal').classList.remove('hidden');
+        renderTimeChips();
+    }
+
+    function renderTimeChips() {
+        const container = document.getElementById('timeChips');
+        container.innerHTML = '';
+        const currentSlots = bookingState.data.bookings[bookingState.editingKey] || [];
+        const allTimes = [...new Set([...DEFAULTS_TIMES, ...currentSlots])].sort();
+
+        allTimes.forEach(t => {
+            const isActive = currentSlots.includes(t);
+            const btn = document.createElement('button');
+            btn.className = `p-2 text-xs rounded border ${isActive ? 'bg-[#c9b896] text-white border-[#c9b896]' : 'border-gray-300 text-gray-400'}`;
+            btn.textContent = t;
+            btn.onclick = () => {
+                if (isActive) {
+                    bookingState.data.bookings[bookingState.editingKey] = currentSlots.filter(x => x !== t);
+                } else {
+                    if (!bookingState.data.bookings[bookingState.editingKey]) bookingState.data.bookings[bookingState.editingKey] = [];
+                    bookingState.data.bookings[bookingState.editingKey].push(t);
+                }
+                saveBookingData();
+                renderTimeChips(); 
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function addCustomTime() {
+        const t = `${document.getElementById('hSel').value}:${document.getElementById('mSel').value}`;
+        if (!bookingState.data.bookings[bookingState.editingKey]) bookingState.data.bookings[bookingState.editingKey] = [];
+        if (!bookingState.data.bookings[bookingState.editingKey].includes(t)) {
+            bookingState.data.bookings[bookingState.editingKey].push(t);
+            saveBookingData();
+            renderTimeChips();
+        }
+    }
+
+    function closeEditModal() {
+        document.getElementById('editTimeModal').classList.add('hidden');
+        renderCalendar();
+    }
+
+    function toggleAskMode() {
+        bookingState.isAskMode = !bookingState.isAskMode;
+        bookingState.selectedTimes = [];
+        const btn = document.getElementById('askBtn');
+        const confirmBtn = document.getElementById('confirmSelectionBtn');
+        
+        if (bookingState.isAskMode) {
+            btn.textContent = "取消選取";
+            confirmBtn.style.display = "inline-block";
+        } else {
+            btn.textContent = "詢問時段";
+            confirmBtn.style.display = "none";
+        }
+        renderCalendar();
+    }
+
+    function toggleTimeSelection(label) {
+        if (!bookingState.isAskMode) return;
+        const idx = bookingState.selectedTimes.indexOf(label);
+        if (idx > -1) {
+            bookingState.selectedTimes.splice(idx, 1);
+        } else {
+            if (bookingState.selectedTimes.length >= 3) {
+                alert("最多選擇 3 個時段");
+                return;
+            }
+            bookingState.selectedTimes.push(label);
+        }
+        renderCalendar();
+    }
+
+    function openAskDialog() {
+        if (bookingState.selectedTimes.length === 0) return alert("請先選擇時段");
+        document.getElementById('selectedTimesPreview').textContent = "您選取的時段：\n" + bookingState.selectedTimes.join('\n');
+        document.getElementById('askDialog').classList.remove('hidden');
+    }
+
+    function copyToLine() {
+        const item = document.getElementById('serviceInput').value || "(未填寫)";
+        const text = `您好，我想詢問預約：\n項目：${item}\n偏好時段：${bookingState.selectedTimes.join('、')}\n再麻煩幫我確認，謝謝！`;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("已複製！將跳轉至 LINE");
+            location.href = "https://lin.ee/kv6nqyW";
+        });
+    }
+
+    function toggleDropdown(header) {
+        const container = header.parentElement;
+        container.classList.toggle('open');
+    }
+
+    function showAdminLogin() { document.getElementById('admin-login-overlay').classList.add('active'); }
+    function hideAdminLogin() { document.getElementById('admin-login-overlay').classList.remove('active'); document.getElementById('admin-pwd').value = ''; }
+
+    // [修改] 登入成功後，透過 Hash 跳轉
+    function checkAdminNew() {
+        const pwd = document.getElementById('admin-pwd').value;
+        if (pwd === '2002') { 
+            hideAdminLogin();
+            document.body.classList.add('admin-mode');
+            
+            // 切換 Nav 顯示
+            document.getElementById('nav-guest').classList.add('hidden');
+            document.getElementById('nav-admin').classList.remove('hidden');
+            document.getElementById('nav-admin').classList.add('active-flex');
+            
+            // [修改] 登入後預設進入「財務管理」
+            location.hash = 'admin-finance';
+        } else {
+            alert('密碼錯誤');
+        }
+    }
+
+    // [修正] 匯出空檔邏輯：改為匯出「有時段的日期」 (即有開放的時段)
+    function exportAvailableSlots() {
+        let result = "";
+        const y = bookingState.viewDate.getFullYear();
+        const m = bookingState.viewDate.getMonth();
+        const lastDate = new Date(y, m + 1, 0).getDate();
+        
+        let hasData = false;
+        
+        for(let d=1; d<=lastDate; d++) {
+            const key = `${y}-${m}-${d}`;
+            const slots = bookingState.data.bookings[key] || [];
+            
+            // 只要有設定時段，就匯出
+            if(slots.length > 0) {
+                hasData = true;
+                result += `${m+1}/${d} (${slots.sort().join('、')})\n`;
+            }
+        }
+        
+        if(!hasData) result = "本月無開放時段";
+        
+        const text = `【${m+1}月可預約時段】\n${result}`;
+        
+        navigator.clipboard.writeText(text).then(() => {
+            alert("已複製可預約時段！\n\n" + text);
+        }).catch(err => {
+            alert("複製失敗，請手動複製：\n" + text);
+        });
+    }
+
+    // --- 財務系統核心 V3 ---
+    let financeStore = {
+        viewDate: new Date(),
+        viewMode: 'item', 
+        data: {}, 
+        manualOffDays: []
+    };
+
+    let activeDateStr = "";
+    let editingEntryId = null;
+    let tempItems = [];
+    let currentCat = "nail";
+
+    function syncFinanceV2() {
+        if (window.dbOnValue && window.dbRef) {
+            window.dbOnValue(window.dbRef(window.firebaseDB, 'meawMeFinanceV2'), (snapshot) => {
+                const val = snapshot.val();
+                if(val) {
+                    financeStore.data = val.data || {};
+                    financeStore.manualOffDays = safeArray(val.manualOffDays);
+                    // [新增] 讀取休假備註
+                    financeStore.offDayNotes = val.offDayNotes || {}; 
+                }
+                renderFinancePage();
+            });
+        }
+    }
+
+    function saveFinanceV2() {
+        if (window.dbSet && window.dbRef) {
+            window.dbSet(window.dbRef(window.firebaseDB, 'meawMeFinanceV2'), {
+                data: financeStore.data,
+                manualOffDays: financeStore.manualOffDays,
+                // [新增] 儲存休假備註
+                offDayNotes: financeStore.offDayNotes || {}
+            });
+        }
+        renderFinancePage();
+        if(!document.getElementById('dayDetailModal').classList.contains('hidden')) renderDayDetailList();
+    }
+
+    function saveFinanceV2() {
+        if (window.dbSet && window.dbRef) {
+            window.dbSet(window.dbRef(window.firebaseDB, 'meawMeFinanceV2'), {
+                data: financeStore.data,
+                manualOffDays: financeStore.manualOffDays
+            });
+        }
+        renderFinancePage();
+        if(!document.getElementById('dayDetailModal').classList.contains('hidden')) renderDayDetailList();
+    }
+
+    function renderFinancePage() {
+        const y = financeStore.viewDate.getFullYear();
+        const m = financeStore.viewDate.getMonth();
+        document.getElementById('fin-month-display').textContent = `${y} / ${String(m+1).padStart(2,'0')}`;
+        
+        const grid = document.getElementById('finance-calendar-grid');
+        if(!grid) return;
+        grid.innerHTML = '';
+
+        const firstDay = new Date(y, m, 1).getDay();
+        const offset = (firstDay === 0 ? 6 : firstDay - 1);
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        
+        const holidayMap = window.getTaiwanHolidays(); 
+
+        let totalRev = 0, realRev = 0, count = 0, offDays = 0, realOff = 0;
+
+        for(let i=0; i<offset; i++) grid.innerHTML += `<div></div>`;
+
+        for(let d=1; d<=daysInMonth; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const dayOfWeek = new Date(y, m, d).getDay();
+            
+            const isSun = dayOfWeek === 0;
+            const isSat = dayOfWeek === 6;
+            const holidayName = holidayMap[dateStr];
+            const isManualOff = financeStore.manualOffDays.includes(dateStr);
+            // 取得備註陣列
+            const notes = safeArray(financeStore.offDayNotes ? financeStore.offDayNotes[dateStr] : []);
+            const entries = safeArray(financeStore.data[dateStr]);
+
+            // 統計
+            if (isSun || isSat || holidayName || isManualOff) offDays++; 
+            if ((isSun || isSat || holidayName || isManualOff) && entries.length === 0) realOff++;
+
+            const box = document.createElement('div');
+            const isRedDay = isSun || isSat || holidayName || isManualOff;
+            
+            // --- 右上角狀態文字 ---
+            let labelText = "";
+            if (isManualOff) {
+                labelText = "休"; // 右上角只顯示簡單的"休"
+            } else if (holidayName) {
+                labelText = holidayName;
+            } else if (isSun) {
+                labelText = "公休";
+            }
+
+            // [修改] 置中邏輯：只有在「沒有預約」且「沒有備註」的紅字日子才置中
+            // 只要有寫備註，就會變成列表模式
+            const isCentered = isRedDay && entries.length === 0 && notes.length === 0 && labelText !== "";
+
+            box.className = `fin-day-box ${isRedDay ? 'is-holiday-bg' : ''} ${isCentered ? 'centered-state' : ''}`;
+            box.style.overflow = "hidden"; 
+            box.onclick = () => openDayView(dateStr);
+
+            let contentHtml = "";
+            let dateColor = isRedDay ? 'text-[#ff6b6b]' : 'font-bold';
+            let labelColor = isRedDay ? 'text-[#ff6b6b] font-bold' : 'opacity-30';
+
+            if (isCentered) {
+                // [模式 A] 純粹的假日/公休 (無備註)：置中大字
+                contentHtml = `
+                    <div class="date-corner ${dateColor}">${d}</div>
+                    <div class="center-text ${labelColor}">${labelText}</div>
+                `;
+            } else {
+                // [模式 B] 有行程 或 有備註：列表顯示
+                contentHtml = `
+                    <div class="fin-day-header">
+                        <span class="${dateColor} font-bold">${d}</span>
+                        <span class="${labelColor}">${labelText}</span>
+                    </div>
+                    <div class="flex-1">
+                `;
+                
+                // 1. 先顯示休假備註 (紅色列表)
+                notes.forEach(note => {
+                    contentHtml += `<div class="fin-item is-note">${note}</div>`;
+                });
+
+                // 2. 再顯示預約行程 (一般列表)
+                entries.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
+                    count++;
+                    let p = parsePrice(e.price);
+                    totalRev += p;
+                    realRev += (p - (e.hasDeposit?100:0));
+                    
+                    let itemName = e.items[0] || '項目';
+                    const txt = financeStore.viewMode === 'price' ? `$${e.price}` : itemName;
+                    // 若 viewMode 是 price，加上綠色邊框樣式
+                    const priceClass = financeStore.viewMode === 'price' ? 'is-price-view' : '';
+                    contentHtml += `<div class="fin-item ${priceClass}">${txt}</div>`;
+                });
+                contentHtml += `</div>`;
+            }
+            
+            box.innerHTML = contentHtml;
+            grid.appendChild(box);
+
+            // 週結算
+            if (isSun) {
+                 let wTotal = 0, wReal = 0;
+                 for(let k=0; k<7; k++) {
+                     let pastD = d - k;
+                     if(pastD > 0) {
+                         let pDate = `${y}-${String(m+1).padStart(2,'0')}-${String(pastD).padStart(2,'0')}`;
+                         safeArray(financeStore.data[pDate]).forEach(e => {
+                             let val = parsePrice(e.price);
+                             wTotal += val;
+                             wReal += (val - (e.hasDeposit?100:0));
+                         });
+                     }
+                 }
+                 const row = document.createElement('div');
+                 row.className = 'weekly-row';
+                 row.innerHTML = `<span>📅 本週結算</span> <span>總: $${wTotal.toLocaleString()} / 實: $${wReal.toLocaleString()}</span>`;
+                 grid.appendChild(row);
+            }
+        }
+        
+        document.getElementById('stat-target-off').innerText = offDays;
+        document.getElementById('stat-real-off').innerText = realOff;
+        document.getElementById('stat-count').innerText = count;
+        document.getElementById('stat-avg').innerText = count>0 ? Math.round(totalRev/count) : 0;
+        document.getElementById('stat-month-total').innerText = `$${totalRev.toLocaleString()}`;
+        document.getElementById('stat-month-real').innerText = `$${realRev.toLocaleString()}`;
+    }
+
+    function openDayView(dateStr) {
+        activeDateStr = dateStr;
+        document.getElementById('dayDetailModal').classList.remove('hidden');
+        document.getElementById('dd-title').innerText = `${dateStr} 行程`;
+        renderDayDetailList();
+        updateDayOffButton();
+    }
+
+    function closeDayDetail() { document.getElementById('dayDetailModal').classList.add('hidden'); }
+
+    function renderDayDetailList() {
+        const container = document.getElementById('dd-list');
+        container.innerHTML = '';
+        
+        // 1. 休假備註區塊 (樣式改為：紅字、紅框、淡紅底)
+        const isOff = financeStore.manualOffDays.includes(activeDateStr);
+        if (isOff) {
+            const notes = safeArray(financeStore.offDayNotes ? financeStore.offDayNotes[activeDateStr] : []);
+            
+            // 標題 (紅色)
+            const noteHeader = document.createElement('div');
+            noteHeader.className = "text-xs font-bold mt-2 border-b pb-1 mb-2";
+            noteHeader.style.color = "#ff6b6b"; 
+            noteHeader.style.borderColor = "rgba(255, 107, 107, 0.3)";
+            noteHeader.innerText = "休假原因";
+            container.appendChild(noteHeader);
+
+            // 列表 (每一條都用紅色顯示)
+            notes.forEach((note, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex justify-between items-center p-2 rounded mb-2 border';
+                // 強制套用紅字配色
+                row.style.borderColor = '#ff6b6b';
+                row.style.backgroundColor = 'rgba(255, 107, 107, 0.08)'; 
+                
+                row.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span style="color:#ff6b6b; font-size:12px;">●</span>
+                        <span style="color:#ff6b6b; font-weight:bold; font-size:14px;">${note}</span>
+                    </div>
+                    <button style="color:#ff6b6b;" class="font-bold text-lg px-2 hover:opacity-70" onclick="deleteOffNote(${idx})">✕</button>
+                `;
+                container.appendChild(row);
+            });
+
+            // 新增備註的輸入框
+            const addRow = document.createElement('div');
+            addRow.className = "flex gap-2 mb-4";
+            addRow.innerHTML = `
+                <input type="text" id="new-note-input" placeholder="輸入原因 (如: 進修)" class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm text-gray-700">
+                <button onclick="addOffNote()" class="bg-[#ff6b6b] text-white px-3 py-1 rounded text-xs font-bold shadow">新增</button>
+            `;
+            container.appendChild(addRow);
+        }
+
+        // 2. 預約行程區塊 (保持原本的灰白配色)
+        const entries = safeArray(financeStore.data[activeDateStr]);
+        
+        if(entries.length > 0) {
+            const entryHeader = document.createElement('div');
+            entryHeader.className = "text-xs text-gray-500 mb-2 font-bold mt-2 border-b border-gray-200 pb-1";
+            entryHeader.innerText = "預約行程";
+            container.appendChild(entryHeader);
+
+            entries.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
+                const div = document.createElement('div');
+                // 一般行程維持灰色/深色字
+                div.className = 'flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg mb-2 cursor-pointer hover:bg-gray-100 transition-all';
+                div.onclick = (event) => {
+                    if(event.target.classList.contains('del-btn')) return;
+                    openEditForm(e.id);
+                };
+                div.innerHTML = `
+                    <div class="flex-1">
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-[#1a3a2e] font-extrabold text-xl">${e.time}</span>
+                            <span class="text-gray-500 text-xs font-bold">$${e.price}</span>
+                        </div>
+                        <div class="text-sm text-gray-600 font-medium mt-1">
+                            ${safeArray(e.items).join(' + ')}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
+                        <button class="del-btn text-red-400 font-bold text-lg px-2 py-1 hover:text-red-600 transition-colors" onclick="deleteSingleEntry('${e.id}')">✕</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        } else if (!isOff) {
+            container.innerHTML += `<div class="text-center opacity-40 py-6 text-sm text-gray-500">本日尚無行程</div>`;
+        }
+    }
+
+    // [新增] 新增備註
+    window.addOffNote = function() {
+        const input = document.getElementById('new-note-input');
+        if(!input || !input.value.trim()) return;
+        
+        if (!financeStore.offDayNotes) financeStore.offDayNotes = {};
+        if (!financeStore.offDayNotes[activeDateStr]) financeStore.offDayNotes[activeDateStr] = [];
+        
+        // 轉為陣列處理 (舊資料如果是字串，先轉陣列)
+        let current = financeStore.offDayNotes[activeDateStr];
+        if (typeof current === 'string') current = [current];
+        
+        current.push(input.value.trim());
+        financeStore.offDayNotes[activeDateStr] = current;
+        
+        saveFinanceV2(); // 儲存並刷新
+    };
+
+    // [新增] 刪除備註
+    window.deleteOffNote = function(idx) {
+        if (!financeStore.offDayNotes || !financeStore.offDayNotes[activeDateStr]) return;
+        
+        let current = financeStore.offDayNotes[activeDateStr];
+        if (typeof current === 'string') current = [current]; // 相容舊格式
+        
+        current.splice(idx, 1);
+        
+        if (current.length === 0) {
+            delete financeStore.offDayNotes[activeDateStr];
+        } else {
+            financeStore.offDayNotes[activeDateStr] = current;
+        }
+        saveFinanceV2();
+    };
+
+    // [修改] 移除 updateDayOffButton 中的按鈕生成，因為已經移到列表中了
+    function updateDayOffButton() {
+        const isOff = financeStore.manualOffDays.includes(activeDateStr);
+        const btn = document.getElementById('btn-day-off');
+        if(isOff) {
+            btn.innerHTML = "🔴 取消休假";
+            btn.classList.add('bg-[#ff6b6b]', 'text-white');
+            btn.classList.remove('border-red-400', 'text-[#ff6b6b]');
+            btn.style.border = 'none';
+        } else {
+            btn.innerHTML = "排休";
+            btn.classList.remove('bg-[#ff6b6b]', 'text-white');
+            btn.classList.add('border', 'border-red-400', 'text-red-400');
+            btn.style.background = 'transparent';
+        }
+    }
+
+    // [新增] 單筆刪除功能 (請一併貼在 renderDayDetailList 下方)
+    window.deleteSingleEntry = function(id) {
+        if(!confirm("確定直接刪除此筆預約？")) return;
+        
+        let currentEntries = safeArray(financeStore.data[activeDateStr]);
+        // 過濾掉該 ID
+        financeStore.data[activeDateStr] = currentEntries.filter(e => String(e.id) !== String(id));
+        
+        saveFinanceV2(); // 儲存並刷新畫面
+    };
+
+    function toggleDayOff() {
+        const idx = financeStore.manualOffDays.indexOf(activeDateStr);
+        if (idx > -1) financeStore.manualOffDays.splice(idx, 1);
+        else financeStore.manualOffDays.push(activeDateStr);
+        saveFinanceV2();
+        updateDayOffButton();
+    }
+
+    
+    // [新增] 編輯休假原因
+    window.editOffReason = function() {
+        if (!financeStore.offDayNotes) financeStore.offDayNotes = {};
+        const currentNote = financeStore.offDayNotes[activeDateStr] || "";
+        const newNote = prompt("請輸入休假原因 (將顯示於行事曆)：", currentNote);
+        
+        if (newNote !== null) {
+            if (newNote.trim() === "") {
+                delete financeStore.offDayNotes[activeDateStr];
+            } else {
+                financeStore.offDayNotes[activeDateStr] = newNote;
+            }
+            saveFinanceV2();
+        }
+    };
+
+    // [修復] 開啟編輯視窗
+    function openEditForm(entryId = null) {
+        // 強制移除 hidden
+        const modal = document.getElementById('finEditModal');
+        if(modal) modal.classList.remove('hidden');
+        
+        editingEntryId = entryId;
+        tempItems = [];
+        currentCat = 'nail';
+        
+        // 重新生成小時選單 (確保不為空)
+        const hSel = document.getElementById('fe-h');
+        if(hSel) {
+            hSel.innerHTML = '';
+            for(let i=10; i<=22; i++) {
+                hSel.innerHTML += `<option value="${i}">${i}</option>`;
+            }
+        }
+
+        // 預設值
+        let defH = "10";
+        let defM = "00";
+        
+        const elPrice = document.getElementById('fe-price');
+        const elDur = document.getElementById('fe-duration');
+        const elDep = document.getElementById('fe-deposit');
+        const elTitle = document.getElementById('fe-title');
+
+        if(elDep) elDep.checked = true;
+        if(elPrice) elPrice.value = ""; 
+        if(elDur) elDur.value = "";
+        if(elTitle) elTitle.innerText = "新增帳務";
+
+        // 載入舊資料
+        if (entryId) {
+            const entries = safeArray(financeStore.data[activeDateStr]);
+            const entry = entries.find(e => String(e.id) === String(entryId));
+            if (entry) {
+                if(elTitle) elTitle.innerText = "編輯帳務";
+                const parts = (entry.time || "10:00").split(':');
+                if(parts.length === 2) {
+                    defH = parseInt(parts[0]); 
+                    defM = parts[1];
+                }
+                if(elDep) elDep.checked = entry.hasDeposit;
+                if(elPrice) elPrice.value = entry.price;
+                if(elDur) elDur.value = entry.duration;
+                tempItems = safeArray(entry.items).map(n => ({name: n, price: 0, duration: 0}));
+            }
+        }
+
+        if(hSel) hSel.value = defH;
+        const mSel = document.getElementById('fe-m');
+        if(mSel) mSel.value = defM;
+
+        const defaultBtn = document.querySelector('.cat-tab-btn');
+        if(defaultBtn) switchFinCat('nail', defaultBtn); 
+        
+        renderSelectedList();
+    }
+
+    // [修復] 關閉視窗
+    function closeFinEditModal() {
+        const modal = document.getElementById('finEditModal');
+        if(modal) modal.classList.add('hidden');
+    }
+
+    // [修復] 儲存資料
+    function saveFinData() {
+        if (!activeDateStr) return;
+        if (!financeStore.data[activeDateStr]) financeStore.data[activeDateStr] = [];
+        
+        let currentEntries = safeArray(financeStore.data[activeDateStr]);
+
+        const h = document.getElementById('fe-h').value;
+        const m = document.getElementById('fe-m').value;
+        const timeStr = `${h}:${m}`;
+        const rawPrice = document.getElementById('fe-price').value; // 支援文字價格
+
+        const newData = {
+            id: editingEntryId || Date.now(),
+            time: timeStr,
+            items: tempItems.length > 0 ? tempItems.map(i=>i.name) : ['自訂項目'],
+            price: rawPrice, 
+            duration: parseInt(document.getElementById('fe-duration').value) || 0,
+            hasDeposit: document.getElementById('fe-deposit').checked
+        };
+
+        if (editingEntryId) {
+            const idx = currentEntries.findIndex(e => String(e.id) === String(editingEntryId));
+            if(idx > -1) currentEntries[idx] = newData;
+        } else {
+            currentEntries.push(newData);
+        }
+        
+        financeStore.data[activeDateStr] = currentEntries;
+
+        saveFinanceV2(); // 寫入資料庫
+        closeFinEditModal(); // 關閉視窗
+        renderDayDetailList(); // 刷新當日詳情
+    }
+    function saveFinData() {
+        if (!activeDateStr) return;
+        if (!financeStore.data[activeDateStr]) financeStore.data[activeDateStr] = [];
+        
+        let currentEntries = safeArray(financeStore.data[activeDateStr]);
+
+        // [修改] 讀取下拉選單組合成時間字串
+        const h = document.getElementById('fe-h').value;
+        const m = document.getElementById('fe-m').value;
+        const timeStr = `${h}:${m}`;
+
+        const newData = {
+            id: editingEntryId || Date.now(),
+            time: timeStr,
+            items: tempItems.length > 0 ? tempItems.map(i=>i.name) : ['自訂項目'],
+            price: parseInt(document.getElementById('fe-price').value) || 0,
+            duration: parseInt(document.getElementById('fe-duration').value) || 0,
+            hasDeposit: document.getElementById('fe-deposit').checked
+        };
+
+        if (editingEntryId) {
+            const idx = currentEntries.findIndex(e => String(e.id) === String(editingEntryId));
+            if(idx > -1) currentEntries[idx] = newData;
+        } else {
+            currentEntries.push(newData);
+        }
+        
+        financeStore.data[activeDateStr] = currentEntries;
+
+        saveFinanceV2();
+        closeFinEditForm();
+        renderDayDetailList();
+    }
+
+    // 1. 切換類別：讀取價目表並顯示按鈕
+    window.switchFinCat = function(cat, btn) {
+        currentCat = cat;
+
+        // 按鈕變色
+        document.querySelectorAll('.cat-tab-btn').forEach(b => b.classList.remove('active'));
+        if(btn) btn.classList.add('active');
+        
+        // 抓取資料
+        let list = [];
+        if (cat === 'model') {
+            if(serviceData.nail) list = list.concat(safeArray(serviceData.nail.model));
+            if(serviceData.eyelash) list = list.concat(safeArray(serviceData.eyelash.model));
+        } else {
+            if(serviceData[cat]) {
+                list = list.concat(safeArray(serviceData[cat].main));
+                list = list.concat(safeArray(serviceData[cat].addon));
+            }
+        }
+
+        const grid = document.getElementById('fe-item-grid');
+        if(!grid) return;
+
+        if (list.length === 0) {
+            grid.innerHTML = `<div class="col-span-2 text-center text-gray-400 text-xs py-4">尚無項目</div>`;
+            return;
+        }
+
+        // 產生按鈕
+        grid.innerHTML = list.map(i => `
+            <button class="item-option-btn" onclick="addItemToTemp('${i.name}', '${i.price}', ${i.duration||0})">
+                ${i.name} <span class="opacity-60 text-[10px]">($${i.price})</span>
+            </button>
+        `).join('');
+    };
+
+    // 2. 點選項目後加入清單並計算
+    window.addItemToTemp = function(name, priceStr, dur) {
+        // 解析價格 (過濾符號)
+        const priceVal = parsePrice(priceStr);
+        const durVal = parseInt(dur) || 0;
+
+        // 加入暫存
+        tempItems.push({name: name, price: priceVal, duration: durVal});
+
+        // 自動累加
+        const currentPrice = parsePrice(document.getElementById('fe-price').value);
+        const currentDur = parseInt(document.getElementById('fe-duration').value) || 0;
+
+        document.getElementById('fe-price').value = currentPrice + priceVal;
+        document.getElementById('fe-duration').value = currentDur + durVal;
+
+        const defaultBtn = document.querySelector('.cat-tab-btn');
+        if(defaultBtn) switchFinCat('nail', defaultBtn);  // 補上這行
+
+        renderSelectedList();
+    };
+
+    // 3. 渲染已選項目清單 (含刪除功能)
+    window.renderSelectedList = function() {
+        const list = document.getElementById('fe-selected-list');
+        const count = document.getElementById('fe-count');
+        if(!list) return;
+
+        list.innerHTML = tempItems.map((item, idx) => `
+            <div class="selected-list-item">
+                <span class="selected-name">${item.name}</span>
+                <span class="del-item-btn" onclick="removeItemFromTemp(${idx})">✕</span>
+            </div>
+        `).join('');
+        
+        if(count) count.innerText = `${tempItems.length} 項`;
+    };
+
+    // 4. 刪除暫存項目並扣除金額
+    window.removeItemFromTemp = function(idx) {
+        const item = tempItems[idx];
+        if(!item) return;
+
+        // 扣除金額
+        const currentPrice = parsePrice(document.getElementById('fe-price').value);
+        const currentDur = parseInt(document.getElementById('fe-duration').value) || 0;
+
+        // 確保不會變成負數
+        const newPrice = Math.max(0, currentPrice - item.price);
+        const newDur = Math.max(0, currentDur - item.duration);
+
+        document.getElementById('fe-price').value = newPrice;
+        document.getElementById('fe-duration').value = newDur;
+
+        // 移除陣列元素
+        tempItems.splice(idx, 1);
+        renderSelectedList();
+    };
+
+    // [修復] 切換類別：讀取價目表並顯示按鈕
+    window.switchFinCat = function(cat, btn) {
+        currentCat = cat;
+
+        // 1. 按鈕變色邏輯
+        document.querySelectorAll('.cat-tab-btn').forEach(b => b.classList.remove('active'));
+        if(btn) btn.classList.add('active');
+        
+        // 2. 抓取資料 (主項目 + 加購項目)
+        let list = [];
+        if (cat === 'model') {
+            // 如果是手模，抓 美甲手模 + 美睫手模
+            if(serviceData.nail) list = list.concat(safeArray(serviceData.nail.model));
+            if(serviceData.eyelash) list = list.concat(safeArray(serviceData.eyelash.model));
+        } else {
+            // 一般項目 (美甲/美睫/美容)
+            if(serviceData[cat]) {
+                list = list.concat(safeArray(serviceData[cat].main));
+                list = list.concat(safeArray(serviceData[cat].addon));
+            }
+        }
+
+        const grid = document.getElementById('fe-item-grid');
+        if(!grid) return;
+
+        // 3. 如果沒資料
+        if (list.length === 0) {
+            grid.innerHTML = `<div class="col-span-2 text-center text-gray-400 text-xs py-4">尚無項目 (請至價目表設定)</div>`;
+            return;
+        }
+
+        // 4. 產生按鈕 (支援文字價格)
+        grid.innerHTML = list.map(i => `
+            <button class="item-option-btn" onclick="addItemToTemp('${i.name}', '${i.price}', ${i.duration||0})">
+                ${i.name} <span class="opacity-60 text-[10px]">($${i.price})</span>
+            </button>
+        `).join('');
+    };
+
+    function deleteCurrentFin() {
+        if(confirm("確定刪除此筆資料？")) {
+            let currentEntries = safeArray(financeStore.data[activeDateStr]);
+            financeStore.data[activeDateStr] = currentEntries.filter(e => e.id !== editingEntryId);
+            saveFinanceV2();
+            closeFinEditForm();
+        }
+    }
+
+    function changeFinMonth(dir) {
+        financeStore.viewDate.setMonth(financeStore.viewDate.getMonth() + dir);
+        renderFinancePage();
+    }
+
+    function toggleFinView() {
+        financeStore.viewMode = (financeStore.viewMode === 'item' ? 'price' : 'item');
+        const btn = document.getElementById('finViewToggle');
+        if (btn) btn.innerText = financeStore.viewMode === 'price' ? "顯示: 項目" : "顯示: 金額";
+        renderFinancePage();
+    }
+
+    // 新的代碼變得很簡單，只負責通知瀏覽器網址變了
+    window.switchPage = function(id) {
+        location.hash = id; // 只要改網址就好，剩下的交給 router()
+    };
+
+    // [修改] 登出/儲存功能：先跳回首頁，再刷新頁面以清除權限
+    window.logout = function() { 
+        location.hash = 'home';
+        setTimeout(() => {
+            location.reload();
+        }, 100);
+    };
+
+    // [新增] 路由控制器：根據網址 Hash 顯示對應頁面
+    function router() {
+        // 1. 取得當前 Hash，預設為 home
+        const hash = location.hash.slice(1) || 'home';
+        
+        // 2. 定義後台頁面清單 (需要權限)
+        const adminPages = ['admin-nail', 'admin-eyelash', 'admin-skin', 'admin-calc', 'budget', 'admin-finance'];
+        
+        // 3. 權限檢查
+        const isAdmin = document.body.classList.contains('admin-mode');
+        
+        // 如果想去後台頁面但沒權限
+        if (adminPages.includes(hash) && !isAdmin) {
+            // 強制跳回首頁並跳出登入窗
+            location.hash = 'home';
+            showAdminLogin();
+            return;
+        }
+
+        // 4. 隱藏所有頁面，顯示目標頁面
+        document.querySelectorAll('.page-content').forEach(p => {
+            p.classList.remove('active');
+            p.style.display = 'none'; 
+        });
+
+        const targetPage = document.getElementById('page-' + hash);
+        if (targetPage) {
+            targetPage.classList.add('active');
+            targetPage.style.display = 'block'; 
+        }
+
+        // 5. 更新底部導航按鈕狀態 (自動高亮)
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active');
+            // 檢查按鈕的 onclick 是否包含當前 hash
+            const onclickAttr = btn.getAttribute('onclick');
+            if (onclickAttr && onclickAttr.includes(`'${hash}'`)) {
+                btn.classList.add('active');
+            }
+        });
+
+        // 6. 觸發特定頁面的渲染邏輯
+        window.scrollTo(0,0);
+        if(hash === 'booking') renderCalendar();
+        if(hash === 'budget') renderCalendar(); 
+        if(hash === 'admin-finance') renderFinancePage(); 
+    }
+
+    // [重要] 啟動監聽：只要網址變了，就執行 router
+    window.addEventListener('hashchange', router);
+    
+    // 2026 台灣國定假日表 (日期: 名稱)
+    window.getTaiwanHolidays = function() {
+        return {
+            "2026-01-01": "元旦", "2026-01-02": "元旦",
+            "2026-02-16": "補假", "2026-02-17": "除夕", "2026-02-18": "春節", "2026-02-19": "春節", "2026-02-20": "春節",
+            "2026-02-27": "228", "2026-02-28": "228",
+            "2026-04-03": "兒童", "2026-04-04": "清明", "2026-04-05": "清明", "2026-04-06": "補假",
+            "2026-05-01": "勞動",
+            "2026-06-19": "端午", "2026-06-20": "端午", "2026-06-21": "端午",
+            "2026-09-25": "中秋", "2026-09-26": "中秋", "2026-09-27": "中秋",
+            "2026-10-09": "國慶", "2026-10-10": "國慶", "2026-10-11": "國慶",
+            "2026-12-25": "聖誕", "2026-12-31": "跨年"
+        };
+    };
+
+    window.initSystem = function() {
+        initCalendarTimeSelect(); 
+        renderServiceFront(); 
+        renderAdminList();     
+        initCalc();           
+        
+        syncServiceData();     
+        syncBookingData();     
+        syncFinanceV2();       
+
+        // [新增這行] 網頁載入時，檢查網址並顯示對應頁面
+        router();
+    };
+
+    window.onload = function() {
+        const checkFirebase = setInterval(() => {
+            if (window.firebaseDB && window.dbRef) {
+                clearInterval(checkFirebase);
+                if (typeof window.initSystem === 'function') window.initSystem();
+            }
+        }, 100);
+        setTimeout(() => {
+            if (checkFirebase) clearInterval(checkFirebase);
+            if (typeof window.initSystem === 'function') window.initSystem();
+        }, 3000);
+    };
+
+    // --- Top Button Logic ---
+    window.onscroll = function() { scrollFunction() };
+    function scrollFunction() {
+        const btn = document.getElementById("scrollTopBtn");
+        if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+            btn.classList.add('show');
+        } else {
+            btn.classList.remove('show');
+        }
+    }
+    window.scrollToTop = function() {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+</script>
+</body>
+</html>
