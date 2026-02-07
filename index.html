@@ -3022,37 +3022,32 @@
     };
 
     // 6. [修改] 計算總金額 (先加總固定金額，再乘上所有折扣)
+        // 6. [修改] 循序計算法 (達成括號效果：百分比只乘他前面的累計數)
     window.recalcTotal = function() {
-        let baseTotal = 0;
-        let multipliers = []; 
+        let currentRunningTotal = 0;
 
-        // 第一輪：區分「固定金額」與「百分比折扣」
+        // 依照 tempItems 的順序一一處理
         tempItems.forEach(item => {
+            const val = parseFloat(item.price) || 0;
+            
             if (!item.isPercent) {
-                // 如果是普通金額，直接加總
-                baseTotal += (item.price || 0);
+                // 如果是金額：直接累加到當前總額
+                currentRunningTotal += val;
             } else {
-                // 如果是百分比項目，存入倍率陣列
-                multipliers.push(item.price);
+                // 如果是百分比：將「目前為止的累計總額」乘上該百分比
+                // 例如：前面已經累加到 1100，遇到 70% 變成 1100 * 0.7 = 770
+                currentRunningTotal = currentRunningTotal * (val / 100);
+                
+                // 每次乘完後進行四捨五入，避免浮點數誤差
+                currentRunningTotal = Math.round(currentRunningTotal);
             }
         });
 
-        // 第二輪：計算最終金額
-        let finalTotal = baseTotal;
-        
-        if (multipliers.length > 0) {
-            multipliers.forEach(percent => {
-                // 執行乘法邏輯：Base * (Percent / 100)
-                // 例如：1100 * (70 / 100) = 770
-                finalTotal = finalTotal * (percent / 100);
-            });
-            // 四捨五入取整數，避免出現小數點
-            finalTotal = Math.round(finalTotal);
-        }
-
-        // 更新顯示到輸入框
+        // 最後更新到輸入框
         const priceInput = document.getElementById('fe-price');
-        if (priceInput) priceInput.value = finalTotal;
+        if (priceInput) {
+            priceInput.value = currentRunningTotal;
+        }
     };
 
     // 7. [修改] 渲染已選清單 (百分比顯示 %，金額顯示 $)
