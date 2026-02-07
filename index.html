@@ -398,10 +398,50 @@
         /* 抓取手勢 */
         .drag-handle {
             cursor: grab !important;
-            padding: 10px; /* 增加好抓的範圍 */
+            padding: 10px;
+            touch-action: none; /* 防止手機滑動干擾拖曳 */
         }
         .drag-handle:active {
             cursor: grabbing !important;
+        }
+        
+        /* [新增] 價格選擇按鈕樣式 */
+        .p-select-btn {
+            background: #0f241d !important; /* 深綠色實心背景 */
+            border: 1px solid var(--gold-main);
+            color: #ffffff !important;
+            padding: 16px;
+            border-radius: 10px;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .p-select-btn:active {
+            background: var(--gold-main) !important;
+            color: #1a3a2e !important;
+            transform: scale(0.98);
+        }
+        .p-select-btn span:nth-child(2) {
+            color: var(--gold-main);
+            font-size: 1.1em;
+        }
+        .p-select-btn:active span:nth-child(2) {
+            color: #1a3a2e;
+        }
+        /* 隱藏百分比項目的錢字號 */
+        .currency-symbol.hidden-symbol { display: none; }
+
+        .p-select-btn span:last-child {
+            color: var(--gold-main); /* 價格顯示金色 */
+            font-size: 1.1em;
+        }
+        .p-select-btn:active span:last-child {
+            color: #1a3a2e;
         }
         
         /* --- 編輯面板 (隱藏) --- */
@@ -1394,6 +1434,15 @@
                 </div>
             </div>
 
+            <div id="priceSelectorModal" class="cal-modal-overlay hidden" style="z-index: 6000;">
+                <div class="cal-modal-content" style="max-width: 300px; background: #1a3a2e; border: 2px solid var(--gold-main); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    <h3 class="text-[var(--gold-main)] font-bold text-xl mb-6 tracking-widest text-center">請選擇方案</h3>
+                    <div id="price-options-container" class="grid gap-3">
+                        </div>
+                    <button onclick="document.getElementById('priceSelectorModal').classList.add('hidden')" class="w-full mt-6 py-3 border border-[#c9b896] text-[#c9b896] rounded-lg text-xs font-bold tracking-widest hover:bg-[#c9b896] hover:text-[#1a3a2e] transition-all">取消</button>
+                </div>
+            </div>
+
             <div class="mb-2">
                 <label class="text-xs text-gray-400 block mb-1">選擇類別</label>
                 <div class="cat-tab-group">
@@ -1525,6 +1574,15 @@
         return isNaN(num) ? 0 : num;
     }
 
+    function formatPriceDisplay(price) {
+        // 如果包含 %，顯示原樣 (並加上金色樣式)
+        if (String(price).includes('%')) return `<span class="text-xs font-bold text-[var(--gold-main)]">${price}</span>`;
+        // 如果是 0，顯示 Free
+        if (parseInt(price) === 0 || price === "0") return "Free";
+        // 一般金額
+        return `$${price}`;
+    }
+
     // --- 1. 資料核心與初始化 ---
     let rawData = null;
     try {
@@ -1622,19 +1680,22 @@
     // --- Render Functions ---
     function renderServiceFront() {
         const categories = ['nail', 'eyelash', 'skin'];
+        
         categories.forEach(cat => {
             const categoryData = serviceData[cat] || { main: [], addon: [], model: [] };
             const mainItems = safeArray(categoryData.main);
             const addonItems = safeArray(categoryData.addon);
             const modelItems = safeArray(categoryData.model);
 
+            // 1. 渲染主價目表
             const mainTable = document.querySelector(`#page-${cat} .price-table:first-of-type`);
             if (mainTable) {
                 let html = "";
                 if (cat === 'nail') {
                     html = `<tr><th style="text-align:left;">項目名稱</th><th class="price-value">價格</th></tr>`;
                     mainItems.forEach(item => {
-                        html += `<tr><td>${item.name}</td><td class="price-value">$${item.price}</td></tr>`;
+                        // 使用 formatPriceDisplay 處理 0 -> Free
+                        html += `<tr><td>${item.name}</td><td class="price-value">${formatPriceDisplay(item.price)}</td></tr>`;
                     });
                 } else {
                     const h1 = cat === 'eyelash' ? '自然款' : '原價';
@@ -1643,32 +1704,40 @@
                     mainItems.forEach(item => {
                         let p2 = (item.price2 && item.price2.toString().trim()) ? `$${item.price2}` : '-';
                         let note = (item.note1 || item.note2) ? `<div class="text-[10px] opacity-60">${item.note1||''} ${item.note2||''}</div>` : "";
-                        html += `<tr><td><div class="font-bold">${item.name}</div>${note}</td><td class="price-value">$${item.price}</td><td class="price-value">${p2}</td></tr>`;
+                        // 使用 formatPriceDisplay
+                        html += `<tr><td><div class="font-bold">${item.name}</div>${note}</td><td class="price-value">${formatPriceDisplay(item.price)}</td><td class="price-value">${p2}</td></tr>`;
                     });
                 }
                 mainTable.innerHTML = mainItems.length ? html : `<tr><td colspan="3" class="text-center opacity-30">暫無項目</td></tr>`;
             }
 
+            // 2. 渲染加購項目 (在下拉選單內)
             const dropdowns = document.querySelectorAll(`#page-${cat} .dropdown-container`);
             dropdowns.forEach(dropdown => {
                 if (dropdown.textContent.includes("加購")) {
                     const content = dropdown.querySelector('.dropdown-content');
                     let h = `<table class="price-table" style="width:100%">`;
                     addonItems.forEach(i => {
-                        h += `<tr><td style="border-bottom:1px solid rgba(201,184,150,0.1);">${i.name}</td><td class="price-value">$${i.price}</td></tr>`;
+                        // 使用 formatPriceDisplay
+                        h += `<tr><td style="border-bottom:1px solid rgba(201,184,150,0.1);">${i.name}</td><td class="price-value">${formatPriceDisplay(i.price)}</td></tr>`;
                     });
                     h += `</table>`;
                     if(content) content.innerHTML = addonItems.length ? h : `<div class="text-center opacity-30 p-4">暫無加購項目</div>`;
                 }
             });
 
+            // 3. 渲染睫毛管理 (這段您原本可能漏掉了)
             if (cat === 'eyelash') {
                 const mgmt = document.getElementById('front-eyelash-management');
                 if (mgmt) {
-                    mgmt.innerHTML = `<table class="price-table">` + modelItems.map(i=>`<tr><td>${i.name}</td><td class="price-value">$${i.price}</td></tr>`).join('') + `</table>`;
+                    mgmt.innerHTML = `<table class="price-table">` + 
+                        modelItems.map(i => `<tr><td>${i.name}</td><td class="price-value">${formatPriceDisplay(i.price)}</td></tr>`).join('') + 
+                        `</table>`;
                 }
             }
-        });
+
+        }); 
+
         initCalc();
     }
 
@@ -1677,64 +1746,88 @@
         categories.forEach(cat => {
             if (!serviceData[cat]) return;
             ['main', 'addon', 'model'].forEach(type => {
-                const listContainer = document.getElementById(`list-${cat}-${type}`);
+                const listId = `list-${cat}-${type}`;
+                const listContainer = document.getElementById(listId);
                 const addContainer = document.getElementById(`add-${cat}-${type}`);
+                
                 if (!listContainer) return;
+                
                 const items = safeArray(serviceData[cat][type]);
                 const isEditing = editStates[cat]; 
 
                 listContainer.innerHTML = items.map((item, index) => {
                     if (!item) return '';
+                    const dataIdx = `data-idx="${index}"`;
                     
+                    const p1Disp = String(item.price).includes('%') ? item.price : `$${item.price}`;
+                    const p2Disp = item.price2 ? ` / ${String(item.price2).includes('%') ? item.price2 : '$'+item.price2}` : '';
+
                     if (isEditing) {
+                        const showPrice2 = (type === 'main' && cat !== 'nail');
                         const showCalcCheck = (cat === 'nail' && (type === 'main' || type === 'model'));
                         const checkHtml = showCalcCheck ? 
                             `<div class="flex flex-col items-center ml-2 cursor-pointer" onclick="toggleCalcOption('${cat}', '${type}', ${index})">
-                                <span class="text-[9px] text-[var(--gold-main)] mb-1">計算機</span>
+                                <span class="text-[9px] text-[var(--gold-main)] mb-1">計算</span>
                                 <div class="check-toggle ${item.selectedForCalc ? 'active' : ''}">✔</div>
                              </div>` : '';
-                        const showPrice2 = (type === 'main' && cat !== 'nail');
 
                         return `
-                        <div class="admin-item-row">
-                            <div class="drag-handle text-[var(--gold-main)] mr-2">☰</div>
+                        <div class="admin-item-row" ${dataIdx}>
+                            <div class="drag-handle text-[var(--gold-main)] mr-2 text-xl cursor-grab p-2">≡</div>
                             <div class="info">
                                 <label class="text-[9px] opacity-50 block">項目名稱</label>
                                 <input type="text" class="edit-input w-full font-bold mb-2" value="${item.name||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'name', this.value)">
                                 <div class="flex gap-2">
                                     <div class="flex-1">
-                                        <label class="text-[9px] opacity-50 block">價格 (可填符號)</label>
+                                        <label class="text-[9px] opacity-50 block">價格 (含%)</label>
                                         <input type="text" class="edit-input w-full" value="${item.price||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price', this.value)">
                                     </div>
-                                    ${showPrice2 ? `
-                                    <div class="flex-1">
-                                        <label class="text-[9px] opacity-50 block">體驗/濃密</label>
-                                        <input type="text" class="edit-input w-full" value="${item.price2 || ''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price2', this.value)">
-                                    </div>` : ''}
-                                    </div> 
+                                    ${showPrice2 ? `<div class="flex-1"><label class="text-[9px] opacity-50 block">價格2/體驗</label><input type="text" class="edit-input w-full" value="${item.price2||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price2', this.value)"></div>` : ''}
+                                </div> 
                             </div> 
                             ${checkHtml}
-                            <button onclick="deleteService('${cat}', '${type}', ${index})" class="ml-2 text-red-400 text-xs border border-red-400 px-2 py-4 rounded hover:bg-red-400 hover:text-white transition-all">刪除</button>
+                            <button onclick="deleteService('${cat}', '${type}', ${index})" class="ml-2 text-red-400 text-xs px-2 border border-red-400 rounded">刪除</button>
                         </div>`;
                     } else {
                         const calcBadge = item.selectedForCalc ? '<span class="text-[8px] bg-[#1a4731] text-[#c9b896] px-1 rounded ml-1">計</span>' : '';
-                        const p2Display = item.price2 ? ` / $${item.price2}` : '';
-                        return `
-                        <div class="admin-item-row">
-                            <div class="info">
-                                <div class="name flex items-center">${item.name||'(無名稱)'} ${calcBadge}</div>
-                            </div>
-                            <div class="price">$${item.price||0}${p2Display}</div>
-                        </div>`;
+                        return `<div class="admin-item-row"><div class="info"><div class="name flex items-center">${item.name} ${calcBadge}</div></div><div class="price font-bold">${p1Disp}${p2Disp}</div></div>`;
                     }
                 }).join('');
 
                 if (addContainer) {
                     addContainer.innerHTML = isEditing ? 
-                        `<button onclick="addNewBlankItem('${cat}', '${type}')" class="w-full py-3 border-2 border-dashed border-[#c9b896] text-[#c9b896] rounded-xl text-sm font-bold opacity-60 hover:opacity-100 transition-all my-2">+ 新增項目</button>` 
-                        : '';
+                        `<button onclick="addNewBlankItem('${cat}', '${type}')" class="w-full py-3 border-2 border-dashed border-[#c9b896] text-[#c9b896] rounded-xl text-sm font-bold opacity-60 hover:opacity-100 transition-all my-2">+ 新增項目</button>` : '';
+                }
+
+                if (isEditing) {
+                    // 延遲綁定 Sortable 以確保 DOM 存在
+                    setTimeout(() => initSortable(listContainer, cat, type), 100);
                 }
             });
+        });
+    }
+
+    function initSortable(el, cat, type) {
+        if (!el || !window.Sortable) return;
+        if (el._sortable) el._sortable.destroy(); // 避免重複綁定
+        
+        el._sortable = new Sortable(el, {
+            handle: '.drag-handle',
+            animation: 150,
+            ghostClass: 'opacity-50',
+            onEnd: function (evt) {
+                const oldIndex = evt.oldIndex;
+                const newIndex = evt.newIndex;
+                if (oldIndex === newIndex) return;
+                
+                const list = serviceData[cat][type];
+                const item = list.splice(oldIndex, 1)[0];
+                list.splice(newIndex, 0, item);
+                
+                saveAndSync();
+                // 重新渲染以確保 index 正確
+                setTimeout(() => renderAdminList(), 100);
+            }
         });
     }
 
@@ -2795,28 +2888,23 @@
             currentEntries.push(newData);
         }
         
-        // 1. 更新記憶體中的資料
         financeStore.data[activeDateStr] = currentEntries;
 
-        // 2. 寫入資料庫
         saveFinanceV2(); 
-
-        // 3. [關鍵] 先刷新底下的「當日行程列表」，確保看得到新資料
+        
+        // [關鍵修復] 先刷新列表，再關閉視窗
         renderDayDetailList(); 
-
-        // 4. 最後關閉「新增/編輯」視窗 (回到當日行程頁)
-        closeFinEditModal(); 
+        closeFinEditModal();   
     }
 
     // 1. 切換類別：讀取價目表並顯示按鈕
+    // [修復] 切換類別：讀取價目表並顯示按鈕
     window.switchFinCat = function(cat, btn) {
-        currentCat = cat;
+        currentCat = cat; // 更新全域變數
 
-        // 按鈕變色
         document.querySelectorAll('.cat-tab-btn').forEach(b => b.classList.remove('active'));
         if(btn) btn.classList.add('active');
         
-        // 抓取資料
         let list = [];
         if (cat === 'model') {
             if(serviceData.nail) list = list.concat(safeArray(serviceData.nail.model));
@@ -2836,51 +2924,163 @@
             return;
         }
 
-        // 產生按鈕
-        grid.innerHTML = list.map(i => `
-            <button class="item-option-btn" onclick="addItemToTemp('${i.name}', '${i.price}', ${i.duration||0})">
-                ${i.name} <span class="opacity-60 text-[10px]">($${i.price})</span>
-            </button>
-        `).join('');
+        grid.innerHTML = list.map(i => {
+            const p1Disp = String(i.price).includes('%') ? i.price : `$${i.price}`;
+            // 判斷是否有第二價格 (且不為空或0)
+            const hasP2 = (i.price2 !== undefined && i.price2 !== "" && i.price2 != 0);
+            const p2Str = hasP2 ? i.price2 : "";
+            const dur = i.duration || 0;
+
+            if (hasP2) {
+                // 有雙價格 -> 開啟選擇視窗
+                return `
+                <button class="item-option-btn" onclick="openPriceSelector('${cat}', '${i.name}', '${i.price}', '${p2Str}', ${dur})">
+                    ${i.name} <span class="opacity-60 text-[10px] ml-1">選</span>
+                </button>`;
+            } else {
+                // 單一價格 -> 直接加入
+                return `
+                <button class="item-option-btn" onclick="addItemToTemp('${i.name}', '${i.price}', ${dur})">
+                    ${i.name} <span class="opacity-60 text-[10px]">(${p1Disp})</span>
+                </button>`;
+            }
+        }).join('');
     };
 
-    // 2. 點選項目後加入清單
+    // 2. [修改] 開啟價格選擇視窗 (客製化文字：自然/濃密, 原價/體驗)
+    window.openPriceSelector = function(cat, name, p1, p2, dur) {
+        const modal = document.getElementById('priceSelectorModal');
+        const container = document.getElementById('price-options-container');
+        if(!modal) return alert("錯誤：找不到選擇視窗 HTML，請確認第一步是否已執行");
+        
+        modal.classList.remove('hidden');
+
+        const p1Label = String(p1).includes('%') ? p1 : `$${p1}`;
+        const p2Label = String(p2).includes('%') ? p2 : `$${p2}`;
+
+        // [關鍵] 依據類別顯示不同文字
+        let label1 = "方案 A";
+        let label2 = "方案 B";
+
+        if (cat === 'eyelash') {
+            label1 = "自然款";
+            label2 = "濃密款";
+        } else if (cat === 'skin') {
+            label1 = "原價";
+            label2 = "體驗價";
+        }
+
+        container.innerHTML = `
+            <button class="p-select-btn" onclick="confirmPriceSelection('${name} (${label1})', '${p1}', ${dur})">
+                <span>${label1}</span>
+                <span>${p1Label}</span>
+            </button>
+            <button class="p-select-btn" onclick="confirmPriceSelection('${name} (${label2})', '${p2}', ${dur})">
+                <span>${label2}</span>
+                <span>${p2Label}</span>
+            </button>
+        `;
+    };
+
+    // 3. 確認選擇後加入
+    window.confirmPriceSelection = function(name, price, dur) {
+        document.getElementById('priceSelectorModal').classList.add('hidden');
+        addItemToTemp(name, price, dur);
+    };
+
+    // 4. [修改] 加入項目 (偵測是否為百分比)
     window.addItemToTemp = function(name, priceStr, dur) {
-        const priceVal = parsePrice(priceStr);
+        const pStr = String(priceStr);
+        // 只要包含 % 就視為折扣
+        const isPercent = pStr.includes('%');
+        
+        // 抓取數字： "70%" -> 70, "$1100" -> 1100
+        const priceVal = parseInt(pStr.replace(/[^0-9]/g, '')) || 0;
         const durVal = parseInt(dur) || 0;
 
-        // 加入暫存
-        tempItems.push({name: name, price: priceVal, duration: durVal});
+        tempItems.push({
+            name: name, 
+            price: priceVal, 
+            duration: durVal,
+            isPercent: isPercent // 重要標記
+        });
 
-        // 更新時間 (累加)
         const currentDur = parseInt(document.getElementById('fe-duration').value) || 0;
         document.getElementById('fe-duration').value = currentDur + durVal;
 
-        // 更新金額 (重算)
-        recalcTotal(); 
+        recalcTotal();
         renderSelectedList();
     };
 
-    // 3. 渲染已選項目清單 (含價格編輯 & 刪除)
+    // 5. 更新列表價格
+    window.updateListPrice = function(idx, newPriceStr) {
+        const newPrice = parseInt(newPriceStr) || 0;
+        if (tempItems[idx]) {
+            tempItems[idx].price = newPrice;
+        }
+        recalcTotal();
+    };
+
+    // 6. [修改] 計算總金額 (先加總固定金額，再乘上所有折扣)
+    window.recalcTotal = function() {
+        let baseTotal = 0;
+        let multipliers = []; 
+
+        // 第一輪：區分「固定金額」與「百分比折扣」
+        tempItems.forEach(item => {
+            if (!item.isPercent) {
+                // 如果是普通金額，直接加總
+                baseTotal += (item.price || 0);
+            } else {
+                // 如果是百分比項目，存入倍率陣列
+                multipliers.push(item.price);
+            }
+        });
+
+        // 第二輪：計算最終金額
+        let finalTotal = baseTotal;
+        
+        if (multipliers.length > 0) {
+            multipliers.forEach(percent => {
+                // 執行乘法邏輯：Base * (Percent / 100)
+                // 例如：1100 * (70 / 100) = 770
+                finalTotal = finalTotal * (percent / 100);
+            });
+            // 四捨五入取整數，避免出現小數點
+            finalTotal = Math.round(finalTotal);
+        }
+
+        // 更新顯示到輸入框
+        const priceInput = document.getElementById('fe-price');
+        if (priceInput) priceInput.value = finalTotal;
+    };
+
+    // 7. [修改] 渲染已選清單 (百分比顯示 %，金額顯示 $)
     window.renderSelectedList = function() {
         const list = document.getElementById('fe-selected-list');
         const count = document.getElementById('fe-count');
         if(!list) return;
 
-        list.innerHTML = tempItems.map((item, idx) => `
+        list.innerHTML = tempItems.map((item, idx) => {
+            // 判斷顯示符號
+            const symbolClass = item.isPercent ? 'currency-symbol hidden-symbol' : 'currency-symbol';
+            const suffix = item.isPercent ? '<span class="text-xs font-bold text-[var(--gold-main)] ml-1">%</span>' : '';
+            
+            return `
             <div class="selected-list-item">
                 <span class="selected-name flex-1">${item.name}</span>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] text-gray-400">$</span>
+                <div class="flex items-center gap-1">
+                    <span class="${symbolClass}">$</span>
                     <input type="number" inputmode="numeric" 
                            class="item-price-input" 
                            value="${item.price}" 
                            onfocus="this.select()" 
                            onchange="updateListPrice(${idx}, this.value)">
+                    ${suffix}
                     <span class="del-item-btn ml-2" onclick="removeItemFromTemp(${idx})">✕</span>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
         
         if(count) count.innerText = `${tempItems.length} 項`;
     };
@@ -2896,15 +3096,6 @@
         
         // 重新計算總金額
         recalcTotal();
-    };
-
-    // [新增] 重新計算總金額 (加總所有項目)
-    window.recalcTotal = function() {
-        let total = 0;
-        tempItems.forEach(item => {
-            total += (item.price || 0);
-        });
-        document.getElementById('fe-price').value = total;
     };
 
     // 4. 刪除暫存項目
@@ -2923,45 +3114,6 @@
         // 更新金額 (重算)
         recalcTotal();
         renderSelectedList();
-    };
-
-    // [修復] 切換類別：讀取價目表並顯示按鈕
-    window.switchFinCat = function(cat, btn) {
-        currentCat = cat;
-
-        // 1. 按鈕變色邏輯
-        document.querySelectorAll('.cat-tab-btn').forEach(b => b.classList.remove('active'));
-        if(btn) btn.classList.add('active');
-        
-        // 2. 抓取資料 (主項目 + 加購項目)
-        let list = [];
-        if (cat === 'model') {
-            // 如果是手模，抓 美甲手模 + 美睫手模
-            if(serviceData.nail) list = list.concat(safeArray(serviceData.nail.model));
-            if(serviceData.eyelash) list = list.concat(safeArray(serviceData.eyelash.model));
-        } else {
-            // 一般項目 (美甲/美睫/美容)
-            if(serviceData[cat]) {
-                list = list.concat(safeArray(serviceData[cat].main));
-                list = list.concat(safeArray(serviceData[cat].addon));
-            }
-        }
-
-        const grid = document.getElementById('fe-item-grid');
-        if(!grid) return;
-
-        // 3. 如果沒資料
-        if (list.length === 0) {
-            grid.innerHTML = `<div class="col-span-2 text-center text-gray-400 text-xs py-4">尚無項目 (請至價目表設定)</div>`;
-            return;
-        }
-
-        // 4. 產生按鈕 (支援文字價格)
-        grid.innerHTML = list.map(i => `
-            <button class="item-option-btn" onclick="addItemToTemp('${i.name}', '${i.price}', ${i.duration||0})">
-                ${i.name} <span class="opacity-60 text-[10px]">($${i.price})</span>
-            </button>
-        `).join('');
     };
 
     function deleteCurrentFin() {
