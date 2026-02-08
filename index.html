@@ -36,15 +36,16 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
     <style>
         /* --- 核心視覺系統 --- */
         :root {
-            --forest-bg: #1a3a2e;
+            --forest-bg: #1c3328;
             --border-base: #2d5a47;
             --border-hover: #3d6a57;
             --border-trans: rgba(45, 90, 71, 0.8);
-            --nav-bg: rgba(26, 58, 46, 0.98);
+            --nav-bg: #1c3328;
             --btn-bg: rgba(15, 40, 33, 0.95);
             --btn-hover: rgba(22, 53, 48, 0.9);
             --text-shadow: rgba(0, 0, 0, 0.5);
@@ -80,18 +81,27 @@
         body { 
             background-color: var(--forest-bg); 
             color: var(--white-main); 
-            font-family: 'Noto Sans TC', 'Zen Maru Gothic', sans-serif;
+            /* Outfit 是現代極簡英數字體，搭配思源黑體 Noto Sans TC 的現代排版 */
+            font-family: 'Outfit', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
             margin: 0; 
             padding: 0; 
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden; 
-            line-height: 1.8; 
-            letter-spacing: 1.5px; 
+            line-height: 1.6; 
+            letter-spacing: 0.08em; 
             font-size: 15px;
-            transition: background-color 0.4s ease, color 0.4s ease;
+            font-weight: 400;
         }
 
-        .app-wrapper { width: 100%; max-width: 600px; margin: 0 auto; min-height: 100vh; position: relative; }
+        .app-wrapper { 
+            width: 100%; 
+            max-width: 100%; /* 手機版預設全寬 */
+            margin: 0 auto; 
+            position: relative; 
+            min-height: 100vh; 
+            box-sizing: border-box; /* 確保 padding 不會撐破版面 */
+            padding-bottom: 90px; /* 避免內容被底部導航遮住 */
+        }
         .brand-header { padding: 45px 0 25px; text-align: center; }
         .logo-box { width: 85%; max-width: 380px; margin: 0 auto 12px; }
         .logo-img { width: 100%; height: auto; mix-blend-mode: lighten; }
@@ -118,8 +128,14 @@
 
         /* 卡片樣式 */
         .m-card { 
-            background: var(--card-bg) !important; border: 1px solid var(--border-base) !important; border-radius: 14px !important; 
-            padding: 25px !important; margin: 0 8% 20px 8% !important; box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important; width: auto !important; 
+            background: linear-gradient(165deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%) !important;
+            border: 1px solid rgba(201, 184, 150, 0.25) !important; 
+            border-radius: 20px !important; 
+            padding: 30px 25px !important; 
+            margin: 0 6% 25px 6% !important; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
         .info-title, .m-card h2 { 
             font-size: 20px !important; 
@@ -243,12 +259,40 @@
         }
         
         /* Dropdown & Table */
-        .dropdown-container { margin: 0 1.2rem 12px 1.2rem; }
-        .dropdown-header { background: var(--card-bg); border: 1px solid var(--border-base); border-radius: 8px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .dropdown-title { font-size: 16px; font-weight: 600; color: var(--gold-main); letter-spacing: 1.5px; }
+        .dropdown-container { width: 94%; max-width: 500px; margin: 0 auto 12px; }
+        .dropdown-header { 
+            background: rgba(255, 255, 255, 0.04) !important;
+            border: 1px solid rgba(201, 184, 150, 0.3) !important;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dropdown-title {
+            font-family: inherit; /* 強制繼承 body 的字體 */
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: var(--gold-main);
+        }
         .dropdown-arrow { font-size: 16px; transition: transform 0.4s; color: var(--gold-main); font-weight: bold; }
-        .dropdown-content { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0, 1, 0, 1); background: rgba(245, 241, 232, 0.03); border-radius: 0 0 8px 8px; margin: 0 1px; }
-        .dropdown-container.open .dropdown-content { max-height: 5000px; padding: 20px 18px; border: 1px solid var(--border-base); border-top: none; }
+        .dropdown-content { 
+            max-height: 0; 
+            overflow: hidden; 
+            /* 關鍵：收起時 padding 也要設為 0，才不會擠壓文字 */
+            padding: 0 18px; 
+            transition: max-height 0.4s ease-out, padding 0.4s ease-out; 
+            background: rgba(255, 255, 255, 0.02); 
+            border: 1px solid transparent; 
+            border-top: none;
+        }
+
+        .dropdown-container.open .dropdown-content { 
+            max-height: 2000px; 
+            padding: 20px 18px; 
+            border-color: rgba(201, 184, 150, 0.2); 
+        }
         .dropdown-container.open .dropdown-arrow { transform: rotate(180deg); }
         .price-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
         .price-table td { border-bottom: 1px solid rgba(201, 184, 150, 0.1); padding: 12px 5px; color: var(--white-sec); }
@@ -270,20 +314,39 @@
             background: var(--nav-bg) !important; 
             border-top: 1px solid var(--border-base); 
             z-index: 1000; 
-            height: 80px !important; /* 這裡改高了 (原本50) */
+            /* 這裡固定為 75px，不使用動態高度 */
+            height: 60px !important; 
+            min-height: 60px !important; 
+            max-height: 60px !important;
             padding-bottom: env(safe-area-inset-bottom); 
             display: flex; 
             justify-content: center; 
-            box-shadow: var(--nav-shadow); 
+            box-shadow: var(--nav-shadow);
+            /* 移除任何 transition 縮放效果 */
+            transition: none !important; 
         }
 
-        .nav-inner { 
-            display: flex; 
-            width: 100%; 
-            max-width: 600px; 
-            height: 100%; 
+        .nav-inner {
+            width: 100%;
+            max-width: 100%;
+            height: 100%;
+            display: flex;
         }
+        /* --- 同步平板與電腦版設定 --- */
+        @media (min-width: 768px) {
+            /* 1000px 讓平板與電腦版寬度一致 */
+            .app-wrapper, .nav-inner { 
+                max-width: 1000px !important; 
+            }
+            
+            .m-card { 
+                margin: 0 auto 20px auto !important; 
+            }
 
+            .calendar-grid {
+                gap: 6px !important; /* 電腦版間距稍微比手機大一點，比較精緻 */
+            }
+        }
         /* [修改] 按鈕樣式：取消縮放動畫，改為純色塊區分 */
         .tab-button { 
             flex: 1; 
@@ -292,19 +355,19 @@
             align-items: center; 
             justify-content: center; 
             color: var(--nav-text-unselect) !important; 
-            font-size: 15px; /* 字體稍微加大 */
-            font-weight: 500; 
+            font-size: 13px; /* 字體稍微加大 */
+            font-weight: 600; 
             text-align: center; 
             cursor: pointer; 
             transition: color 0.2s ease; /* 只做顏色漸變，不改變大小 */
-            border: none !important; /* 移除邊框避免跳動 */
+            padding-top: 5px; /* 增加頂部微距讓文字視覺置中 */
         }
 
         /* 選中狀態：字變亮，加底色，不改變大小 */
         .tab-button.active { 
             color: var(--white-main) !important; 
             font-weight: 700; 
-            background: rgba(255, 255, 255, 0.08); 
+            background: oklch(100% 0.00011 271.152 / 0.08); 
         }
 
         /* Login Overlay */
@@ -483,14 +546,42 @@
         .serif { font-family: 'Playfair Display', serif; }
         .blur-target { filter: blur(8px); pointer-events: none; opacity: 0.1; transition: all 0.4s ease; }
         
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 100%; padding: 0 10px; box-sizing: border-box; }
-        
-        .day-box { 
-            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-base); 
-            border-radius: 6px; padding: 2px 1px; display: flex; flex-direction: column; 
-            min-height: 50px; /* 改這裡 */
-            position: relative;
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 2px !important; /* 縮小格子間的空隙 */
+            width: 100%; 
+            padding: 0 4px; 
+            box-sizing: border-box; 
+            max-width: 1000px !important; 
+            margin: 0 auto !important; 
         }
+        
+        /* --- [修改] 固定格子高度，防止跳動 --- */
+        .day-box { 
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid rgba(201, 184, 150, 0.15); 
+            border-radius: 4px; 
+            padding: 4px 1px; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 120px !important; /* 保證基礎高度 */
+            height: auto !important;      /* 內容多時自動撐開 */
+            position: relative; 
+        }
+
+        .fin-day-box { 
+            min-height: 120px !important; /* 財務格子也改為彈性 */
+            height: auto !important;
+            background: transparent; 
+            border: 1px solid rgba(201, 184, 150, 0.15); 
+            border-radius: 4px; 
+            padding: 2px; 
+            position: relative; 
+            display: flex; 
+            flex-direction: column;
+        }
+
         body.admin-mode .day-box { background: rgba(0,0,0,0.03); border-color: var(--gold-main); }
 
         /* [新增] 財務頁面：置中顯示專用樣式 */
@@ -506,19 +597,29 @@
             font-size: 10px;
         }
         .fin-day-box.centered-state .center-text {
-            font-size: 14px;
+            font-size: 11px;
             font-weight: bold;
             letter-spacing: 1px;
+        }
+        .fin-day-header span.font-bold {
+            font-size: 10px; /* 縮小日期數字 */
         }
 
         .sunday-bg { background: rgba(255, 0, 0, 0.05); }
         .past-day { opacity: 0.3; pointer-events: none; }
 
         .time-label { 
-            display: flex; align-items: center; justify-content: center; width: 94%; 
-            background: rgba(201, 184, 150, 0.15); color: var(--gold-main); 
-            margin: 1.5px auto; height: 20px; border-radius: 3px; font-size: 9px; 
-            line-height: 1; cursor: pointer; transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 96%;
+            background: rgba(201, 184, 150, 0.1); 
+            color: var(--gold-main); 
+            margin: 1px auto !important; /* 縮小按鈕之間的垂直距離 */
+            height: 20px; /* 降低按鈕高度 */
+            border-radius: 2px; 
+            font-size: 10px; 
+            line-height: 1;
         }
         body.admin-mode .time-label { background: rgba(0,0,0,0.1); color: var(--gold-main); font-weight: bold; }
         
@@ -552,6 +653,9 @@
             background: var(--forest-bg); border: 1px solid var(--gold-main); 
             border-radius: 20px; padding: 25px; width: 100%; max-width: 320px;
             color: var(--white-main); text-align: center; position: relative;
+            display: flex;              /* 啟用 Flex 佈局 */
+            flex-direction: column;     /* 上下排列 */
+            max-height: 80vh;
         }
         body.admin-mode .cal-modal-content { background: #fff; color: #333; }
         
@@ -577,20 +681,47 @@
         }
         .fin-day-header { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 4px; color: var(--white-sec); }
         .is-holiday { color: #ff6b6b !important; }
-        .is-holiday-bg { background: rgba(255, 107, 107, 0.05); border-color: rgba(255, 107, 107, 0.3); }
+        /* 財務頁面的假日樣式優化 */
+        .is-holiday-bg { 
+            background: rgba(255, 150, 150, 0.1) !important; /* 透明紅底 */
+            border: 1px solid rgba(255, 107, 107, 0.4) !important; /* 精緻紅框 */
+        }
+
+        /* 讓假日日期數字更有設計感 */
+        .is-holiday-bg .fin-day-header span.text-\[#ff6b6b\] {
+            color: #ff6b6b;
+            text-shadow: 0 0 8px rgba(255, 107, 107, 0.4);
+            font-weight: 800;
+        }
         
         /* 預約條目 */
         .fin-item { 
-            font-size: 9px; 
-            background: rgba(201, 184, 150, 0.1); 
-            color: var(--white-main); 
-            margin-bottom: 2px; 
-            padding: 2px 4px; 
-            border-radius: 3px; 
-            cursor: pointer; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis;
+            font-size: 10px; 
+            font-weight: 500; 
+            letter-spacing: 0.05em;
+            /* 關鍵：取消所有邊框，只保留左邊條 */
+            border: none !important;
+            border-left: 3px solid transparent !important; 
+            padding: 4px 8px !important;
+            margin: 2px 0 4px 0 !important;
+            background: rgba(255, 255, 255, 0.04) !important;
+            backdrop-filter: blur(4px);
+            border-radius: 0 4px 4px 0; /* 讓邊條側維持垂直，右側圓角 */
+            color: var(--white-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: clip;
+            box-shadow: none !important; /* 確保沒有陰影形成的外框感 */
+        }
+
+        /* [一般客人] 的邊條顏色 - 金色 */
+        .fin-item:not(.is-model):not(.is-note):not(.is-price-view) {
+            border-left-color: var(--cal-gold) !important;
+        }
+
+        /* [手模] 的邊條顏色 - 深綠色 */
+        .fin-item.is-model {
+            border-left-color: #184629 !important;
         }
         .fin-item.is-price-view { 
             background: transparent !important; 
@@ -636,7 +767,12 @@
         /* --- [更新] 財務系統樣式優化 --- */
         
         /* 1. 當日詳情彈窗樣式 */
-        .day-detail-list { max-height: 300px; overflow-y: auto; margin-bottom: 15px; }
+        .day-detail-list { 
+            flex: 1;                 /* 自動佔用 header 與 footer 之間的所有空間 */
+            overflow-y: auto;        /* 內容超過時顯示滾動條 */
+            min-height: 0;           /* 防止 flex 子元素溢出 */
+            margin-bottom: 15px; 
+        }
         .day-detail-item { 
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(201, 184, 150, 0.1);
@@ -654,7 +790,7 @@
             cursor: pointer; text-align: left;
             transition: all 0.2s;
             /* 強制文字單行並截斷 */
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; overflow: hidden; text-overflow: clip;
         }
         /* 滑鼠移入或選中：深藍底 + 白字 */
         .item-option-btn:hover, .item-option-btn.active {
@@ -677,7 +813,7 @@
             font-size: 12px;
         }
         .selected-name {
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; overflow: hidden; text-overflow: clip;
             color: var(--gold-main);
         }
         .del-item-btn {
@@ -791,6 +927,58 @@
             transform: translateY(2px);
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
+
+        /* --- 預約時段注意事項彈窗樣式 --- */
+        /* --- 進入時段頁面的注意事項彈窗樣式 --- */
+        .notice-glass-modal { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(10, 25, 18, 0.95); 
+            z-index: 7000; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px;
+            /* 加入淡入動畫減少卡頓感 */
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; backdrop-filter: blur(0px); }
+            to { opacity: 1; backdrop-filter: blur(10px); }
+        }
+
+        .notice-content-card {
+            width: 100%;
+            max-width: 360px;
+            background: #1c3328;
+            padding: 30px;
+            border-radius: 24px;
+            border: 1px solid rgba(201, 184, 150, 0.3);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        /* 修改：小標題顏色改為跟標題一樣的金色 */
+        .notice-item-border {
+            border-left: 2px solid var(--gold-main);
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* 鎖定 1.2.3. 小標題以及內部的所有金色類別字體 */
+        .notice-item-border p.font-bold,
+        .notice-item-border .gold-text,
+        .notice-item-border a {
+            color: var(--gold-main) !important;
+            fill: var(--gold-main) !important; /* 針對可能的 SVG 圖標 */
+        }
+
+        /* 確保連結文字在滑過時也不會變色 */
+        .notice-item-border a:hover {
+            color: var(--gold-main) !important;
+            opacity: 0.8;
+        }
+
     </style>
 </head>
 <body>
@@ -1203,7 +1391,29 @@
         </section>
 
     <section id="page-booking" class="page-content pb-32">
-        <h2 class="text-center text-[22px] text-[var(--gold-main)] font-bold my-6 tracking-widest">查詢可預約時段</h2>
+        <div id="booking-notice-modal" class="notice-glass-modal hidden">
+            <div class="notice-content-card">
+                <h3 class="serif text-[var(--gold-main)] text-xl mb-6 font-bold tracking-[0.2em] text-center">注意事項</h3>
+                <div class="space-y-4 text-xs leading-relaxed mb-8 opacity-90 text-[var(--white-sec)]">
+                    <div class="notice-item-border">
+                        <p class="font-bold mb-1">1. 優先使用線上系統</p>
+                        <p>正式預約請先前往系統查看。若系統已無時段，再透過本頁面進行人工詢問。</p>
+                        <a href="https://liff.line.me/2006698321-314ABPEZ" class="inline-block mt-2 px-4 py-2 bg-white/10 border border-gold gold-text rounded-full font-bold text-[10px] tracking-widest">前往預約系統 ❯</a>
+                    </div>
+                    <div class="notice-item-border">
+                        <p class="font-bold mb-1">2. 非即時完成預約</p>
+                        <p>本系統僅提供時段查詢與詢問。預約需進入系統或依照官方LINE指示，成功預約會收到通知。</p>
+                    </div>
+                    <div class="notice-item-border">
+                        <p class="font-bold mb-1">3. 內容僅供參考</p>
+                        <p>時段會隨即時預約、詢問優先順序、施做時長，實際請以人工確認為準。</p>
+                    </div>
+                </div>
+                <button onclick="closeBookingNotice()" class="w-full py-4 bg-[var(--gold-main)] text-[#1c3328] font-black rounded-xl shadow-lg tracking-widest text-sm">我了解並同意</button>
+            </div>
+        </div>
+        <div class="max-w-4xl mx-auto px-4 pt-8">
+            <h2 class="text-center text-[22px] text-[var(--gold-main)] font-bold my-6 tracking-widest">查詢可預約時段</h2>
         
         <div class="flex justify-between items-center mb-6 px-8 max-w-sm mx-auto">
             <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
@@ -1212,7 +1422,7 @@
         </div>
 
         <div style="position: relative; min-height: 300px;">
-            <div class="grid grid-cols-7 gap-1 mb-2 px-2 text-center text-[9px] opacity-50 font-bold">
+            <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
                 <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
                 <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
             </div>
@@ -1314,7 +1524,7 @@
                     <section>
                         <label class="label-group"><span class="label-zh">額外調整</span></label>
                         <div class="k-card p-2.5">
-                            <input type="number" id="adjAmount" class="k-input text-right font-bold" placeholder="輸入金額" oninput="calculate()">
+                            <input type="number" inputmode="numeric" id="adjAmount" class="k-input text-right font-bold" placeholder="輸入金額" oninput="calculate()">
                         </div>
                     </section>
                 </div>
@@ -1346,7 +1556,7 @@
             <button onclick="exportAvailableSlots()" class="bg-[var(--gold-main)] text-[#1a3a2e] px-4 py-2 rounded-full text-xs font-bold shadow-lg">匯出空檔</button>
         </div>
 
-        <div class="grid grid-cols-7 gap-1 mb-2 px-2 text-center text-[9px] opacity-50 font-bold">
+        <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
             <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
             <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
         </div>
@@ -1380,7 +1590,7 @@
             <button onclick="changeFinMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
         </div>
 
-        <div class="grid grid-cols-7 gap-1 mb-2 px-2 text-center text-[9px] opacity-50 font-bold">
+        <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
             <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
             <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
         </div>
@@ -1446,10 +1656,10 @@
             <div class="mb-2">
                 <label class="text-xs text-gray-400 block mb-1">選擇類別</label>
                 <div class="cat-tab-group">
+                    <div class="cat-tab-btn" onclick="switchFinCat('model', this)">手模</div>
                     <div class="cat-tab-btn active" onclick="switchFinCat('nail', this)">美甲</div>
                     <div class="cat-tab-btn" onclick="switchFinCat('eyelash', this)">美睫</div>
                     <div class="cat-tab-btn" onclick="switchFinCat('skin', this)">美容</div>
-                    <div class="cat-tab-btn" onclick="switchFinCat('model', this)">手模</div>
                 </div>
                 <div id="fe-item-grid" class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1"></div>
             </div>
@@ -1471,11 +1681,11 @@
                 <div class="flex gap-2 items-center">
                     <div class="flex-1">
                         <label class="text-[10px] block text-gray-400">總金額</label>
-                        <input type="number" id="fe-price" class="edit-input w-full font-bold text-[#2d4639] text-lg bg-white border border-gray-300">
+                        <input type="number" inputmode="numeric" id="fe-price" class="edit-input w-full font-bold text-[#2d4639] text-lg bg-white border border-gray-300">
                     </div>
                     <div class="flex-1">
                         <label class="text-[10px] block text-gray-400">總時長(分)</label>
-                        <input type="number" id="fe-duration" class="edit-input w-full text-center bg-white border border-gray-300">
+                        <input type="number" inputmode="numeric" id="fe-duration" class="edit-input w-full text-center bg-white border border-gray-300">
                     </div>
                 </div>
             </div>
@@ -1611,6 +1821,14 @@
         data: { openMonths: [], bookings: {} }, 
         editingKey: '' 
     };
+
+    let hasSeenBookingNotice = false; // 紀錄是否看過告示
+
+    function closeBookingNotice() {
+        document.getElementById('booking-notice-modal').classList.add('hidden');
+        hasSeenBookingNotice = true;
+    }
+    
 
     // 計算機 Config
     const calcUIConfigs = {
@@ -1780,7 +1998,7 @@
                                 <div class="flex gap-2">
                                     <div class="flex-1">
                                         <label class="text-[9px] opacity-50 block">價格 (含%)</label>
-                                        <input type="text" class="edit-input w-full" value="${item.price||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price', this.value)">
+                                        <input type="text" inputmode="numeric" class="edit-input w-full" value="${item.price||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price', this.value)">
                                     </div>
                                     ${showPrice2 ? `<div class="flex-1"><label class="text-[9px] opacity-50 block">價格2/體驗</label><input type="text" class="edit-input w-full" value="${item.price2||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price2', this.value)"></div>` : ''}
                                 </div> 
@@ -2205,13 +2423,14 @@
                 dateClass += "text-[#ff6b6b]";
             }
 
-            let html = `<div class="flex justify-between px-1"><span class="${dateClass}">${d}</span></div>`;
+            // [修改處] 將日期稍微放大，文字縮小，製造層次感
+            let html = `<div class="flex justify-between px-1.5 mb-1"><span class="${dateClass} !text-[13px] font-serif">${d}</span></div>`;
 
             if (isSun) {
-                html += `<div class="text-red-400 text-[10px] text-center font-bold mt-2">公休</div>`;
+                html += `<div class="text-[#ff6b6b] text-[9px] text-center opacity-80 mt-1">約滿</div>`;
             } else {
                 if (slots.length === 0) {
-                     html += `<div class="text-[10px] text-center opacity-40 mt-2">約滿</div>`;
+                     html += `<div class="text-[9px] text-center opacity-30 mt-1">公休</div>`;
                 } else {
                     slots.sort().forEach(t => {
                         const labelId = `${m+1}/${d} ${t}`;
@@ -2407,13 +2626,13 @@
             // 只要有設定時段，就匯出
             if(slots.length > 0) {
                 hasData = true;
-                result += `${m+1}/${d} (${slots.sort().join('、')})\n`;
+                result += `${m+1}/${d} ${slots.sort().join('、')}\n`;
             }
         }
         
         if(!hasData) result = "本月無開放時段";
         
-        const text = `【${m+1}月可預約時段】\n${result}`;
+        const text = `.ᐟ.ᐟ.ᐟ.ᐟ ${m+1}月可預約時段 .ᐟ.ᐟ.ᐟ.ᐟ\n〚請先私訊詢問再做預約〛\n${result}`;
         
         navigator.clipboard.writeText(text).then(() => {
             alert("已複製可預約時段！\n\n" + text);
@@ -2563,7 +2782,14 @@
                     contentHtml += `<div class="fin-item is-note">${note}</div>`;
                 });
 
-                // 顯示行程 (並計算金額)
+                // --- [修改開始] ---
+                // 1. 先建立手模清單以便比對
+                const modelItemNames = new Set([
+                    ...safeArray(serviceData.nail?.model).map(i => i.name),
+                    ...safeArray(serviceData.eyelash?.model).map(i => i.name)
+                ]);
+
+                // 2. 顯示行程 (並計算金額)
                 entries.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
                     count++;
                     let p = parsePrice(e.price);
@@ -2573,15 +2799,27 @@
                     totalRev += p;
                     realRev += r;
 
-                    // [新增] 週累計
+                    // 週累計
                     currentWeekTotal += p;
                     currentWeekReal += r;
                     
                     let itemName = e.items[0] || '項目';
                     const txt = financeStore.viewMode === 'price' ? `$${e.price}` : itemName;
-                    const priceClass = financeStore.viewMode === 'price' ? 'is-price-view' : '';
-                    contentHtml += `<div class="fin-item ${priceClass}">${txt}</div>`;
+                    
+                    // 判斷樣式：價格模式、備註模式、手模模式
+                    let itemClass = '';
+                    if (financeStore.viewMode === 'price') {
+                        itemClass = 'is-price-view';
+                    } else {
+                        // 檢查該預約的項目中，是否包含手模清單內的名稱
+                        const isModelItem = e.items.some(name => modelItemNames.has(name));
+                        if (isModelItem) itemClass = 'is-model';
+                    }
+
+                    contentHtml += `<div class="fin-item ${itemClass}">${txt}</div>`;
                 });
+                // --- [修改結束] ---
+
                 contentHtml += `</div>`;
             }
             
@@ -2793,6 +3031,21 @@
         }
     };
 
+    // [新增] 輔助函式：全域查找項目價格 (用於編輯時自動帶入原價)
+    function findItemPrice(itemName) {
+        const allCats = ['nail', 'eyelash', 'skin'];
+        for (const cat of allCats) {
+            if (serviceData[cat]) {
+                const lists = [serviceData[cat].main, serviceData[cat].addon, serviceData[cat].model];
+                for (const list of lists) {
+                    const found = safeArray(list).find(i => i.name === itemName);
+                    if (found) return found.price;
+                }
+            }
+        }
+        return 0; // 找不到則回傳 0
+    }
+
     // [修復] 開啟編輯視窗
     function openEditForm(entryId = null) {
         // 強制移除 hidden
@@ -2840,7 +3093,15 @@
                 if(elDep) elDep.checked = entry.hasDeposit;
                 if(elPrice) elPrice.value = entry.price;
                 if(elDur) elDur.value = entry.duration;
-                tempItems = safeArray(entry.items).map(n => ({name: n, price: 0, duration: 0}));
+                
+                // --- [修改開始] 編輯時自動查找價格，而非歸零 ---
+                tempItems = safeArray(entry.items).map(n => ({
+                    name: n, 
+                    price: findItemPrice(n), // 使用剛剛新增的函式查找原價
+                    duration: 0,
+                    isPercent: false 
+                }));
+                // --- [修改結束] ---
             }
         }
 
@@ -2848,8 +3109,11 @@
         const mSel = document.getElementById('fe-m');
         if(mSel) mSel.value = defM;
 
-        const defaultBtn = document.querySelector('.cat-tab-btn');
-        if(defaultBtn) switchFinCat('nail', defaultBtn); 
+        // --- [修改開始] 預設選中第一個類別 (現在 HTML 順序是 手模 在第一個) ---
+        const allTabs = document.querySelectorAll('.cat-tab-btn');
+        // 自動點擊 HTML 中的第一個按鈕 (這會自動對應到您修改後的 "手模" 按鈕)
+        if(allTabs.length > 0) switchFinCat('model', allTabs[0]); 
+        // --- [修改結束] ---
         
         renderSelectedList();
     }
@@ -2906,10 +3170,20 @@
         if(btn) btn.classList.add('active');
         
         let list = [];
+        
         if (cat === 'model') {
+            // [修改] 手模分頁：只放「美甲」的手模
             if(serviceData.nail) list = list.concat(safeArray(serviceData.nail.model));
-            if(serviceData.eyelash) list = list.concat(safeArray(serviceData.eyelash.model));
+            
+        } else if (cat === 'eyelash') {
+            // [修改] 美睫分頁：放入 主項目 + 睫毛管理(Model) + 加購
+            if(serviceData.eyelash) {
+                list = list.concat(safeArray(serviceData.eyelash.main));
+                list = list.concat(safeArray(serviceData.eyelash.model)); // 睫毛管理移回這裡
+                list = list.concat(safeArray(serviceData.eyelash.addon));
+            }
         } else {
+            // 美甲 或 美容：放入 主項目 + 加購
             if(serviceData[cat]) {
                 list = list.concat(safeArray(serviceData[cat].main));
                 list = list.concat(safeArray(serviceData[cat].addon));
@@ -2926,19 +3200,16 @@
 
         grid.innerHTML = list.map(i => {
             const p1Disp = String(i.price).includes('%') ? i.price : `$${i.price}`;
-            // 判斷是否有第二價格 (且不為空或0)
             const hasP2 = (i.price2 !== undefined && i.price2 !== "" && i.price2 != 0);
             const p2Str = hasP2 ? i.price2 : "";
             const dur = i.duration || 0;
 
             if (hasP2) {
-                // 有雙價格 -> 開啟選擇視窗
                 return `
                 <button class="item-option-btn" onclick="openPriceSelector('${cat}', '${i.name}', '${i.price}', '${p2Str}', ${dur})">
                     ${i.name} <span class="opacity-60 text-[10px] ml-1">選</span>
                 </button>`;
             } else {
-                // 單一價格 -> 直接加入
                 return `
                 <button class="item-option-btn" onclick="addItemToTemp('${i.name}', '${i.price}', ${dur})">
                     ${i.name} <span class="opacity-60 text-[10px]">(${p1Disp})</span>
@@ -3188,9 +3459,19 @@
 
         // 6. 觸發特定頁面的渲染邏輯
         window.scrollTo(0,0);
-        if(hash === 'booking') renderCalendar();
+        if (hash === 'booking') {
+            renderCalendar();
+            const isAdmin = document.body.classList.contains('admin-mode');
+            if (!isAdmin && !hasSeenBookingNotice) {
+                // 使用 setTimeout 微調觸發時間，避開頁面切換的瞬間，解決卡頓感
+                setTimeout(() => {
+                    const noticeModal = document.getElementById('booking-notice-modal');
+                    if(noticeModal) noticeModal.classList.remove('hidden');
+                }, 50); 
+            }
+        }
         if(hash === 'budget') renderCalendar(); 
-        if(hash === 'admin-finance') renderFinancePage(); 
+        if(hash === 'admin-finance') renderFinancePage();
     }
 
     // [重要] 啟動監聽：只要網址變了，就執行 router
@@ -3251,6 +3532,9 @@
     window.scrollToTop = function() {
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
+
+
+
 </script>
 </body>
 </html>
