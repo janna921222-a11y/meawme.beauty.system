@@ -514,118 +514,187 @@
         #page-admin-calc .k-card, 
         #page-admin-calc .app-container,
         #page-admin-calc section { background: transparent !important; background-color: transparent !important; box-shadow: none !important; border: none !important;}
+        /* --- 計算機底部懸浮列修正 --- */
         #page-admin-calc .sticky-calc-footer {
             position: fixed !important;
-            bottom: 60px !important;  
+            bottom: 60px !important;
             
-            /* --- 置中核心設定 --- */
-            width: 60% !important;     /* 這裡可以改成妳想要的寬度，例如 80% 或 70% */
-            left: 50% !important;      /* 先靠左對齊螢幕的 50% 線 */
-            transform: translateX(-50%) !important; /* 再往左拉回自己寬度的一半，達成置中 */
-            /* -------------------- */
+            /* 手機版：寬度改寬一點 (92%)，才不會太擠 */
+            width: 92% !important; 
+            left: 50% !important;
+            transform: translateX(-50%) !important;
 
+            /* 外觀設定 */
             background: rgba(255, 255, 255, 0.95) !important;
             backdrop-filter: blur(15px) !important;
             border-radius: 50px !important;
             box-shadow: 0 8px 30px rgba(0,0,0,0.1) !important;
-            z-index: 900 !important; 
+            z-index: 900 !important;
+            padding: 15px 20px !important; 
             
-            /* 妳剛才調整的窄長參數 */
-            padding: 20px 25px !important; /* 第一個數字控制高矮，第二個控制左右間距 */
-            
+            /* 排版設定 */
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
             border: 1px solid rgba(181, 164, 137, 0.2) !important;
         }
+
+        /* 電腦版：限制最大寬度 500px，才不會太長 */
+        @media (min-width: 768px) {
+            #page-admin-calc .sticky-calc-footer {
+                width: 500px !important; 
+            }
+        }
                 
-        /* ------------------------------------------- */
-        /* --- [NEW] 行事曆系統專用樣式 --- */
-        /* ------------------------------------------- */
+        /* --- [NEW] 行事曆系統專用樣式 (修正版) --- */
         .calendar-section { width: 100%; position: relative; }
         .serif { font-family: 'Playfair Display', serif; }
         .blur-target { filter: blur(8px); pointer-events: none; opacity: 0.1; transition: all 0.4s ease; }
         
+        /* 1. 日曆網格佈局 (共用) */
         .calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            gap: 2px !important; /* 縮小格子間的空隙 */
-            width: 100%; 
+            gap: 2px;
+            width: 100%;
             padding: 0 4px; 
             box-sizing: border-box; 
             max-width: 1000px !important; 
             margin: 0 auto !important; 
+            align-items: stretch; /* 讓格子高度自動對齊 */
         }
         
-        /* --- [修改] 固定格子高度，防止跳動 --- */
-        .day-box { 
-            background: rgba(255, 255, 255, 0.03); 
-            border: 1px solid rgba(201, 184, 150, 0.15); 
+        @media (min-width: 768px) {
+            .calendar-grid { gap: 6px; }
+        }
+        
+        /* 2. 格子結構 (共用排版設定，確保高度與形狀一致) */
+        .day-box, .fin-day-box { 
             border-radius: 4px; 
             padding: 4px 1px; 
             display: flex; 
             flex-direction: column; 
-            min-height: 120px !important; /* 保證基礎高度 */
-            height: auto !important;      /* 內容多時自動撐開 */
-            position: relative; 
+            position: relative;
+            min-height: 110px; 
+            height: 100% !important; /* 強制填滿高度 */
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
-        .fin-day-box { 
-            min-height: 120px !important; /* 財務格子也改為彈性 */
-            height: auto !important;
-            background: transparent; 
+        /* [預約] 專用外觀：保留底色與咖啡色框 */
+        .day-box {
+            background: rgba(255, 255, 255, 0.03); 
             border: 1px solid rgba(201, 184, 150, 0.15); 
-            border-radius: 4px; 
-            padding: 2px; 
-            position: relative; 
-            display: flex; 
-            flex-direction: column;
         }
 
-        body.admin-mode .day-box { background: rgba(0,0,0,0.03); border-color: var(--gold-main); }
+        /* [財務] 專用外觀：無底色、改用淡白線 */
+        .fin-day-box {
+            background: transparent; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+        }
+        
+        /* 電腦版高度調整 (共用) */
+        @media (min-width: 768px) {
+            .day-box, .fin-day-box { 
+                padding: 10px 4px; 
+                
+                /* [修改] 電腦版最小高度加大 */
+                min-height: 150px; 
+                
+                border-radius: 8px; 
+            }
+        }
 
-        /* [新增] 財務頁面：置中顯示專用樣式 */
-        .fin-day-box.centered-state {
-            justify-content: center;
-            align-items: center;
-            padding: 0;
+        /* 後台模式 (Admin Mode) 配色 */
+        body.admin-mode .day-box { 
+            background: rgba(0,0,0,0.03); 
+            border-color: var(--gold-main); 
         }
-        .fin-day-box.centered-state .date-corner {
-            position: absolute;
-            top: 2px;
-            left: 4px;
-            font-size: 10px;
+        body.admin-mode .fin-day-box {
+            background: transparent;
+            border-color: rgba(0,0,0,0.1); /* 後台淺色模式下的財務邊框 */
         }
-        .fin-day-box.centered-state .center-text {
-            font-size: 11px;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-        .fin-day-header span.font-bold {
-            font-size: 10px; /* 縮小日期數字 */
-        }
+
+        /* 財務頁面：置中顯示專用樣式 */
+        .fin-day-box.centered-state { justify-content: center; align-items: center; padding: 0; }
+        .fin-day-box.centered-state .date-corner { position: absolute; top: 2px; left: 4px; font-size: 10px; }
+        .fin-day-box.centered-state .center-text { font-size: 11px; font-weight: bold; letter-spacing: 1px; }
+        .fin-day-header span.font-bold { font-size: 10px; }
 
         .sunday-bg { background: rgba(255, 0, 0, 0.05); }
         .past-day { opacity: 0.3; pointer-events: none; }
 
+        /* 3. 時段按鈕格式 (共用) */
         .time-label { 
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 96%;
-            background: rgba(201, 184, 150, 0.1); 
+            width: 94%;
+            background: rgba(201, 184, 150, 0.12); 
             color: var(--gold-main); 
-            margin: 1px auto !important; /* 縮小按鈕之間的垂直距離 */
-            height: 20px; /* 降低按鈕高度 */
+            margin: 1.5px auto !important; 
+            height: 18px; 
             border-radius: 2px; 
-            font-size: 10px; 
+            font-size: 8px; 
+            letter-spacing: -0.5px;
             line-height: 1;
         }
+            
+        @media (min-width: 768px) {
+            .time-label { font-size: 11px; height: 24px; border-radius: 3px; margin: 2px auto !important; }
+        }
+
         body.admin-mode .time-label { background: rgba(0,0,0,0.1); color: var(--gold-main); font-weight: bold; }
-        
-        /* 選中狀態 (前台) */
+        .ask-mode .time-label { cursor: pointer; border: 0.5px solid var(--gold-main); box-sizing: border-box; }
         .ask-mode .time-label.selected { background: #800020 !important; color: white !important; transform: scale(1.05); }
+
+        /* 4. 注意事項彈窗 (移除動畫，解決從小變大的問題) */
+        .notice-glass-modal { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(10, 25, 18, 0.95); 
+            z-index: 7000; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+            opacity: 1; /* 確保直接顯示 */
+            backdrop-filter: blur(10px);
+            /* 關鍵：不設定 animation */
+            transition: none !important;
+        }
         
+        .notice-content-card {
+            width: 100%;
+            max-width: 360px;
+            background: #1c3328;
+            padding: 30px;
+            border-radius: 24px;
+            border: 1px solid rgba(201, 184, 150, 0.3);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            /* 確保卡片本身也沒有縮放動畫 */
+            transform: none !important; 
+            animation: none !important;
+        }
+
+        .notice-item-border {
+            border-left: 2px solid var(--gold-main);
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .notice-item-border p.font-bold,
+        .notice-item-border .gold-text,
+        .notice-item-border a {
+            color: var(--gold-main) !important;
+            fill: var(--gold-main) !important;
+        }
+        
+        .notice-item-border a:hover {
+            color: var(--gold-main) !important;
+            opacity: 0.8;
+        }
+
         /* 後台管理按鈕 */
         .admin-day-controls { display: none; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: auto; }
         body.admin-mode .admin-day-controls { display: grid; }
@@ -659,26 +728,21 @@
         }
         body.admin-mode .cal-modal-content { background: #fff; color: #333; }
         
-        .copy-btn { width: 100%; padding: 12px; background: #1a4731; color: white; border-radius: 10px; margin-top: 10px; }
+        .copy-btn { 
+            width: 100%; 
+            padding: 12px; 
+            background: #1a4731; 
+            color: white; 
+            border-radius: 10px; 
+            margin-top: 10px; 
+            border: 1px solid var(--gold-main); /* 新增這行 */
+        }
 
         /* --- [NEW] 財務行事曆專用樣式 --- */
         .fin-stat-header { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 15px 15px; border-bottom: 1px solid rgba(201, 184, 150, 0.2); margin-bottom: 15px; }
         .fin-stat-group { text-align: right; }
         .fin-stat-label { font-size: 10px; color: var(--gold-main); opacity: 0.8; letter-spacing: 1px; }
         .fin-stat-val { font-size: 16px; font-weight: 700; color: var(--white-main); font-family: 'Playfair Display', serif; }
-        
-        /* 行事曆格子 */
-        .fin-day-box { 
-            min-height: 100px; 
-            background: transparent; 
-            border: 1px solid rgba(201, 184, 150, 0.15); 
-            border-radius: 4px; 
-            padding: 4px; 
-            position: relative; 
-            display: flex; 
-            flex-direction: column;
-            overflow: hidden;
-        }
         .fin-day-header { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 4px; color: var(--white-sec); }
         .is-holiday { color: #ff6b6b !important; }
         /* 財務頁面的假日樣式優化 */
@@ -928,55 +992,63 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
-        /* --- 預約時段注意事項彈窗樣式 --- */
-        /* --- 進入時段頁面的注意事項彈窗樣式 --- */
-        .notice-glass-modal { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(10, 25, 18, 0.95); 
-            z-index: 7000; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 20px;
-            /* 加入淡入動畫減少卡頓感 */
-            animation: modalFadeIn 0.3s ease-out;
-        }
-
         @keyframes modalFadeIn {
             from { opacity: 0; backdrop-filter: blur(0px); }
             to { opacity: 1; backdrop-filter: blur(10px); }
         }
 
-        .notice-content-card {
-            width: 100%;
-            max-width: 360px;
-            background: #1c3328;
-            padding: 30px;
-            border-radius: 24px;
-            border: 1px solid rgba(201, 184, 150, 0.3);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        /* 非首頁時，縮減 Header 底部留白，讓 Logo 距離內容更近 */
+        .brand-header.header-compact {
+            padding-bottom: 0 !important; /* 取消原本的 25px */
+        }
+        
+        /* 財務管理標題置中專用 */
+        .fin-title-container {
+            position: relative;
+            display: flex;
+            justify-content: center; /* 標題置中 */
+            align-items: center;
+            padding: 24px 16px 16px; /* pt-6 px-4 mb-4 的對應 */
+            margin-bottom: 16px;
+        }
+        /* 按鈕強制靠右 */
+        .fin-right-btn {
+            position: absolute;
+            right: 16px;
         }
 
-        /* 修改：小標題顏色改為跟標題一樣的金色 */
-        .notice-item-border {
-            border-left: 2px solid var(--gold-main);
-            padding-left: 15px;
-            margin-bottom: 20px;
+        /* --- [修正] 日曆系統手機版瘦身 --- */
+        .day-box, .fin-day-box { 
+            /* 手機版高度縮小，原本是 110px */
+            min-height: 85px !important; 
         }
 
-        /* 鎖定 1.2.3. 小標題以及內部的所有金色類別字體 */
-        .notice-item-border p.font-bold,
-        .notice-item-border .gold-text,
-        .notice-item-border a {
-            color: var(--gold-main) !important;
-            fill: var(--gold-main) !important; /* 針對可能的 SVG 圖標 */
+        /* 讓裡面的文字與條列更緊湊 */
+        .fin-item {
+            font-size: 9px !important;      /* 字體縮小 */
+            padding: 1px 4px !important;    /* 內距縮小 */
+            margin: 1px 0 2px 0 !important; /* 間距縮小 */
+            line-height: 1.3 !important;
         }
 
-        /* 確保連結文字在滑過時也不會變色 */
-        .notice-item-border a:hover {
-            color: var(--gold-main) !important;
-            opacity: 0.8;
+        /* 預約時段按鈕也縮小 */
+        .time-label {
+            height: 15px !important;
+            font-size: 8px !important;
+            margin: 1px auto !important;
+        }
+
+        /* 電腦版維持原本大氣的配置 */
+        @media (min-width: 768px) {
+            .day-box, .fin-day-box { min-height: 150px !important; }
+            .fin-item { font-size: 11px !important; padding: 4px 8px !important; }
+            .time-label { height: 24px !important; font-size: 11px !important; }
+            
+            /* [修正] 計算機電腦版太寬的問題 -> 限制最大寬度 */
+            #page-admin-calc .app-container {
+                max-width: 500px !important; /* 限制寬度 */
+                margin: 0 auto !important;
+            }
         }
 
     </style>
@@ -1410,9 +1482,31 @@
                     </div>
                 </div>
                 <button onclick="closeBookingNotice()" class="w-full py-4 bg-[var(--gold-main)] text-[#1c3328] font-black rounded-xl shadow-lg tracking-widest text-sm">我了解並同意</button>
-            </div>
         </div>
-        <div class="max-w-4xl mx-auto px-4 pt-8">
+    </div>
+    
+    <div id="guideModal" class="notice-glass-modal hidden">
+        <div class="notice-content-card">
+            <h3 class="serif text-[var(--gold-main)] text-2xl mb-8 font-bold tracking-widest text-center">使用方式</h3>
+            <div class="space-y-6 mb-10 text-left text-[var(--white-main)]">
+                <div class="flex items-start">
+                    <div class="bg-[var(--gold-main)] text-[#1c3328] w-6 h-6 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs font-bold">1</div>
+                    <p class="text-sm">點選想詢問的時段（最多三個）<br><span class="opacity-50 text-[11px]">※ 請依偏好順序進行選取</span></p>
+                </div>
+                <div class="flex items-start">
+                    <div class="bg-[var(--gold-main)] text-[#1c3328] w-6 h-6 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs font-bold">2</div>
+                    <p class="text-sm">點擊「確定選取」並輸入預約項目<br><span class="opacity-50 text-[11px]">例如：指定款A+卸甲</span></p>
+                </div>
+                <div class="flex items-start">
+                    <div class="bg-[var(--gold-main)] text-[#1c3328] w-6 h-6 rounded-full flex items-center justify-center mr-3 flex-shrink-0 text-xs font-bold">3</div>
+                    <p class="text-sm">點選「複製文字」並前往 LINE 貼上詢問</p>
+                </div>
+            </div>
+            <button onclick="startAskMode()" class="w-full py-4 bg-[var(--gold-main)] text-[#1c3328] font-black rounded-xl shadow-lg tracking-widest text-sm">開始選取時段</button>
+            <button onclick="document.getElementById('guideModal').classList.add('hidden')" class="w-full mt-6 text-xs opacity-40 text-[var(--white-sec)]">暫時取消</button>
+        </div>
+    </div>
+    <div class="max-w-4xl mx-auto px-4 pt-8">
             <h2 class="text-center text-[22px] text-[var(--gold-main)] font-bold my-6 tracking-widest">查詢可預約時段</h2>
         
         <div class="flex justify-between items-center mb-6 px-8 max-w-sm mx-auto">
@@ -1437,7 +1531,7 @@
         </div>
 
         <div class="text-center">
-            <button id="askBtn" onclick="toggleAskMode()" class="ask-action-btn">詢問時段</button>
+            <button id="askBtn" onclick="showGuide()" class="ask-action-btn">詢問時段</button>
             <button id="confirmSelectionBtn" onclick="openAskDialog()" class="confirm-action-btn">確定選取</button>
         </div>
     </section>
@@ -1490,10 +1584,9 @@
         </section>
 
         <section id="page-admin-calc" class="page-content pb-32">
-            <header class="text-center pt-4 mb-4">
-                <h1 class="text-sm font-bold tracking-[0.2em] text-[#2d4639]">美甲款式計算機</h1>
-            </header>
-            <div class="app-container px-4">
+        <h2 style="font-size: 28px !important; text-align: center !important; margin: 30px 0 10px !important; color: var(--gold-main); font-weight: 800; letter-spacing: 3px;">美甲款式計算機</h2>
+        
+        <div class="app-container px-4" style="max-width: 500px; margin: 0 auto;">
                 <div class="flex bg-white rounded-full p-1 mb-4 shadow-sm border border-gray-100 mx-[4%]">
                     <button id="tab-regular" onclick="switchMode('regular')" class="flex-1 py-1.5 text-[10px] rounded-full transition-all tab-active font-bold">一般顧客</button>
                     <button id="tab-model" onclick="switchMode('model')" class="flex-1 py-1.5 text-[10px] rounded-full transition-all text-gray-400 font-bold">手模專區</button>
@@ -1564,9 +1657,9 @@
     </section>
 
     <section id="page-admin-finance" class="page-content pb-32">
-        <div class="flex justify-between items-center px-4 pt-6 mb-4">
+        <div class="fin-title-container">
             <h2 style="margin:0 !important; font-size:20px !important;">財務管理</h2>
-            <button id="finViewToggle" onclick="toggleFinView()" class="view-toggle-btn">顯示: 金額</button>
+            <button id="finViewToggle" onclick="toggleFinView()" class="view-toggle-btn fin-right-btn">顯示: 金額</button>
         </div>
 
         <div class="fin-stat-header">
@@ -2537,6 +2630,19 @@
         renderCalendar();
     }
 
+    window.showGuide = function() {
+        if (bookingState.isAskMode) {
+            toggleAskMode(); // 如果已經是選取模式，按鈕功能變為取消
+        } else {
+            document.getElementById('guideModal').classList.remove('hidden'); // 否則顯示教學
+        }
+    };
+
+    window.startAskMode = function() {
+        document.getElementById('guideModal').classList.add('hidden');
+        toggleAskMode(); // 關閉教學並啟動選取
+    };
+
     function toggleAskMode() {
         bookingState.isAskMode = !bookingState.isAskMode;
         bookingState.selectedTimes = [];
@@ -3421,6 +3527,21 @@
         // 1. 取得當前 Hash，預設為 home
         const hash = location.hash.slice(1) || 'home';
         
+        // --- [修改] 控制首頁標題文字顯示 & 距離調整 ---
+        const headerTexts = document.querySelectorAll('.studio-name, .studio-name2, .studio-subtitle');
+        const brandHeader = document.querySelector('.brand-header');
+        
+        if (hash === 'home') {
+            // 首頁：顯示文字、恢復原本留白
+            headerTexts.forEach(el => el.style.display = ''); 
+            if(brandHeader) brandHeader.classList.remove('header-compact');
+        } else {
+            // 非首頁：隱藏文字、縮減留白
+            headerTexts.forEach(el => el.style.display = 'none'); 
+            if(brandHeader) brandHeader.classList.add('header-compact');
+        }
+        // --------------------------------
+
         // 2. 定義後台頁面清單 (需要權限)
         const adminPages = ['admin-nail', 'admin-eyelash', 'admin-skin', 'admin-calc', 'budget', 'admin-finance'];
         
@@ -3463,7 +3584,6 @@
             renderCalendar();
             const isAdmin = document.body.classList.contains('admin-mode');
             if (!isAdmin && !hasSeenBookingNotice) {
-                // 使用 setTimeout 微調觸發時間，避開頁面切換的瞬間，解決卡頓感
                 setTimeout(() => {
                     const noticeModal = document.getElementById('booking-notice-modal');
                     if(noticeModal) noticeModal.classList.remove('hidden');
