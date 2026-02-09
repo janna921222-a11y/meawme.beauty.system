@@ -2516,14 +2516,17 @@
                 dateClass += "text-[#ff6b6b]";
             }
 
-            // [修改處] 將日期稍微放大，文字縮小，製造層次感
+                        // [修改] 將日期稍微放大，文字縮小，製造層次感
             let html = `<div class="flex justify-between px-1.5 mb-1"><span class="${dateClass} !text-[13px] font-serif">${d}</span></div>`;
 
+            // [修正] 邏輯與顏色對調：
+            // 1. 週日 -> 公休 (紅色 text-[#ff6b6b])
+            // 2. 平日無時段 -> 約滿 (淡灰色 opacity-30)
             if (isSun) {
-                html += `<div class="text-[#ff6b6b] text-[9px] text-center opacity-80 mt-1">約滿</div>`;
+                html += `<div class="text-[#ff6b6b] text-[9px] text-center opacity-80 mt-1 font-bold">公休</div>`;
             } else {
                 if (slots.length === 0) {
-                     html += `<div class="text-[9px] text-center opacity-30 mt-1">公休</div>`;
+                     html += `<div class="text-[9px] text-center opacity-30 mt-1">約滿</div>`;
                 } else {
                     slots.sort().forEach(t => {
                         const labelId = `${m+1}/${d} ${t}`;
