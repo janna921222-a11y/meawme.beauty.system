@@ -370,7 +370,7 @@
             background: oklch(100% 0.00011 271.152 / 0.08); 
         }
 
-        /* Login Overlay */
+        /* Login Overlay - 鍵盤防跳動優化 */
         #admin-login-overlay {
             position: fixed; 
             inset: 0; 
@@ -378,7 +378,9 @@
             display: none; 
             flex-direction: column; 
             align-items: center; 
-            justify-content: center;
+            /* [修正] 改為靠上對齊，並給予固定頂部距離，鍵盤彈起時才不會被擠壓 */
+            justify-content: flex-start !important; 
+            padding-top: 25vh !important; 
             z-index: 5000;
         }
         #admin-login-overlay.active { display: flex; animation: fadeIn 0.5s ease forwards; }
@@ -758,24 +760,25 @@
             font-weight: 800;
         }
         
-        /* 預約條目 */
+        /* 預約條目 - Flex 佈局優化 */
         .fin-item { 
-            font-size: 10px; 
+            font-size: 10px !important; 
             font-weight: 500; 
             letter-spacing: 0.05em;
-            /* 關鍵：取消所有邊框，只保留左邊條 */
+            /* 關鍵：改用 Flex 讓符號強制顯示 */
+            display: flex !important; 
+            justify-content: space-between !important;
+            align-items: center !important;
+            
             border: none !important;
             border-left: 3px solid transparent !important; 
-            padding: 4px 8px !important;
-            margin: 2px 0 4px 0 !important;
-            background: rgba(255, 255, 255, 0.04) !important;
+            padding: 2px 4px !important; /* 稍微縮小內距 */
+            margin: 1px 0 2px 0 !important; 
+            background: rgba(255, 255, 255, 0.04);
             backdrop-filter: blur(4px);
-            border-radius: 0 4px 4px 0; /* 讓邊條側維持垂直，右側圓角 */
+            border-radius: 0 4px 4px 0; 
             color: var(--white-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: clip;
-            box-shadow: none !important; /* 確保沒有陰影形成的外框感 */
+            box-shadow: none !important; 
         }
 
         /* [一般客人] 的邊條顏色 - 金色 */
@@ -787,18 +790,40 @@
         .fin-item.is-model {
             border-left-color: #184629 !important;
         }
+        /* [純金額顯示] 優化：靠左、無符號、綠框改金框(可選) */
         .fin-item.is-price-view { 
             background: transparent !important; 
-            border: 1px solid #1a4731 !important; /* 綠色框線 */
+            border: 1px solid #1a4731 !important; 
             color: var(--gold-main) !important; 
-            font-weight: bold; 
-            text-align: right; 
+            
+            /* [修正] 改為靠左對齊 */
+            justify-content: flex-start !important; 
+            text-align: left !important;
+            padding-left: 6px !important; /* 左邊留點呼吸空間 */
+        }
+        
+        /* 確保裡面的文字也靠左 */
+        .fin-item.is-price-view span {
+            text-align: left !important;
+            flex: 1 !important; /* 讓它佔滿剩餘空間 */
         }
         .fin-item.is-note {
             background: rgba(255, 107, 107, 0.15) !important; /* 淡紅底 */
             color: #ff6b6b !important; /* 紅字 */
             font-weight: 700 !important;
             border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        /* 針對條目內的文字 (處理截斷問題) */
+        .fin-item span.flex-1 {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: clip; /* 不使用省略號 (...) */
+            
+            /* [關鍵技術] 漸層遮罩：讓文字尾端最後 15% 自然淡出 */
+            /* 這樣就不會看到「只剩一點點筆畫」的醜切斷面 */
+            mask-image: linear-gradient(to right, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
         }
 
         /* 週結算列 */
@@ -897,10 +922,22 @@
             padding: 0 2px;
             border-radius: 0;
         }
-        .item-price-input:focus {
+        /* [新增] 清單內的小型時長輸入框 */
+        .item-duration-input {
+            width: 35px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed #ccc; /* 虛線區隔 */
+            text-align: center;
+            color: #666;
+            font-size: 11px;
+            padding: 0;
+            margin-right: 4px;
+        }
+        .item-duration-input:focus {
             outline: none;
-            border-bottom: 2px solid var(--gold-main); /* 點擊時變金色 */
-            background: rgba(255, 255, 255, 0.5);
+            border-bottom: 1px solid var(--gold-main);
+            color: var(--gold-main);
         }
         
         /* 類別切換按鈕 */
@@ -1025,7 +1062,7 @@
 
         /* 讓裡面的文字與條列更緊湊 */
         .fin-item {
-            font-size: 9px !important;      /* 字體縮小 */
+            font-size: 8px !important;      /* 字體縮小 */
             padding: 1px 4px !important;    /* 內距縮小 */
             margin: 1px 0 2px 0 !important; /* 間距縮小 */
             line-height: 1.3 !important;
@@ -1050,6 +1087,34 @@
                 margin: 0 auto !important;
             }
         }
+
+        /* [修改] 財務日曆格子底部 - 上下班時間顯示 */
+        .fin-day-footer {
+            margin-top: auto;
+            padding-top: 4px;
+            border-top: 1px dashed rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            
+            /* 手機版設定：字小 + 間距緊 */
+            font-size: 9px !important; 
+            letter-spacing: -0.5px !important; /* [新增] 字距變窄 */
+            
+            font-family: 'Outfit', sans-serif;
+            opacity: 0.8;
+        }
+
+        /* [新增] 電腦版設定 (平板以上)：字體恢復，間距正常 */
+        @media (min-width: 768px) {
+            .fin-day-footer {
+                font-size: 12px !important;
+                letter-spacing: 0 !important;
+            }
+        }
+
+        /* 左邊上班，右邊下班 (顏色維持) */
+        .fin-day-footer .start-time { color: var(--gold-main); font-weight: 700; }
+        .fin-day-footer .end-time { color: var(--white-sec); }
 
     </style>
 </head>
@@ -1658,7 +1723,10 @@
 
     <section id="page-admin-finance" class="page-content pb-32">
         <div class="fin-title-container">
+            <button onclick="fixLegacyData()" class="view-toggle-btn" style="position: absolute; left: 16px; border-color: #ff6b6b; color: #ff6b6b;">系統校正</button>
+            
             <h2 style="margin:0 !important; font-size:20px !important;">財務管理</h2>
+            
             <button id="finViewToggle" onclick="toggleFinView()" class="view-toggle-btn fin-right-btn">顯示: 金額</button>
         </div>
 
@@ -1815,14 +1883,20 @@
     </nav>
 
     <div id="admin-login-overlay">
-        <div class="login-container">
+        <form class="login-container" onsubmit="event.preventDefault(); checkAdminNew();">
             <div class="login-title">身份驗證</div>
-            <input type="password" id="admin-pwd" class="pwd-input" placeholder="ACCESS CODE" inputmode="numeric" pattern="[0-9]*">
+            
+            <input type="text" name="username" value="meawme" autocomplete="username" style="display:none;">
+
+            <input type="password" id="admin-pwd" name="password" autocomplete="current-password" 
+                   class="pwd-input" placeholder="ACCESS CODE" inputmode="numeric" pattern="[0-9]*"
+                   oninput="if(this.value==='2002') checkAdminNew()">
+            
             <div class="flex flex-col gap-6 items-center">
-                <button onclick="checkAdminNew()" class="login-action-btn">VERIFY</button>
-                <button onclick="hideAdminLogin()" style="color:rgba(255,255,255,0.3); font-size: 11px; letter-spacing: 2px;">CANCEL</button>
+                <button type="submit" class="login-action-btn">VERIFY</button>
+                <button type="button" onclick="hideAdminLogin()" style="color:rgba(255,255,255,0.3); font-size: 11px; letter-spacing: 2px;">CANCEL</button>
             </div>
-        </div>
+        </form>
     </div>
 
     <div id="askDialog" class="cal-modal-overlay hidden">
@@ -1983,7 +2057,15 @@
 
     function saveBookingData() {
         if (window.dbSet && window.dbRef) {
-            window.dbSet(window.dbRef(window.firebaseDB, 'meawMeBooking'), bookingState.data);
+            // 寫入 Firebase 路徑 'meawMeBooking'
+            window.dbSet(window.dbRef(window.firebaseDB, 'meawMeBooking'), bookingState.data)
+                .then(() => {
+                    // console.log("行事曆同步成功");
+                })
+                .catch((error) => {
+                    console.error("行事曆同步失敗:", error);
+                    alert("行事曆同步失敗，請檢查網路");
+                });
         }
         renderCalendar();
     }
@@ -2052,6 +2134,7 @@
         initCalc();
     }
 
+    // [修改] 渲染後台列表 (新增 Duration 輸入框)
     function renderAdminList() {
         const categories = ['nail', 'eyelash', 'skin'];
         categories.forEach(cat => {
@@ -2069,9 +2152,9 @@
                 listContainer.innerHTML = items.map((item, index) => {
                     if (!item) return '';
                     const dataIdx = `data-idx="${index}"`;
-                    
                     const p1Disp = String(item.price).includes('%') ? item.price : `$${item.price}`;
                     const p2Disp = item.price2 ? ` / ${String(item.price2).includes('%') ? item.price2 : '$'+item.price2}` : '';
+                    const durDisp = item.duration ? `(${item.duration}分)` : ''; // 顯示時長
 
                     if (isEditing) {
                         const showPrice2 = (type === 'main' && cat !== 'nail');
@@ -2090,10 +2173,14 @@
                                 <input type="text" class="edit-input w-full font-bold mb-2" value="${item.name||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'name', this.value)">
                                 <div class="flex gap-2">
                                     <div class="flex-1">
-                                        <label class="text-[9px] opacity-50 block">價格 (含%)</label>
+                                        <label class="text-[9px] opacity-50 block">價格</label>
                                         <input type="text" inputmode="numeric" class="edit-input w-full" value="${item.price||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price', this.value)">
                                     </div>
-                                    ${showPrice2 ? `<div class="flex-1"><label class="text-[9px] opacity-50 block">價格2/體驗</label><input type="text" class="edit-input w-full" value="${item.price2||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price2', this.value)"></div>` : ''}
+                                    <div class="w-16">
+                                        <label class="text-[9px] opacity-50 block">時長(分)</label>
+                                        <input type="number" inputmode="numeric" class="edit-input w-full text-center" value="${item.duration||0}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'duration', this.value)">
+                                    </div>
+                                    ${showPrice2 ? `<div class="flex-1"><label class="text-[9px] opacity-50 block">價格2</label><input type="text" class="edit-input w-full" value="${item.price2||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price2', this.value)"></div>` : ''}
                                 </div> 
                             </div> 
                             ${checkHtml}
@@ -2101,7 +2188,7 @@
                         </div>`;
                     } else {
                         const calcBadge = item.selectedForCalc ? '<span class="text-[8px] bg-[#1a4731] text-[#c9b896] px-1 rounded ml-1">計</span>' : '';
-                        return `<div class="admin-item-row"><div class="info"><div class="name flex items-center">${item.name} ${calcBadge}</div></div><div class="price font-bold">${p1Disp}${p2Disp}</div></div>`;
+                        return `<div class="admin-item-row"><div class="info"><div class="name flex items-center">${item.name} ${calcBadge} <span class="text-[9px] opacity-50 ml-1">${durDisp}</span></div></div><div class="price font-bold">${p1Disp}${p2Disp}</div></div>`;
                     }
                 }).join('');
 
@@ -2109,13 +2196,15 @@
                     addContainer.innerHTML = isEditing ? 
                         `<button onclick="addNewBlankItem('${cat}', '${type}')" class="w-full py-3 border-2 border-dashed border-[#c9b896] text-[#c9b896] rounded-xl text-sm font-bold opacity-60 hover:opacity-100 transition-all my-2">+ 新增項目</button>` : '';
                 }
-
-                if (isEditing) {
-                    // 延遲綁定 Sortable 以確保 DOM 存在
-                    setTimeout(() => initSortable(listContainer, cat, type), 100);
-                }
+                if (isEditing) setTimeout(() => initSortable(listContainer, cat, type), 100);
             });
         });
+    }
+
+    // [修改] 更新數值 (支援 duration)
+    function updateItemValue(cat, type, index, field, value) {
+        if (field === 'duration' || (field === 'price' && !isNaN(value))) value = parseInt(value) || 0;
+        serviceData[cat][type][index][field] = value;
     }
 
     function initSortable(el, cat, type) {
@@ -2516,17 +2605,14 @@
                 dateClass += "text-[#ff6b6b]";
             }
 
-                        // [修改] 將日期稍微放大，文字縮小，製造層次感
+            // [修改處] 將日期稍微放大，文字縮小，製造層次感
             let html = `<div class="flex justify-between px-1.5 mb-1"><span class="${dateClass} !text-[13px] font-serif">${d}</span></div>`;
 
-            // [修正] 邏輯與顏色對調：
-            // 1. 週日 -> 公休 (紅色 text-[#ff6b6b])
-            // 2. 平日無時段 -> 約滿 (淡灰色 opacity-30)
             if (isSun) {
-                html += `<div class="text-[#ff6b6b] text-[9px] text-center opacity-80 mt-1 font-bold">公休</div>`;
+                html += `<div class="text-[#ff6b6b] text-[9px] text-center opacity-80 mt-1">約滿</div>`;
             } else {
                 if (slots.length === 0) {
-                     html += `<div class="text-[9px] text-center opacity-30 mt-1">約滿</div>`;
+                     html += `<div class="text-[9px] text-center opacity-30 mt-1">公休</div>`;
                 } else {
                     slots.sort().forEach(t => {
                         const labelId = `${m+1}/${d} ${t}`;
@@ -2577,11 +2663,39 @@
         saveBookingData();
     }
 
+    // [修正] 切換單日開關 (防呆：避開已存在財務中的預約)
     function toggleDaySlots(key) {
-        if (bookingState.data.bookings[key] && bookingState.data.bookings[key].length > 0) {
+        const currentSlots = bookingState.data.bookings[key];
+        
+        // 如果目前有開放，則全關
+        if (currentSlots && currentSlots.length > 0) {
             bookingState.data.bookings[key] = [];
         } else {
-            bookingState.data.bookings[key] = [...DEFAULTS_TIMES];
+            // 要開啟預設時段，但必須先檢查財務有沒有衝堂
+            // 1. 轉換 Key 格式以對應 Finance Data (YYYY-M-D -> YYYY-MM-DD)
+            const [y, m, d] = key.split('-');
+            const finKey = `${y}-${String(parseInt(m)+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const finEntries = safeArray(financeStore.data[finKey]);
+
+            // 2. 過濾預設時段
+            const safeDefaults = DEFAULTS_TIMES.filter(defaultTime => {
+                // 檢查這個 defaultTime 是否跟任何一個 finEntry 衝突
+                const [dH, dM] = defaultTime.split(':').map(Number);
+                const dMins = dH * 60 + dM;
+
+                // 檢查是否落在任何一個預約區間內
+                const isOccupied = finEntries.some(e => {
+                     const [eH, eM] = e.time.split(':').map(Number);
+                     const eStart = eH * 60 + eM;
+                     const eDur = parseInt(e.duration || 60, 10);
+                     const eEnd = eStart + eDur;
+                     // 如果預設時間 落在 預約開始與結束之間，就是被佔用了
+                     return (dMins >= eStart && dMins < eEnd);
+                });
+                return !isOccupied; // 沒被佔用才保留
+            });
+
+            bookingState.data.bookings[key] = safeDefaults;
         }
         saveBookingData();
     }
@@ -2618,14 +2732,65 @@
         });
     }
 
+    // [修正] 行事曆手動新增時段 (新增：財務衝突檢查與提醒)
     function addCustomTime() {
-        const t = `${document.getElementById('hSel').value}:${document.getElementById('mSel').value}`;
-        if (!bookingState.data.bookings[bookingState.editingKey]) bookingState.data.bookings[bookingState.editingKey] = [];
-        if (!bookingState.data.bookings[bookingState.editingKey].includes(t)) {
-            bookingState.data.bookings[bookingState.editingKey].push(t);
-            saveBookingData();
-            renderTimeChips();
+        const h = document.getElementById('hSel').value;
+        const m = document.getElementById('mSel').value;
+        const t = `${h}:${m}`;
+        
+        // 1. 基本檢查：是否已存在
+        if (!bookingState.data.bookings[bookingState.editingKey]) {
+            bookingState.data.bookings[bookingState.editingKey] = [];
         }
+        if (bookingState.data.bookings[bookingState.editingKey].includes(t)) {
+            return alert("此時段已存在");
+        }
+
+        // 2. [新增] 進階檢查：是否與財務行程衝突
+        // 轉換 Key 格式 (Booking Key "2026-1-8" -> Finance Key "2026-02-08")
+        const [yStr, mStr, dStr] = bookingState.editingKey.split('-');
+        const y = parseInt(yStr);
+        const mm = parseInt(mStr) + 1; // booking key 的月是 0-base，轉成 1-base
+        const dd = parseInt(dStr);
+        const finKey = `${y}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+        
+        const finEntries = safeArray(financeStore.data[finKey]);
+        
+        if (finEntries.length > 0) {
+            // 計算欲新增的時間點 (分鐘數)
+            const newMins = parseInt(h) * 60 + parseInt(m);
+            
+            // 檢查是否有任何預約覆蓋了這個時間點
+            // 邏輯：如果 新增時間 >= 預約開始 AND 新增時間 < 預約結束，就是衝突
+            const conflictEntry = finEntries.find(e => {
+                const [eH, eM] = e.time.split(':').map(Number);
+                const startMins = eH * 60 + eM;
+                const dur = parseInt(e.duration || 60);
+                const endMins = startMins + dur;
+                
+                return (newMins >= startMins && newMins < endMins);
+            });
+
+            if (conflictEntry) {
+                // 算出結束時間方便顯示
+                const [cH, cM] = conflictEntry.time.split(':').map(Number);
+                const cDur = parseInt(conflictEntry.duration || 60);
+                const cEndMins = cH * 60 + cM + cDur;
+                const cEndH = Math.floor(cEndMins / 60);
+                const cEndM = cEndMins % 60;
+                const cEndStr = `${String(cEndH).padStart(2,'0')}:${String(cEndM).padStart(2,'0')}`;
+
+                const msg = `⚠️ 警告：時段衝突！\n\n您想開啟的 ${t} 與現有預約重疊：\n預約：${conflictEntry.time} - ${cEndStr} (${conflictEntry.items[0]})\n\n確定要強制開啟嗎？(可能導致重複預約)`;
+                
+                if (!confirm(msg)) return; // 使用者按取消，則不新增
+            }
+        }
+
+        // 3. 通過檢查，執行新增
+        bookingState.data.bookings[bookingState.editingKey].push(t);
+        bookingState.data.bookings[bookingState.editingKey].sort(); // 排序讓顯示更整齊
+        saveBookingData();
+        renderTimeChips();
     }
 
     function closeEditModal() {
@@ -2778,30 +2943,28 @@
         }
     }
 
+    // [修正] 合併後的正確儲存函數 (請取代原有的兩個 saveFinanceV2)
     function saveFinanceV2() {
         if (window.dbSet && window.dbRef) {
             window.dbSet(window.dbRef(window.firebaseDB, 'meawMeFinanceV2'), {
                 data: financeStore.data,
                 manualOffDays: financeStore.manualOffDays,
-                // [新增] 儲存休假備註
-                offDayNotes: financeStore.offDayNotes || {}
+                offDayNotes: financeStore.offDayNotes || {} // 確保備註被儲存
+            }).then(() => {
+                // console.log("儲存成功");
+            }).catch(e => {
+                console.error("儲存失敗", e);
+                alert("儲存失敗，請檢查網路");
             });
         }
         renderFinancePage();
-        if(!document.getElementById('dayDetailModal').classList.contains('hidden')) renderDayDetailList();
-    }
-
-    function saveFinanceV2() {
-        if (window.dbSet && window.dbRef) {
-            window.dbSet(window.dbRef(window.firebaseDB, 'meawMeFinanceV2'), {
-                data: financeStore.data,
-                manualOffDays: financeStore.manualOffDays
-            });
+        // 如果當日詳情視窗是開啟的，也刷新它
+        if(!document.getElementById('dayDetailModal').classList.contains('hidden')) {
+            renderDayDetailList();
         }
-        renderFinancePage();
-        if(!document.getElementById('dayDetailModal').classList.contains('hidden')) renderDayDetailList();
-    }
+}
 
+    // [修正版] 渲染財務頁面 (修復上下班位置與時間計算)
     function renderFinancePage() {
         const y = financeStore.viewDate.getFullYear();
         const m = financeStore.viewDate.getMonth();
@@ -2814,140 +2977,160 @@
         const firstDay = new Date(y, m, 1).getDay();
         const offset = (firstDay === 0 ? 6 : firstDay - 1);
         const daysInMonth = new Date(y, m + 1, 0).getDate();
-        
         const holidayMap = window.getTaiwanHolidays(); 
+        const todayObj = new Date();
+        const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth()+1).padStart(2,'0')}-${String(todayObj.getDate()).padStart(2,'0')}`;
 
-        // 月總計變數
         let totalRev = 0, realRev = 0, count = 0, offDays = 0, realOff = 0;
-        
-        // [新增] 週結算累計變數
-        let currentWeekTotal = 0;
-        let currentWeekReal = 0;
+        let currentWeekTotal = 0, currentWeekReal = 0;
 
         for(let i=0; i<offset; i++) grid.innerHTML += `<div></div>`;
 
         for(let d=1; d<=daysInMonth; d++) {
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const dayOfWeek = new Date(y, m, d).getDay();
-            
             const isSun = dayOfWeek === 0;
             const isSat = dayOfWeek === 6;
             const holidayName = holidayMap[dateStr];
             const isManualOff = financeStore.manualOffDays.includes(dateStr);
             const notes = safeArray(financeStore.offDayNotes ? financeStore.offDayNotes[dateStr] : []);
             const entries = safeArray(financeStore.data[dateStr]);
+            const isToday = (dateStr === todayStr);
 
-            // 1. 月統計邏輯
             if (isSun || isSat || holidayName || isManualOff) offDays++; 
-            if ((isSun || holidayName || isManualOff) && entries.length === 0) realOff++; // 週六不算自動實休
+            if ((isSun || holidayName || isManualOff) && entries.length === 0) realOff++; 
 
             const box = document.createElement('div');
             const isRedDay = isSun || isSat || holidayName || isManualOff;
             
-            // 文字顯示邏輯
             let labelText = "";
-            let isNote = false;
+            if (notes.length > 0) labelText = notes[0] + (notes.length > 1 ? "+" : ""); 
+            else if (isManualOff) labelText = "公休"; 
+            else if (holidayName) labelText = holidayName;
+            else if (isSun) labelText = "休";
 
-            if (notes.length > 0) {
-                labelText = notes[0] + (notes.length > 1 ? "+" : ""); 
-                isNote = true; 
-            } else if (isManualOff) {
-                labelText = "休"; 
-            } else if (holidayName) {
-                labelText = holidayName;
-            } else if (isSun) {
-                labelText = "公休";
-            }
-
-            // 置中邏輯
             const isCentered = isRedDay && entries.length === 0 && notes.length === 0 && labelText !== "";
-
+            
             box.className = `fin-day-box ${isRedDay ? 'is-holiday-bg' : ''} ${isCentered ? 'centered-state' : ''}`;
-            box.style.overflow = "hidden"; 
+            
+            if (isToday) {
+                box.style.cssText = `border: 2px solid var(--gold-main) !important; box-shadow: inset 0 0 10px rgba(201, 184, 150, 0.3) !important; overflow: hidden;`;
+            } else {
+                box.style.overflow = "hidden";
+            }
+            
             box.onclick = () => openDayView(dateStr);
 
             let contentHtml = "";
             let dateColor = isRedDay ? 'text-[#ff6b6b]' : 'font-bold';
             let labelColor = isRedDay ? 'text-[#ff6b6b] font-bold' : 'opacity-30';
 
+            // [核心修正] 計算當日最早與最晚時間
+            // 邏輯：上班 = 第一筆開始； 下班 = 最後一筆開始 + 該筆時長
+            let minTimeStr = null;
+            let maxTimeStr = null;
+
+            if (entries.length > 0) {
+                // 1. 確保預約依照時間先後排序 (早 -> 晚)
+                entries.sort((a, b) => a.time.localeCompare(b.time));
+
+                // 2. 上班時間 = 第一筆的開始時間
+                minTimeStr = entries[0].time;
+
+                // 3. 下班時間 = 最後一筆的開始時間 + 該筆時長
+                const lastEntry = entries[entries.length - 1];
+                const [lastH, lastM] = lastEntry.time.split(':').map(Number);
+                
+                // 確保讀取時長 (如果資料庫是 0 或無資料，才預設 60，否則使用設定值)
+                let lastDur = parseInt(lastEntry.duration, 10);
+                if (isNaN(lastDur) || lastDur === 0) lastDur = 60;
+
+                // 計算結束分鐘數
+                let endMins = (lastH * 60) + lastM + lastDur;
+
+                // 轉回 HH:MM 格式
+                let endH = Math.floor(endMins / 60);
+                let endM = endMins % 60;
+                
+                // 處理跨日 (例如 25:00 變成 01:00)
+                if (endH >= 24) endH = endH - 24;
+                
+                maxTimeStr = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
+            }
+
             if (isCentered) {
-                // 模式 A：置中大字
-                contentHtml = `
-                    <div class="date-corner ${dateColor}">${d}</div>
-                    <div class="center-text ${labelColor}">${labelText}</div>
-                `;
+                contentHtml = `<div class="date-corner ${dateColor}">${d}</div><div class="center-text ${labelColor}">${labelText}</div>`;
             } else {
-                // 模式 B：列表顯示
                 contentHtml = `
                     <div class="fin-day-header">
                         <span class="${dateColor} font-bold">${d}</span>
                         <span class="${labelColor}">${labelText}</span>
                     </div>
-                    <div class="flex-1">
+                    <div class="flex-1 flex flex-col">
                 `;
                 
-                // 顯示紅色備註
                 notes.forEach(note => {
-                    contentHtml += `<div class="fin-item is-note">${note}</div>`;
+                    contentHtml += `<div class="fin-item is-note"><span>${note}</span></div>`;
                 });
 
-                // --- [修改開始] ---
-                // 1. 先建立手模清單以便比對
-                const modelItemNames = new Set([
-                    ...safeArray(serviceData.nail?.model).map(i => i.name),
-                    ...safeArray(serviceData.eyelash?.model).map(i => i.name)
-                ]);
+                const modelItemNames = new Set([...safeArray(serviceData.nail?.model).map(i => i.name), ...safeArray(serviceData.eyelash?.model).map(i => i.name)]);
 
-                // 2. 顯示行程 (並計算金額)
                 entries.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
                     count++;
                     let p = parsePrice(e.price);
                     let r = (p - (e.hasDeposit?100:0));
-
-                    // 月累計
-                    totalRev += p;
-                    realRev += r;
-
-                    // 週累計
-                    currentWeekTotal += p;
-                    currentWeekReal += r;
+                    totalRev += p; realRev += r;
+                    currentWeekTotal += p; currentWeekReal += r;
                     
-                    let itemName = e.items[0] || '項目';
-                    const txt = financeStore.viewMode === 'price' ? `$${e.price}` : itemName;
-                    
-                    // 判斷樣式：價格模式、備註模式、手模模式
+                    let displayItemName = (e.items[0] || '項目').trim();
+                    const baseTxt = financeStore.viewMode === 'price' ? `$${e.price}` : displayItemName;
+                    let fullItemsString = safeArray(e.items).join('').replace(/\s+/g, '');
+                    const hasRemoval = fullItemsString.includes("卸") || fullItemsString.includes("續");
+                    const hasExtension = fullItemsString.includes("甲片") || fullItemsString.includes("延甲");
+
+                    let suffix = "";
+                    if (financeStore.viewMode !== 'price') {
+                        if (hasRemoval && hasExtension) suffix = "☠︎"; 
+                        else if (hasRemoval) suffix = "☺︎"; 
+                        else if (hasExtension) suffix = "☹︎"; 
+                    } 
+
                     let itemClass = '';
                     if (financeStore.viewMode === 'price') {
                         itemClass = 'is-price-view';
                     } else {
-                        // 檢查該預約的項目中，是否包含手模清單內的名稱
-                        const isModelItem = e.items.some(name => modelItemNames.has(name));
-                        if (isModelItem) itemClass = 'is-model';
+                        if (e.items.some(name => modelItemNames.has(name))) itemClass = 'is-model';
                     }
 
-                    contentHtml += `<div class="fin-item ${itemClass}">${txt}</div>`;
+                    contentHtml += `
+                    <div class="fin-item ${itemClass}">
+                        <span class="flex-1 overflow-hidden whitespace-nowrap">${baseTxt}</span>
+                        ${suffix ? `<span class="flex-shrink-0 ml-1 font-bold">${suffix}</span>` : ''}
+                    </div>`;
                 });
-                // --- [修改結束] ---
 
-                contentHtml += `</div>`;
+                // [修正] 底部時間顯示： Start(左) ..... End(右)
+                if (minTimeStr && maxTimeStr) {
+                    contentHtml += `
+                        <div class="fin-day-footer">
+                            <span class="start-time">${minTimeStr}</span>
+                            <span class="end-time">${maxTimeStr}</span>
+                        </div>`;
+                }
+
+                contentHtml += `</div>`; // Close flex-1
             }
             
             box.innerHTML = contentHtml;
             grid.appendChild(box);
 
-            // 2. 週結算邏輯修正：如果是週日 OR 該月最後一天，就印出結算列
             if (isSun || d === daysInMonth) {
                  const row = document.createElement('div');
                  row.className = 'weekly-row';
-                 // 如果是月底最後一天且不是週日，顯示「月底結算」以示區隔
                  const rowTitle = (d === daysInMonth && !isSun) ? "📅 月底結算" : "📅 本週結算";
-                 
                  row.innerHTML = `<span>${rowTitle}</span> <span>總: $${currentWeekTotal.toLocaleString()} / 實: $${currentWeekReal.toLocaleString()}</span>`;
                  grid.appendChild(row);
-
-                 // 印完後歸零，準備算下一週
-                 currentWeekTotal = 0;
-                 currentWeekReal = 0;
+                 currentWeekTotal = 0; currentWeekReal = 0;
             }
         }
         
@@ -2969,16 +3152,16 @@
 
     function closeDayDetail() { document.getElementById('dayDetailModal').classList.add('hidden'); }
 
+    // [修改] 顯示當日詳情 (新增：顯示結束時間)
     function renderDayDetailList() {
         const container = document.getElementById('dd-list');
         container.innerHTML = '';
         
-        // 1. 休假備註區塊 (樣式改為：紅字、紅框、淡紅底)
+        // 1. 休假備註區塊
         const isOff = financeStore.manualOffDays.includes(activeDateStr);
         if (isOff) {
             const notes = safeArray(financeStore.offDayNotes ? financeStore.offDayNotes[activeDateStr] : []);
             
-            // 標題 (紅色)
             const noteHeader = document.createElement('div');
             noteHeader.className = "text-xs font-bold mt-2 border-b pb-1 mb-2";
             noteHeader.style.color = "#ff6b6b"; 
@@ -2986,11 +3169,9 @@
             noteHeader.innerText = "休假原因";
             container.appendChild(noteHeader);
 
-            // 列表 (每一條都用紅色顯示)
             notes.forEach((note, idx) => {
                 const row = document.createElement('div');
                 row.className = 'flex justify-between items-center p-2 rounded mb-2 border';
-                // 強制套用紅字配色
                 row.style.borderColor = '#ff6b6b';
                 row.style.backgroundColor = 'rgba(255, 107, 107, 0.08)'; 
                 
@@ -3004,7 +3185,6 @@
                 container.appendChild(row);
             });
 
-            // 新增備註的輸入框
             const addRow = document.createElement('div');
             addRow.className = "flex gap-2 mb-4";
             addRow.innerHTML = `
@@ -3014,7 +3194,7 @@
             container.appendChild(addRow);
         }
 
-        // 2. 預約行程區塊 (保持原本的灰白配色)
+        // 2. 預約行程區塊
         const entries = safeArray(financeStore.data[activeDateStr]);
         
         if(entries.length > 0) {
@@ -3024,8 +3204,16 @@
             container.appendChild(entryHeader);
 
             entries.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
+                // 計算結束時間
+                const [sH, sM] = e.time.split(':').map(Number);
+                const dur = parseInt(e.duration || 60, 10);
+                const endMins = sH * 60 + sM + dur;
+                let eH = Math.floor(endMins / 60);
+                const eM = endMins % 60;
+                if(eH >= 24) eH -= 24;
+                const endTimeStr = `${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
+
                 const div = document.createElement('div');
-                // 一般行程維持灰色/深色字
                 div.className = 'flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg mb-2 cursor-pointer hover:bg-gray-100 transition-all';
                 div.onclick = (event) => {
                     if(event.target.classList.contains('del-btn')) return;
@@ -3033,14 +3221,15 @@
                 };
                 div.innerHTML = `
                     <div class="flex-1">
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-[#c9b896] font-extrabold text-xl font-serif">${e.time}</span>
-                            <span class="text-gray-400 text-xs font-bold tracking-wider">$${e.price}</span>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-[#c9b896] font-extrabold text-lg font-serif">${e.time} - ${endTimeStr}</span>
+                                <span class="text-gray-400 text-xs font-bold tracking-wider">$${e.price}</span>
+                            </div>
+                            <div class="text-[15px] text-[#4b3621] font-bold mt-1 tracking-wide" 
+                                 style="text-shadow: 0 2px 4px rgba(75, 54, 33, 0.15), 0 1px 1px rgba(255,255,255,0.8);">
+                                ${safeArray(e.items).join(' + ')}
+                            </div>
                         </div>
-                        <div class="text-sm text-gray-300 font-medium mt-1">
-                            ${safeArray(e.items).join(' + ')}
-                        </div>
-                    </div>
                     <div class="flex items-center gap-3 pl-3 border-l border-gray-600">
                         <button class="del-btn text-red-400 font-bold text-lg px-2 py-1 hover:text-red-300 transition-colors" onclick="deleteSingleEntry('${e.id}')">✕</button>
                     </div>
@@ -3104,23 +3293,104 @@
         }
     }
 
-    // [新增] 單筆刪除功能 (請一併貼在 renderDayDetailList 下方)
+    // [修正] 單筆刪除功能 (新增：自動釋出時段)
     window.deleteSingleEntry = function(id) {
-        if(!confirm("確定直接刪除此筆預約？")) return;
+        // 阻止事件冒泡
+        if(event) event.stopPropagation();
+
+        if(!confirm("確定刪除此筆預約？\n(對應的時段將會嘗試自動釋出)")) return;
         
+        // 1. 找出要刪除的那筆資料，為了拿到它的時間
         let currentEntries = safeArray(financeStore.data[activeDateStr]);
-        // 過濾掉該 ID
-        financeStore.data[activeDateStr] = currentEntries.filter(e => String(e.id) !== String(id));
+        const targetEntry = currentEntries.find(e => String(e.id) === String(id));
         
-        saveFinanceV2(); // 儲存並刷新畫面
+        // 2. 刪除財務資料
+        financeStore.data[activeDateStr] = currentEntries.filter(e => String(e.id) !== String(id));
+        saveFinanceV2(); 
+
+        // 3. [新增] 自動釋出時段邏輯
+        if (targetEntry && targetEntry.time) {
+            // 修正 Booking Key 格式
+            const [yStr, mmStr, ddStr] = activeDateStr.split('-');
+            const bookingKey = `${parseInt(yStr)}-${parseInt(mmStr)-1}-${parseInt(ddStr)}`;
+            
+            // 如果該天還沒有時段陣列，初始化它
+            if (!bookingState.data.bookings[bookingKey]) {
+                bookingState.data.bookings[bookingKey] = [];
+            }
+
+            const timeToRelease = targetEntry.time;
+            const currentSlots = bookingState.data.bookings[bookingKey];
+
+            // 如果該時段不在清單中，把它加回去
+            if (!currentSlots.includes(timeToRelease)) {
+                // 這裡可以選擇是否要依照 DEFAULTS_TIMES 過濾，或是直接加回去
+                // 建議：直接加回去，讓變更反映出來
+                currentSlots.push(timeToRelease);
+                currentSlots.sort(); // 排序保持美觀
+                saveBookingData(); // 同步行事曆
+                console.log(`時段 ${timeToRelease} 已自動釋出`);
+            }
+        }
     };
 
+    // [修正] 排休按鈕 (連動：自動開關行事曆 + 智慧避開行程)
     function toggleDayOff() {
         const idx = financeStore.manualOffDays.indexOf(activeDateStr);
-        if (idx > -1) financeStore.manualOffDays.splice(idx, 1);
-        else financeStore.manualOffDays.push(activeDateStr);
+        const isSettingOff = (idx === -1); // 如果目前沒休(idx=-1)，就是要設為休假
+
+        if (idx > -1) {
+            financeStore.manualOffDays.splice(idx, 1); // 取消休假 -> 變回上班日
+        } else {
+            financeStore.manualOffDays.push(activeDateStr); // 設定休假
+        }
+        
         saveFinanceV2();
         updateDayOffButton();
+
+        // 轉換日期格式 Finance Key (YYYY-MM-DD) -> Booking Key (YYYY-M-D)
+        const [y, mm, dd] = activeDateStr.split('-');
+        const bookingKey = `${parseInt(y)}-${parseInt(mm)-1}-${parseInt(dd)}`;
+
+        if (isSettingOff) {
+            // --- 情境 A：設為休假 ---
+            // 動作：強制清空當日所有行事曆時段
+            if (bookingState.data.bookings[bookingKey] && bookingState.data.bookings[bookingKey].length > 0) {
+                bookingState.data.bookings[bookingKey] = [];
+                saveBookingData();
+            }
+        } else {
+            // --- 情境 B：取消休假 (變回上班日) ---
+            // 動作：自動開啟預設時段 (10,13,16,19)，但要先檢查有沒有財務行程擋路
+            
+            // 1. 取得當日已有的財務預約
+            const finEntries = safeArray(financeStore.data[activeDateStr]);
+
+            // 2. 篩選出「安全」的預設時段
+            const safeDefaults = DEFAULTS_TIMES.filter(defaultTime => {
+                const [dH, dM] = defaultTime.split(':').map(Number);
+                const dMins = dH * 60 + dM;
+
+                // 檢查這個時間點是否被任何財務預約佔用
+                const isOccupied = finEntries.some(e => {
+                     const [eH, eM] = e.time.split(':').map(Number);
+                     const eStart = eH * 60 + eM;
+                     const eDur = parseInt(e.duration || 60, 10);
+                     const eEnd = eStart + eDur;
+                     
+                     // 判斷邏輯：如果「預設開啟時間」落在「預約區間」內，視為衝突
+                     return (dMins >= eStart && dMins < eEnd);
+                });
+                return !isOccupied; // 沒被佔用才保留
+            });
+
+            // 3. 寫入行事曆並存檔
+            bookingState.data.bookings[bookingKey] = safeDefaults;
+            saveBookingData();
+            
+            // 可以選擇是否要提示
+            // console.log(`已恢復上班日，自動開啟時段: ${safeDefaults.join(', ')}`);
+        }
     }
 
     
@@ -3140,41 +3410,96 @@
         }
     };
 
-    // [新增] 輔助函式：全域查找項目價格 (用於編輯時自動帶入原價)
-    function findItemPrice(itemName) {
+    
+    // [修改] 全域查找項目資料 (回傳 價格 與 時長)
+    function findItemData(itemName) {
         const allCats = ['nail', 'eyelash', 'skin'];
         for (const cat of allCats) {
-            if (serviceData[cat]) {
-                const lists = [serviceData[cat].main, serviceData[cat].addon, serviceData[cat].model];
-                for (const list of lists) {
-                    const found = safeArray(list).find(i => i.name === itemName);
-                    if (found) return found.price;
+            if (!serviceData[cat]) continue;
+            
+            const lists = [
+                safeArray(serviceData[cat].main), 
+                safeArray(serviceData[cat].addon), 
+                safeArray(serviceData[cat].model)
+            ];
+
+            for (const list of lists) {
+                // 1. 完全比對
+                let found = list.find(i => i.name === itemName);
+                
+                // 2. 前綴比對 (處理括號變體)
+                if (!found) {
+                    const candidates = list.filter(i => itemName.startsWith(i.name));
+                    if (candidates.length > 0) {
+                        found = candidates.reduce((a, b) => a.name.length > b.name.length ? a : b);
+                    }
+                }
+
+                if (found) {
+                    const isPrice2 = ["濃密", "體驗", "方案 B"].some(k => itemName.includes(k));
+                    const price = (isPrice2 && found.price2) ? parsePrice(found.price2) : parsePrice(found.price);
+                    // 回傳物件包含時長
+                    return { price: price, duration: found.duration || 60 }; // 預設 60 分
                 }
             }
         }
-        return 0; // 找不到則回傳 0
+        return { price: 0, duration: 60 };
     }
 
-    // [修復] 開啟編輯視窗
+    // [修復] 開啟編輯視窗 (新增：即時衝突偵測 + 灰色時間選項)
     function openEditForm(entryId = null) {
-        // 強制移除 hidden
         const modal = document.getElementById('finEditModal');
         if(modal) modal.classList.remove('hidden');
         
         editingEntryId = entryId;
         tempItems = [];
-        currentCat = 'nail';
+        currentCat = 'nail'; 
         
-        // 重新生成小時選單 (確保不為空)
+        // [新增] 插入即時警告訊息框 (如果還沒有的話)
+        let warnBox = document.getElementById('conflict-msg');
+        if (!warnBox) {
+            warnBox = document.createElement('div');
+            warnBox.id = 'conflict-msg';
+            warnBox.className = "text-[#ff6b6b] text-xs font-bold text-center mb-2 hidden";
+            // 插在時間選擇器的下方
+            const timeContainer = document.getElementById('fe-h').parentElement.parentElement;
+            timeContainer.after(warnBox);
+        }
+        warnBox.classList.add('hidden'); // 重置隱藏
+
+        // 準備現有預約資料 (用於標記灰色選項)
+        const currentEntries = safeArray(financeStore.data[activeDateStr]);
+        const busyHours = new Set();
+        currentEntries.forEach(e => {
+            // 如果是正在編輯的這筆，不要視為忙碌
+            if (editingEntryId && String(e.id) === String(editingEntryId)) return;
+            const h = parseInt(e.time.split(':')[0], 10);
+            busyHours.add(h);
+        });
+
+        // 重新生成小時選單 (標記忙碌時間)
         const hSel = document.getElementById('fe-h');
         if(hSel) {
             hSel.innerHTML = '';
             for(let i=10; i<=22; i++) {
-                hSel.innerHTML += `<option value="${i}">${i}</option>`;
+                const val = String(i).padStart(2,'0');
+                const isBusy = busyHours.has(i);
+                // 如果忙碌，加上灰色樣式
+                const style = isBusy ? 'color: #ccc;' : 'color: #1a3a2e;';
+                const text = isBusy ? `${i} (忙)` : i;
+                hSel.innerHTML += `<option value="${val}" style="${style}">${text}</option>`;
             }
+            // 綁定即時檢查事件
+            hSel.onchange = checkConflictUI;
         }
 
-        // 預設值
+        const mSel = document.getElementById('fe-m');
+        if(mSel) mSel.onchange = checkConflictUI; // 綁定事件
+
+        // 綁定時長輸入框事件
+        const durInput = document.getElementById('fe-duration');
+        if(durInput) durInput.oninput = checkConflictUI;
+
         let defH = "10";
         let defM = "00";
         
@@ -3190,41 +3515,83 @@
 
         // 載入舊資料
         if (entryId) {
-            const entries = safeArray(financeStore.data[activeDateStr]);
-            const entry = entries.find(e => String(e.id) === String(entryId));
+            const entry = currentEntries.find(e => String(e.id) === String(entryId));
             if (entry) {
                 if(elTitle) elTitle.innerText = "編輯帳務";
                 const parts = (entry.time || "10:00").split(':');
                 if(parts.length === 2) {
-                    defH = parseInt(parts[0]); 
+                    defH = parts[0]; 
                     defM = parts[1];
                 }
                 if(elDep) elDep.checked = entry.hasDeposit;
-                if(elPrice) elPrice.value = entry.price;
-                if(elDur) elDur.value = entry.duration;
                 
-                // --- [修改開始] 編輯時自動查找價格，而非歸零 ---
-                tempItems = safeArray(entry.items).map(n => ({
-                    name: n, 
-                    price: findItemPrice(n), // 使用剛剛新增的函式查找原價
-                    duration: 0,
-                    isPercent: false 
-                }));
-                // --- [修改結束] ---
+                tempItems = safeArray(entry.items).map(n => {
+                    const data = findItemData(n); 
+                    return {
+                        name: n, 
+                        price: data.price, 
+                        duration: data.duration, 
+                        isPercent: n.includes('%') || String(data.price).includes('%') 
+                    };
+                });
             }
         }
 
-        if(hSel) hSel.value = defH;
-        const mSel = document.getElementById('fe-m');
+        if(hSel) hSel.value = String(defH).padStart(2,'0');
         if(mSel) mSel.value = defM;
 
-        // --- [修改開始] 預設選中第一個類別 (現在 HTML 順序是 手模 在第一個) ---
         const allTabs = document.querySelectorAll('.cat-tab-btn');
-        // 自動點擊 HTML 中的第一個按鈕 (這會自動對應到您修改後的 "手模" 按鈕)
         if(allTabs.length > 0) switchFinCat('model', allTabs[0]); 
-        // --- [修改結束] ---
         
         renderSelectedList();
+        recalcTotal();
+        checkConflictUI(); // 開啟時先檢查一次
+    }
+
+    // [新增] 即時衝突檢查 UI 顯示
+    function checkConflictUI() {
+        const warnBox = document.getElementById('conflict-msg');
+        if (!warnBox) return;
+
+        const h = document.getElementById('fe-h').value;
+        const m = document.getElementById('fe-m').value;
+        const duration = parseInt(document.getElementById('fe-duration').value, 10) || 0;
+
+        if (duration === 0) {
+            warnBox.classList.add('hidden');
+            return;
+        }
+
+        const startH = parseInt(h, 10);
+        const startM = parseInt(m, 10);
+        const newStartMins = startH * 60 + startM;
+        const newEndMins = newStartMins + duration;
+
+        const currentEntries = safeArray(financeStore.data[activeDateStr]);
+        let isConflict = false;
+        let conflictTime = "";
+
+        currentEntries.forEach(e => {
+            if (editingEntryId && String(e.id) === String(editingEntryId)) return; // 排除自己
+            
+            const [eH, eM] = e.time.split(':').map(Number);
+            const eStart = eH * 60 + eM;
+            const eDur = parseInt(e.duration || 60, 10);
+            const eEnd = eStart + eDur;
+
+            // 判斷重疊
+            if (newStartMins < eEnd && newEndMins > eStart) {
+                isConflict = true;
+                conflictTime = e.time;
+            }
+        });
+
+        if (isConflict) {
+            warnBox.innerText = `⚠️ 注意：與 ${conflictTime} 的預約時段重疊！`;
+            warnBox.classList.remove('hidden');
+        } else {
+            warnBox.classList.add('hidden');
+        }
     }
 
     // [修復] 關閉視窗
@@ -3233,7 +3600,7 @@
         if(modal) modal.classList.add('hidden');
     }
 
-    // [修復] 儲存帳務資料 (確保儲存後刷新列表)
+    // [核心修改] 儲存帳務並同步至行事曆 (已修復同步邏輯與資料型別)
     function saveFinData() {
         if (!activeDateStr) return;
         if (!financeStore.data[activeDateStr]) financeStore.data[activeDateStr] = [];
@@ -3244,13 +3611,59 @@
         const m = document.getElementById('fe-m').value;
         const timeStr = `${h}:${m}`;
         const rawPrice = document.getElementById('fe-price').value; 
+        // [重點] 強制轉數字 (base 10)
+        const duration = parseInt(document.getElementById('fe-duration').value, 10) || 0;
 
+        // 1. 計算新項目的時間區間 (分鐘數)
+        const startH = parseInt(h, 10);
+        const startM = parseInt(m, 10);
+        const newStartMins = startH * 60 + startM;
+        const newEndMins = newStartMins + duration;
+
+        // 2. 衝突偵測 (檢查財務紀錄內部)
+        let isConflict = false;
+        currentEntries.forEach(e => {
+            if (editingEntryId && String(e.id) === String(editingEntryId)) return; // 排除自己
+            
+            const [eH, eM] = e.time.split(':').map(Number);
+            const eStart = eH * 60 + eM;
+            // 這裡讀取舊資料也要強制轉 int
+            const eEnd = eStart + (parseInt(e.duration || 60, 10));
+
+            // 判斷重疊: (StartA < EndB) and (EndA > StartB)
+            if (newStartMins < eEnd && newEndMins > eStart) isConflict = true; 
+        });
+
+        if (isConflict) {
+            if(!confirm(`⚠️ 檢測到與現有帳務時間重疊 (${timeStr})\n\n確定要繼續新增嗎？`)) return;
+        }
+
+        // [新增] 如果是「編輯模式」，先嘗試釋出「舊的時段」
+        if (editingEntryId) {
+             const oldEntry = currentEntries.find(e => String(e.id) === String(editingEntryId));
+             if (oldEntry && oldEntry.time !== timeStr) { // 如果時間有變動
+                const [yStr, mmStr, ddStr] = activeDateStr.split('-');
+                const bookingKey = `${parseInt(yStr)}-${parseInt(mmStr)-1}-${parseInt(ddStr)}`;
+                
+                if (!bookingState.data.bookings[bookingKey]) bookingState.data.bookings[bookingKey] = [];
+                const slots = bookingState.data.bookings[bookingKey];
+                
+                // 把舊時間加回去 (如果不在清單內)
+                if (!slots.includes(oldEntry.time)) {
+                    slots.push(oldEntry.time);
+                    slots.sort();
+                    // 這裡不用 saveBookingData，因為最後面會統一處理
+                }
+             }
+        }
+
+        // 3. 儲存財務資料
         const newData = {
             id: editingEntryId || Date.now(),
             time: timeStr,
             items: tempItems.length > 0 ? tempItems.map(i=>i.name) : ['自訂項目'],
             price: rawPrice, 
-            duration: parseInt(document.getElementById('fe-duration').value) || 0,
+            duration: duration, // 確保是數字
             hasDeposit: document.getElementById('fe-deposit').checked
         };
 
@@ -3262,10 +3675,41 @@
         }
         
         financeStore.data[activeDateStr] = currentEntries;
-
         saveFinanceV2(); 
+
+        // 4. 同步行事曆 (強力移除模式)
+        if (!bookingState.data.bookings) bookingState.data.bookings = {};
         
-        // [關鍵修復] 先刷新列表，再關閉視窗
+        // 修正 Booking Key: YYYY-M-D (月份不補零，日期不補零)
+        const [yStr, mmStr, ddStr] = activeDateStr.split('-');
+        const bookingKey = `${parseInt(yStr)}-${parseInt(mmStr)-1}-${parseInt(ddStr)}`;
+        
+        let currentBookingSlots = bookingState.data.bookings[bookingKey];
+
+        // 只有當該日期有資料時才處理
+        if (currentBookingSlots && Array.isArray(currentBookingSlots)) {
+            let hasChanged = false;
+            
+            // 過濾掉 "落在新預約區間內" 的空檔
+            const updatedSlots = currentBookingSlots.filter(slot => {
+                const [sH, sM] = slot.split(':').map(Number);
+                const slotStartMins = sH * 60 + sM;
+                
+                // 檢查這個空檔是否在新預約的時間範圍內
+                // 如果空檔時間 >= 新預約開始 AND 空檔時間 < 新預約結束
+                if (slotStartMins >= newStartMins && slotStartMins < newEndMins) {
+                    hasChanged = true;
+                    return false; // 移除此空檔
+                }
+                return true; // 保留此空檔
+            });
+
+            if (hasChanged) {
+                bookingState.data.bookings[bookingKey] = updatedSlots;
+                saveBookingData(); // 儲存行事曆變更
+            }
+        }
+        
         renderDayDetailList(); 
         closeFinEditModal();   
     }
@@ -3401,36 +3845,47 @@
         recalcTotal();
     };
 
-    // 6. [修改] 計算總金額 (先加總固定金額，再乘上所有折扣)
-        // 6. [修改] 循序計算法 (達成括號效果：百分比只乘他前面的累計數)
+    // [新增] 更新單一項目的時長
+    window.updateListDuration = function(idx, newDurStr) {
+        const newDur = parseInt(newDurStr) || 0;
+        if (tempItems[idx]) {
+            tempItems[idx].duration = newDur;
+        }
+        recalcTotal(); // 更新總時長
+    };
+
+    // [核心修改] 重新計算總金額與總時長 (修正編輯時時長歸零問題)
     window.recalcTotal = function() {
         let currentRunningTotal = 0;
+        let currentTotalDuration = 0;
 
         // 依照 tempItems 的順序一一處理
         tempItems.forEach(item => {
             const val = parseFloat(item.price) || 0;
+            const dur = parseInt(item.duration) || 0;
             
+            // 1. 計算金額 (循序折扣邏輯)
             if (!item.isPercent) {
-                // 如果是金額：直接累加到當前總額
                 currentRunningTotal += val;
             } else {
-                // 如果是百分比：將「目前為止的累計總額」乘上該百分比
-                // 例如：前面已經累加到 1100，遇到 70% 變成 1100 * 0.7 = 770
+                // 百分比只乘以前面的累計
                 currentRunningTotal = currentRunningTotal * (val / 100);
-                
-                // 每次乘完後進行四捨五入，避免浮點數誤差
                 currentRunningTotal = Math.round(currentRunningTotal);
             }
+
+            // 2. 計算時長 (單純累加)
+            currentTotalDuration += dur;
         });
 
-        // 最後更新到輸入框
+        // 更新 UI
         const priceInput = document.getElementById('fe-price');
-        if (priceInput) {
-            priceInput.value = currentRunningTotal;
-        }
+        const durInput = document.getElementById('fe-duration');
+        
+        if (priceInput) priceInput.value = currentRunningTotal;
+        if (durInput) durInput.value = currentTotalDuration; // 自動更新總時長
     };
 
-    // 7. [修改] 渲染已選清單 (百分比顯示 %，金額顯示 $)
+    // [修改] 渲染已選清單 (新增時長輸入框)
     window.renderSelectedList = function() {
         const list = document.getElementById('fe-selected-list');
         const count = document.getElementById('fe-count');
@@ -3444,7 +3899,15 @@
             return `
             <div class="selected-list-item">
                 <span class="selected-name flex-1">${item.name}</span>
-                <div class="flex items-center gap-1">
+                
+                <div class="flex items-center">
+                    <input type="number" inputmode="numeric" 
+                           class="item-duration-input" 
+                           value="${item.duration}" 
+                           onfocus="this.select()"
+                           onchange="updateListDuration(${idx}, this.value)">
+                    <span class="text-[9px] text-gray-400 mr-2">分</span>
+
                     <span class="${symbolClass}">$</span>
                     <input type="number" inputmode="numeric" 
                            class="item-price-input" 
@@ -3452,6 +3915,7 @@
                            onfocus="this.select()" 
                            onchange="updateListPrice(${idx}, this.value)">
                     ${suffix}
+                    
                     <span class="del-item-btn ml-2" onclick="removeItemFromTemp(${idx})">✕</span>
                 </div>
             </div>`;
@@ -3473,21 +3937,20 @@
         recalcTotal();
     };
 
-    // 4. 刪除暫存項目
+    // [新增] 更新單一項目的時長
+    window.updateListDuration = function(idx, newDurStr) {
+        const newDur = parseInt(newDurStr) || 0;
+        if (tempItems[idx]) {
+            tempItems[idx].duration = newDur;
+        }
+        recalcTotal(); // 更新總時長
+    };
+
+    // [修改] 刪除暫存項目
     window.removeItemFromTemp = function(idx) {
-        const item = tempItems[idx];
-        if(!item) return;
-
-        // 扣除時間
-        const currentDur = parseInt(document.getElementById('fe-duration').value) || 0;
-        const newDur = Math.max(0, currentDur - item.duration);
-        document.getElementById('fe-duration').value = newDur;
-
-        // 移除陣列元素
+        if (!tempItems[idx]) return;
         tempItems.splice(idx, 1);
-        
-        // 更新金額 (重算)
-        recalcTotal();
+        recalcTotal(); // 刪除後重算總金額與總時長
         renderSelectedList();
     };
 
@@ -3517,12 +3980,12 @@
         location.hash = id; // 只要改網址就好，剩下的交給 router()
     };
 
-    // [修改] 登出/儲存功能：先跳回首頁，再刷新頁面以清除權限
+    // [修改] 登出/儲存功能：移除延遲，強制立刻刷新
     window.logout = function() { 
-        location.hash = 'home';
-        setTimeout(() => {
-            location.reload();
-        }, 100);
+        // 使用 location.replace 替換當前歷史紀錄，避免上一頁
+        // 並強制重整
+        window.location.href = location.pathname + '#home';
+        window.location.reload();
     };
 
     // [新增] 路由控制器：根據網址 Hash 顯示對應頁面
@@ -3615,6 +4078,91 @@
         };
     };
 
+    // --- [修正] 舊資料校正工具 (含：自動補時長 + 自動開啟空檔) ---
+    window.fixLegacyData = function() {
+        if(!confirm("⚠️ 系統校正 (進階版)：\n\n1. 自動補齊舊帳務的「時長」\n2. 重置行事曆狀態：\n   - 休假：清空時段\n   - 上班：自動開啟所有「無行程」的預設時段 (10, 13, 16, 19)\n\n這將會把舊日期的行事曆「重置」為標準狀態，確定執行嗎？")) return;
+
+        let updatedDays = 0;
+        const allDates = Object.keys(financeStore.data);
+
+        allDates.forEach(dateStr => {
+            const entries = financeStore.data[dateStr];
+            // 如果當天沒資料且不是休假，通常不需特別處理(或是也可以選擇要不要全開，這邊先針對有帳務的日期處理)
+            if ((!entries || entries.length === 0) && !financeStore.manualOffDays.includes(dateStr)) return;
+
+            let dataModified = false;
+
+            // 1. 修正財務資料：補上 duration
+            if (entries) {
+                entries.forEach(entry => {
+                    if (!entry.duration || parseInt(entry.duration) === 0) {
+                        let newDur = 0;
+                        safeArray(entry.items).forEach(itemName => {
+                            const info = findItemData(itemName); 
+                            newDur += info.duration;
+                        });
+                        entry.duration = newDur || 60; 
+                        dataModified = true;
+                    }
+                });
+            }
+
+            // 2. 同步行事曆 (重算當日該有的時段)
+            // 轉換日期格式 YYYY-MM-DD -> YYYY-M-D
+            const [y, m, d] = dateStr.split('-');
+            const bookingKey = `${parseInt(y)}-${parseInt(m)-1}-${parseInt(d)}`;
+            
+            const isOff = financeStore.manualOffDays.includes(dateStr);
+            let calculatedSlots = [];
+
+            if (isOff) {
+                // 情境 A: 休假 -> 應為空
+                calculatedSlots = [];
+            } else {
+                // 情境 B: 上班 -> 應為 (預設時段 - 衝突時段)
+                // 這是您要求的「無行程時段需自動開啟」核心邏輯
+                const finEntries = entries || [];
+                
+                calculatedSlots = DEFAULTS_TIMES.filter(defaultTime => {
+                    const [dH, dM] = defaultTime.split(':').map(Number);
+                    const dMins = dH * 60 + dM;
+
+                    // 檢查是否被佔用
+                    const isOccupied = finEntries.some(e => {
+                         const [eH, eM] = e.time.split(':').map(Number);
+                         const eStart = eH * 60 + eM;
+                         const eDur = parseInt(e.duration || 60, 10);
+                         const eEnd = eStart + eDur;
+                         
+                         return (dMins >= eStart && dMins < eEnd);
+                    });
+                    return !isOccupied; // 沒被佔用就開啟
+                });
+            }
+
+            // 3. 比對與更新
+            const currentSlots = bookingState.data.bookings[bookingKey] || [];
+            // 簡單排序比對
+            const calcStr = JSON.stringify(calculatedSlots.sort());
+            const currStr = JSON.stringify(currentSlots.sort());
+
+            if (calcStr !== currStr || dataModified) {
+                bookingState.data.bookings[bookingKey] = calculatedSlots;
+                dataModified = true;
+            }
+
+            if (dataModified) updatedDays++;
+        });
+
+        if (updatedDays > 0) {
+            saveFinanceV2();
+            saveBookingData();
+            alert(`✅ 校正完成！\n已同步更新 ${updatedDays} 天的資料。\n(缺失的時段已自動補上、衝突的已關閉)`);
+        } else {
+            alert("🎉 資料已是最新狀態，無需更新。");
+        }
+    };
+
     window.initSystem = function() {
         initCalendarTimeSelect(); 
         renderServiceFront(); 
@@ -3655,8 +4203,6 @@
     window.scrollToTop = function() {
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
-
-
 
 </script>
 </body>
