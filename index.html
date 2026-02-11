@@ -3387,7 +3387,7 @@
             // 如果是國定假日，顯示「取消休假」比較直覺
             const label = (isHoliday || isSun) ? "🟢 上班 (取消休假)" : "🟢 上班 (取消排休)";
             btn.innerHTML = label;
-            btn.classList.add('bg-[#1a4731]', 'text-white'); // 綠色按鈕
+            btn.classList.add('bg-[#1a4731]', 'text-[#ff6b6b]'); // 綠色按鈕
             btn.classList.remove('bg-[#ff6b6b]', 'border-red-400', 'text-[#ff6b6b]', 'text-red-400', 'border');
             btn.style.border = '1px solid #1a4731';
         } else {
