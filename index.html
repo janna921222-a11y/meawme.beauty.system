@@ -3364,22 +3364,41 @@
         saveFinanceV2();
     };
 
-    // [修改] 移除 updateDayOffButton 中的按鈕生成，因為已經移到列表中了
+        // [修改] 更新排休按鈕狀態與文字
     function updateDayOffButton() {
-        const isOff = financeStore.manualOffDays.includes(activeDateStr);
+        const holidayMap = window.getTaiwanHolidays();
+        const isHoliday = !!holidayMap[activeDateStr];
+        const isSun = new Date(activeDateStr).getDay() === 0;
+        
+        // 判斷行事曆是否有時段
+        const [y, mm, dd] = activeDateStr.split('-');
+        const bookingKey = `${parseInt(y)}-${parseInt(mm)-1}-${parseInt(dd)}`;
+        const hasSlots = (bookingState.data.bookings[bookingKey] || []).length > 0;
+        const inManualList = financeStore.manualOffDays.includes(activeDateStr);
+
+        // 判斷目前是否視為休假
+        const isCurrentlyOff = inManualList || ((isHoliday || isSun) && !hasSlots);
+
         const btn = document.getElementById('btn-day-off');
-        if(isOff) {
-            btn.innerHTML = "🔴 取消休假";
-            btn.classList.add('bg-[#ff6b6b]', 'text-white');
-            btn.classList.remove('border-red-400', 'text-[#ff6b6b]');
-            btn.style.border = 'none';
+        if (!btn) return;
+
+        if (isCurrentlyOff) {
+            // 目前是休假 -> 按鈕功能為「改為上班」
+            // 如果是國定假日，顯示「取消休假」比較直覺
+            const label = (isHoliday || isSun) ? "🟢 上班 (取消休假)" : "🟢 上班 (取消排休)";
+            btn.innerHTML = label;
+            btn.classList.add('bg-[#1a4731]', 'text-white'); // 綠色按鈕
+            btn.classList.remove('bg-[#ff6b6b]', 'border-red-400', 'text-[#ff6b6b]', 'text-red-400', 'border');
+            btn.style.border = '1px solid #1a4731';
         } else {
-            btn.innerHTML = "排休";
-            btn.classList.remove('bg-[#ff6b6b]', 'text-white');
-            btn.classList.add('border', 'border-red-400', 'text-red-400');
+            // 目前是上班 -> 按鈕功能為「改為休假」
+            btn.innerHTML = "🔴 排休";
+            btn.classList.remove('bg-[#1a4731]', 'text-white');
+            btn.classList.add('border', 'border-red-400', 'text-[#ff6b6b]');
             btn.style.background = 'transparent';
         }
     }
+
 
     // [修正] 單筆刪除功能 (新增：自動釋出時段)
     window.deleteSingleEntry = function(id) {
@@ -3422,66 +3441,80 @@
         }
     };
 
-    // [修正] 排休按鈕 (連動：自動開關行事曆 + 智慧避開行程)
-    function toggleDayOff() {
-        const idx = financeStore.manualOffDays.indexOf(activeDateStr);
-        const isSettingOff = (idx === -1); // 如果目前沒休(idx=-1)，就是要設為休假
+        // [修改] 排休/上班切換邏輯 (支援國定假日預設休假)
+    window.toggleDayOff = function() {
+        const holidayMap = window.getTaiwanHolidays();
+        const isHoliday = !!holidayMap[activeDateStr];
+        const dayOfWeek = new Date(activeDateStr).getDay();
+        const isSun = dayOfWeek === 0;
 
-        if (idx > -1) {
-            financeStore.manualOffDays.splice(idx, 1); // 取消休假 -> 變回上班日
-        } else {
-            financeStore.manualOffDays.push(activeDateStr); // 設定休假
-        }
+        // 1. 判斷「目前」是否處於休假狀態
+        // 定義：如果在手動休假名單中，或者 (是國定假日/週日 且 沒有時段)，都視為「休假中」
+        const inManualList = financeStore.manualOffDays.includes(activeDateStr);
         
-        saveFinanceV2();
-        updateDayOffButton();
-
-        // 轉換日期格式 Finance Key (YYYY-MM-DD) -> Booking Key (YYYY-M-D)
+        // 取得目前行事曆時段
         const [y, mm, dd] = activeDateStr.split('-');
         const bookingKey = `${parseInt(y)}-${parseInt(mm)-1}-${parseInt(dd)}`;
+        const currentSlots = bookingState.data.bookings[bookingKey] || [];
+        const hasSlots = currentSlots.length > 0;
 
-        if (isSettingOff) {
-            // --- 情境 A：設為休假 ---
-            // 動作：強制清空當日所有行事曆時段
-            if (bookingState.data.bookings[bookingKey] && bookingState.data.bookings[bookingKey].length > 0) {
-                bookingState.data.bookings[bookingKey] = [];
-                saveBookingData();
-            }
-        } else {
-            // --- 情境 B：取消休假 (變回上班日) ---
-            // 動作：自動開啟預設時段 (10,13,16,19)，但要先檢查有沒有財務行程擋路
+        // 核心邏輯：如果 (手動排休) 或 (是假日且沒開時段)，就是休假狀態
+        const isCurrentlyOff = inManualList || ((isHoliday || isSun) && !hasSlots);
+
+        if (isCurrentlyOff) {
+            // ===========================================
+            // 情境 A：目前是休假 -> 切換為「上班」
+            // ===========================================
             
-            // 1. 取得當日已有的財務預約
-            const finEntries = safeArray(financeStore.data[activeDateStr]);
+            // 1. 從手動休假名單移除 (恢復為工作日狀態)
+            if (inManualList) {
+                const idx = financeStore.manualOffDays.indexOf(activeDateStr);
+                financeStore.manualOffDays.splice(idx, 1);
+            }
 
-            // 2. 篩選出「安全」的預設時段
+            // 2. 自動開啟時段 (智慧避開已存在的財務預約)
+            const finEntries = safeArray(financeStore.data[activeDateStr]);
+            
+            // 篩選出安全的預設時段 (10, 13, 16, 19)
             const safeDefaults = DEFAULTS_TIMES.filter(defaultTime => {
                 const [dH, dM] = defaultTime.split(':').map(Number);
                 const dMins = dH * 60 + dM;
 
-                // 檢查這個時間點是否被任何財務預約佔用
+                // 檢查是否被任何帳務行程佔用
                 const isOccupied = finEntries.some(e => {
                      const [eH, eM] = e.time.split(':').map(Number);
                      const eStart = eH * 60 + eM;
                      const eDur = parseInt(e.duration || 60, 10);
-                     const eEnd = eStart + eDur;
-                     
-                     // 判斷邏輯：如果「預設開啟時間」落在「預約區間」內，視為衝突
-                     return (dMins >= eStart && dMins < eEnd);
+                     // 判斷時間重疊
+                     return (dMins >= eStart && dMins < (eStart + eDur));
                 });
-                return !isOccupied; // 沒被佔用才保留
+                return !isOccupied; // 沒被佔用才開啟
             });
-
-            // 3. 寫入行事曆並存檔
-            bookingState.data.bookings[bookingKey] = safeDefaults;
-            saveBookingData();
             
-            // 可以選擇是否要提示
-            // console.log(`已恢復上班日，自動開啟時段: ${safeDefaults.join(', ')}`);
-        }
-    }
+            // 寫入行事曆 (如果沒有可用時段，至少初始化為空陣列，代表已非休假但客滿)
+            bookingState.data.bookings[bookingKey] = safeDefaults;
 
-    
+        } else {
+            // ===========================================
+            // 情境 B：目前是上班 -> 切換為「休假」
+            // ===========================================
+            
+            // 1. 加入手動休假名單
+            if (!inManualList) {
+                financeStore.manualOffDays.push(activeDateStr);
+            }
+
+            // 2. 強制清空所有時段 (同步行事曆)
+            bookingState.data.bookings[bookingKey] = [];
+        }
+
+        // 儲存並更新畫面
+        saveFinanceV2();
+        saveBookingData();
+        updateDayOffButton(); // 更新按鈕文字
+        renderFinancePage();  // 刷新日曆背景
+    };
+
     // [新增] 編輯休假原因
     window.editOffReason = function() {
         if (!financeStore.offDayNotes) financeStore.offDayNotes = {};
