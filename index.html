@@ -1116,6 +1116,23 @@
         .fin-day-footer .start-time { color: var(--gold-main); font-weight: 700; }
         .fin-day-footer .end-time { color: var(--white-sec); }
 
+        /* --- [新增] 後台價目表整合分頁樣式 --- */
+        .admin-sub-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; padding: 0 10px; }
+        .admin-sub-tab-btn { flex: 1; padding: 10px 0; text-align: center; border-radius: 30px; font-size: 13px; font-weight: 700; color: var(--gold-main); border: 1px solid var(--gold-main); background: transparent; transition: all 0.3s; }
+        .admin-sub-tab-btn.active { background: var(--gold-main); color: var(--forest-bg); }
+
+        /* --- [新增] 預約視窗項目分區標題 --- */
+        .fe-section-title { grid-column: span 2; font-size: 11px; color: var(--gold-main); font-weight: 700; margin-top: 10px; margin-bottom: 5px; padding-bottom: 2px; border-bottom: 1px dashed rgba(201, 184, 150, 0.3); letter-spacing: 1px; }
+
+        /* --- [新增] 數量輸入框樣式 --- */
+        .item-qty-input { width: 30px; background: transparent; border: none; border-bottom: 1px solid #ccc; text-align: center; font-size: 11px; color: #333; margin-right: 4px; }
+        .item-qty-input:focus { outline: none; border-color: var(--gold-main); }
+
+        /* --- [新增] 圖片上傳預覽 --- */
+        .img-upload-box { margin-top: 10px; border: 1px dashed #ccc; border-radius: 8px; padding: 10px; text-align: center; position: relative; background: rgba(255,255,255,0.05); }
+        .img-preview { max-width: 100%; max-height: 150px; border-radius: 4px; margin-top: 5px; display: none; }
+        .img-preview.show { display: block; margin: 5px auto 0; }
+
     </style>
 </head>
 <body>
@@ -1601,52 +1618,46 @@
         </div>
     </section>
 
-    <section id="page-admin-nail" class="page-content pb-32">
-            <h2>美甲項目管理</h2>
-            <div class="admin-setting-container">
-                <button id="btn-set-nail" class="setting-btn" onclick="toggleEditMode('nail')">⚙️ 設置系統</button>
-            </div>
-            <div class="admin-section-label">主項目 (價目表)</div>
-            <div id="list-nail-main"></div>
-            <div id="add-nail-main"></div> 
+    <section id="page-admin-pricelist" class="page-content pb-32">
+        <h2 style="margin-bottom: 20px !important;">價目表管理</h2>
+        
+        <div class="admin-sub-tabs" style="flex-wrap: wrap;">
+            <button class="admin-sub-tab-btn active" onclick="switchAdminPriceTab('nail-model', this)">手模</button>
+            <button class="admin-sub-tab-btn" onclick="switchAdminPriceTab('eyelash-practice', this)">睫模</button>
+            <button class="admin-sub-tab-btn" onclick="switchAdminPriceTab('nail', this)">美甲</button>
+            <button class="admin-sub-tab-btn" onclick="switchAdminPriceTab('eyelash', this)">美睫</button>
+            <button class="admin-sub-tab-btn" onclick="switchAdminPriceTab('skin', this)">美容</button>
+        </div>
 
-            <div class="admin-section-label">加購項目</div>
-            <div id="list-nail-addon"></div>
-            <div id="add-nail-addon"></div>
+        <div id="admin-cat-content-nail-model">
+            <div class="admin-setting-container"><button class="setting-btn" onclick="toggleEditMode('nail-model')">⚙️ 設置系統 </button></div>
+            <div class="admin-section-label">手模專區</div><div id="list-nail-model"></div><div id="add-nail-model"></div>
+        </div>
 
-            <div class="admin-section-label">手模專區</div>
-            <div id="list-nail-model"></div>
-            <div id="add-nail-model"></div> 
-        </section>
+        <div id="admin-cat-content-eyelash-practice" class="hidden">
+            <div class="admin-setting-container"><button class="setting-btn" onclick="toggleEditMode('eyelash-practice')">⚙️ 設置系統</button></div>
+            <div class="admin-section-label">睫模專區</div><div id="list-eyelash-practice"></div><div id="add-eyelash-practice"></div>
+        </div>
 
-        <section id="page-admin-eyelash" class="page-content pb-32">
-            <h2>美睫項目管理</h2>
-            <div class="admin-setting-container">
-                <button id="btn-set-eyelash" class="setting-btn" onclick="toggleEditMode('eyelash')">⚙️ 設置系統</button>
-            </div>
-            <div class="admin-section-label">主項目 (價目表)</div>
-            <div id="list-eyelash-main"></div>
-            <div id="add-eyelash-main"></div> 
+        <div id="admin-cat-content-nail" class="hidden">
+            <div class="admin-setting-container"><button id="btn-set-nail" class="setting-btn" onclick="toggleEditMode('nail')">⚙️ 設置系統</button></div>
+            <div class="admin-section-label">主項目 (價目表)</div><div id="list-nail-main"></div><div id="add-nail-main"></div>
+            <div class="admin-section-label">加購項目</div><div id="list-nail-addon"></div><div id="add-nail-addon"></div>
+        </div>
 
-            <div class="admin-section-label">睫毛管理項目 (同步前台)</div>
-            <div id="list-eyelash-model"></div> <div id="add-eyelash-model"></div>
+        <div id="admin-cat-content-eyelash" class="hidden">
+            <div class="admin-setting-container"><button id="btn-set-eyelash" class="setting-btn" onclick="toggleEditMode('eyelash')">⚙️ 設置系統</button></div>
+            <div class="admin-section-label">主項目</div><div id="list-eyelash-main"></div><div id="add-eyelash-main"></div>
+            <div class="admin-section-label">睫毛管理</div><div id="list-eyelash-model"></div><div id="add-eyelash-model"></div>
+            <div class="admin-section-label">加購項目</div><div id="list-eyelash-addon"></div><div id="add-eyelash-addon"></div>
+        </div>
 
-            <div class="admin-section-label">加購項目</div>
-            <div id="list-eyelash-addon"></div>
-            <div id="add-eyelash-addon"></div> 
-        </section>
-
-        <section id="page-admin-skin" class="page-content pb-32">
-            <h2>美容項目管理</h2>
-            <div class="admin-setting-container">
-                <button id="btn-set-skin" class="setting-btn" onclick="toggleEditMode('skin')">⚙️ 設置系統</button>
-            </div>
-            <div class="admin-section-label">主項目 (價目表)</div>
-            <div id="list-skin-main"></div>
-            <div id="add-skin-main"></div> <div class="admin-section-label">加購項目</div>
-            <div id="list-skin-addon"></div>
-            <div id="add-skin-addon"></div> 
-        </section>
+        <div id="admin-cat-content-skin" class="hidden">
+            <div class="admin-setting-container"><button id="btn-set-skin" class="setting-btn" onclick="toggleEditMode('skin')">⚙️ 設置系統</button></div>
+            <div class="admin-section-label">主項目</div><div id="list-skin-main"></div><div id="add-skin-main"></div>
+            <div class="admin-section-label">加購項目</div><div id="list-skin-addon"></div><div id="add-skin-addon"></div>
+        </div>
+    </section>
 
         <section id="page-admin-calc" class="page-content pb-32">
         <h2 style="font-size: 28px !important; text-align: center !important; margin: 30px 0 10px !important; color: var(--gold-main); font-weight: 800; letter-spacing: 3px;">美甲款式計算機</h2>
@@ -1701,7 +1712,7 @@
         </section>
 
     <section id="page-budget" class="page-content pb-32">
-        <h2 class="text-center text-[22px] font-bold my-6 text-[var(--gold-main)]">行事曆管理</h2>
+        <h2 class="text-center text-[22px] font-bold my-6 text-[var(--gold-main)]">時段管理</h2>
         
         <div class="flex justify-between items-center mb-6 px-8 max-w-sm mx-auto">
             <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
@@ -1725,7 +1736,7 @@
         <div class="fin-title-container">
             <button onclick="fixLegacyData()" class="view-toggle-btn" style="position: absolute; left: 16px; border-color: #ff6b6b; color: #ff6b6b;">系統校正</button>
             
-            <h2 style="margin:0 !important; font-size:20px !important;">財務管理</h2>
+            <h2 style="margin:0 !important; font-size:20px !important;">預約管理</h2>
             
             <button id="finViewToggle" onclick="toggleFinView()" class="view-toggle-btn fin-right-btn">顯示: 金額</button>
         </div>
@@ -1780,7 +1791,7 @@
             <div id="dd-list" class="day-detail-list"></div>
             <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/10">
                 <button onclick="toggleDayOff()" id="btn-day-off" class="py-3 rounded-lg border border-[#ff6b6b] text-[#ff6b6b] font-bold text-sm transition-all">休假</button>
-                <button onclick="openEditForm()" class="py-3 rounded-lg bg-[var(--gold-main)] text-[#1a3a2e] font-bold text-sm shadow-lg">＋ 新增帳務</button>
+                <button onclick="openEditForm()" class="py-3 rounded-lg bg-[var(--gold-main)] text-[#1a3a2e] font-bold text-sm shadow-lg">＋ 新增預約</button>
             </div>
         </div>
     </div>
@@ -1817,8 +1828,9 @@
             <div class="mb-2">
                 <label class="text-xs text-gray-400 block mb-1">選擇類別</label>
                 <div class="cat-tab-group">
-                    <div class="cat-tab-btn" onclick="switchFinCat('model', this)">手模</div>
-                    <div class="cat-tab-btn active" onclick="switchFinCat('nail', this)">美甲</div>
+                    <div class="cat-tab-btn active" onclick="switchFinCat('nail_model', this)">手模</div>
+                    <div class="cat-tab-btn" onclick="switchFinCat('eyelash_practice', this)">睫模</div>
+                    <div class="cat-tab-btn" onclick="switchFinCat('nail', this)">美甲</div>
                     <div class="cat-tab-btn" onclick="switchFinCat('eyelash', this)">美睫</div>
                     <div class="cat-tab-btn" onclick="switchFinCat('skin', this)">美容</div>
                 </div>
@@ -1851,6 +1863,20 @@
                 </div>
             </div>
 
+            <div class="mb-2 bg-gray-50 p-3 rounded border border-gray-200">
+                <label class="text-[10px] block text-gray-400 mb-1">備註 (Note)</label>
+                <textarea id="fe-note" rows="2" class="w-full text-xs p-2 border border-gray-300 rounded bg-white text-gray-800" placeholder="輸入備註..."></textarea>
+                
+                <div class="img-upload-box">
+                    <label for="fe-image-upload" class="cursor-pointer text-xs text-[var(--gold-main)] font-bold flex items-center justify-center gap-2">
+                        📷 上傳圖片 / 照片
+                        <input type="file" id="fe-image-upload" accept="image/*" class="hidden" onchange="previewImage(this)">
+                    </label>
+                    <img id="fe-img-preview" src="" class="img-preview">
+                    <button id="btn-clear-img" onclick="clearImage()" class="hidden text-[10px] text-red-400 mt-1 underline">移除圖片</button>
+                </div>
+            </div>
+
             <div class="flex gap-2 mt-2">
                 <button onclick="saveFinData()" class="w-full py-3 bg-[var(--gold-main)] text-[#1a3a2e] rounded-full text-sm font-bold shadow-md hover:opacity-90">確認儲存</button>
             </div>
@@ -1872,12 +1898,10 @@
             </div>
         </div>
         <div id="nav-admin" class="nav-inner hidden">
-            <div class="tab-button" onclick="switchPage('admin-nail', this)">美甲</div>
-            <div class="tab-button" onclick="switchPage('admin-eyelash', this)">美睫</div>
-            <div class="tab-button" onclick="switchPage('admin-skin', this)">美容</div>
+            <div class="tab-button" onclick="switchPage('admin-pricelist', this)">價目表</div>
             <div class="tab-button" onclick="switchPage('admin-calc', this)">計算</div>
-            <div class="tab-button" onclick="switchPage('budget', this)">行事曆</div>
-            <div class="tab-button" onclick="switchPage('admin-finance', this)">財務</div>
+            <div class="tab-button" onclick="switchPage('budget', this)">時段</div>
+            <div class="tab-button" onclick="switchPage('admin-finance', this)">預約</div>
             <div class="tab-button" onclick="logout()" style="color:#ff6b6b">儲存</div>
         </div>
     </nav>
@@ -1970,7 +1994,7 @@
 
     const defaultData = {
         nail: { main: [{name:"單色凝膠", duration:60, price:700, selectedForCalc:true}], addon: [], model: [] },
-        eyelash: { main: [], addon: [], model: [] },
+        eyelash: { main: [], addon: [], model: [], practice: [] }, // 新增 practice
         skin: { main: [], addon: [] }
     };
 
@@ -2015,44 +2039,63 @@
         }
     };
 
-    // --- Firebase Sync Functions ---
+    // [修正版] 資料同步函數 (自動修復缺失欄位)
     function syncServiceData() {
         if (window.dbOnValue && window.dbRef) {
             window.dbOnValue(window.dbRef(window.firebaseDB, 'meawMeData'), (snapshot) => {
                 const val = snapshot.val();
                 if (val) {
                     let cleanData = val;
+                    // 確保三大類別都存在
                     ['nail', 'eyelash', 'skin'].forEach(cat => {
-                        if (!cleanData[cat]) cleanData[cat] = { main: [], addon: [], model: [] };
-                        ['main', 'addon', 'model'].forEach(type => {
-                            cleanData[cat][type] = safeArray(cleanData[cat][type]);
+                        if (!cleanData[cat]) cleanData[cat] = { main: [], addon: [], model: [], practice: [] };
+                        
+                        // [關鍵修復] 如果沒有 practice (睫模) 欄位，自動補上空陣列
+                        if (cat === 'eyelash' && !cleanData[cat].practice) {
+                            cleanData[cat].practice = [];
+                        }
+
+                        // 確保所有子項目都是陣列
+                        const types = ['main', 'addon', 'model', 'practice'];
+                        types.forEach(type => {
+                            // 如果該欄位不存在，就給它空陣列
+                            if (!cleanData[cat][type]) {
+                                cleanData[cat][type] = [];
+                            } else {
+                                cleanData[cat][type] = safeArray(cleanData[cat][type]);
+                            }
                         });
                     });
                     serviceData = cleanData;
                 } else {
-                      ['nail', 'eyelash', 'skin'].forEach(cat => {
-                        if (!serviceData[cat]) serviceData[cat] = { main: [], addon: [], model: [] };
-                    });
+                    serviceData = JSON.parse(JSON.stringify(defaultData));
                 }
-                try { renderServiceFront(); } catch(e) { console.error("Front render fail", e); }
-                try { renderAdminList(); } catch(e) { console.error("Admin render fail", e); }
-                try { initCalc(); } catch(e) { console.error("Calc init fail", e); }
+                
+                // 加上 try-catch 防止單一錯誤導致全頁白屏
+                try { renderServiceFront(); } catch(e) { console.error("Front error", e); }
+                try { renderAdminList(); } catch(e) { console.error("Admin error", e); }
+                try { initCalc(); } catch(e) { console.error("Calc error", e); }
             });
         }
     }
 
-    function syncBookingData() {
-        if (window.dbOnValue && window.dbRef) {
-            window.dbOnValue(window.dbRef(window.firebaseDB, 'meawMeBooking'), (snapshot) => {
-                const val = snapshot.val();
-                if (val) {
-                    bookingState.data = val;
-                    if (!bookingState.data.openMonths) bookingState.data.openMonths = [];
-                    if (!bookingState.data.bookings) bookingState.data.bookings = {};
-                }
-                renderCalendar();
+    // [修正] 儲存邏輯：確保 practice 欄位被寫入
+    function saveAndSync() {
+        if (window.dbSet && window.dbRef) {
+            let cleanData = JSON.parse(JSON.stringify(serviceData));
+            ['nail', 'eyelash', 'skin'].forEach(cat => {
+                const types = ['main', 'addon', 'model'];
+                if(cat === 'eyelash') types.push('practice'); // 寫入 practice
+
+                types.forEach(type => {
+                    cleanData[cat][type] = safeArray(cleanData[cat][type]);
+                });
             });
+            window.dbSet(window.dbRef(window.firebaseDB, 'meawMeData'), cleanData);
         }
+        renderServiceFront();
+        renderAdminList();
+        initCalc();
     }
 
     function saveBookingData() {
@@ -2070,6 +2113,36 @@
         renderCalendar();
     }
 
+    // [智慧修正版] 同步預約時段 (Booking) - 自動識別資料結構
+    function syncBookingData() {
+        if (window.dbOnValue && window.dbRef) {
+            window.dbOnValue(window.dbRef(window.firebaseDB, 'meawMeBooking'), (snapshot) => {
+                const val = snapshot.val();
+                // console.log("雲端時段資料:", val); // 除錯用
+                
+                if (val) {
+                    // 智慧判斷：資料是被包在 bookings 裡，還是直接就是資料？
+                    if (val.bookings || val.openMonths) {
+                        // 結構 A：標準格式
+                        bookingState.data = val; 
+                    } else {
+                        // 結構 B：舊格式或異常格式 (資料直接散落在根目錄)
+                        bookingState.data = { 
+                            bookings: val, 
+                            openMonths: [] // 補上預設值
+                        };
+                    }
+                }
+                
+                // 防呆：確保變數存在，避免網頁報錯
+                if (!bookingState.data.bookings) bookingState.data.bookings = {};
+                if (!bookingState.data.openMonths) bookingState.data.openMonths = [];
+                
+                renderCalendar();
+            });
+        }
+    }
+    
     // --- Render Functions ---
     function renderServiceFront() {
         const categories = ['nail', 'eyelash', 'skin'];
@@ -2134,12 +2207,17 @@
         initCalc();
     }
 
-    // [修改] 渲染後台列表 (新增 Duration 輸入框)
+    // [修正] 列表渲染：迴圈加入 practice 以顯示睫模清單
     function renderAdminList() {
         const categories = ['nail', 'eyelash', 'skin'];
         categories.forEach(cat => {
             if (!serviceData[cat]) return;
-            ['main', 'addon', 'model'].forEach(type => {
+            // 這裡加入 practice 讓迴圈能跑到新欄位
+            const types = ['main', 'addon', 'model', 'practice']; 
+            
+            types.forEach(type => {
+                if(!serviceData[cat][type]) return;
+
                 const listId = `list-${cat}-${type}`;
                 const listContainer = document.getElementById(listId);
                 const addContainer = document.getElementById(`add-${cat}-${type}`);
@@ -2154,11 +2232,12 @@
                     const dataIdx = `data-idx="${index}"`;
                     const p1Disp = String(item.price).includes('%') ? item.price : `$${item.price}`;
                     const p2Disp = item.price2 ? ` / ${String(item.price2).includes('%') ? item.price2 : '$'+item.price2}` : '';
-                    const durDisp = item.duration ? `(${item.duration}分)` : ''; // 顯示時長
+                    const durDisp = item.duration ? `(${item.duration}分)` : '';
 
                     if (isEditing) {
                         const showPrice2 = (type === 'main' && cat !== 'nail');
                         const showCalcCheck = (cat === 'nail' && (type === 'main' || type === 'model'));
+                        
                         const checkHtml = showCalcCheck ? 
                             `<div class="flex flex-col items-center ml-2 cursor-pointer" onclick="toggleCalcOption('${cat}', '${type}', ${index})">
                                 <span class="text-[9px] text-[var(--gold-main)] mb-1">計算</span>
@@ -2609,10 +2688,10 @@
             let html = `<div class="flex justify-between px-1.5 mb-1"><span class="${dateClass} !text-[13px] font-serif">${d}</span></div>`;
 
             if (isSun) {
-                html += `<div class="text-[#ff6b6b] text-[9px] text-center opacity-80 mt-1">約滿</div>`;
+                html += `<div class="text-[#ff6b6b] text-[9px] text-center opacity-80 mt-1">公休</div>`;
             } else {
                 if (slots.length === 0) {
-                     html += `<div class="text-[9px] text-center opacity-30 mt-1">公休</div>`;
+                     html += `<div class="text-[9px] text-center opacity-30 mt-1">約滿</div>`;
                 } else {
                     slots.sort().forEach(t => {
                         const labelId = `${m+1}/${d} ${t}`;
@@ -2915,12 +2994,13 @@
         });
     }
 
-    // --- 財務系統核心 V3 ---
+    // --- 財務系統核心 V3 (若遺失請補上) ---
     let financeStore = {
         viewDate: new Date(),
         viewMode: 'item', 
         data: {}, 
-        manualOffDays: []
+        manualOffDays: [],
+        offDayNotes: {} // [修正] 確保備註欄位存在
     };
 
     let activeDateStr = "";
@@ -2928,28 +3008,40 @@
     let tempItems = [];
     let currentCat = "nail";
 
+    // [智慧修正版] 同步帳務預約 (Finance) - 自動識別資料結構
+    // ★ 如果您是「新增/編輯預約」看不到，主要是靠這一段救回來
     function syncFinanceV2() {
         if (window.dbOnValue && window.dbRef) {
             window.dbOnValue(window.dbRef(window.firebaseDB, 'meawMeFinanceV2'), (snapshot) => {
                 const val = snapshot.val();
+                // console.log("雲端帳務資料:", val); // 除錯用
+
                 if(val) {
-                    financeStore.data = val.data || {};
-                    financeStore.manualOffDays = safeArray(val.manualOffDays);
-                    // [新增] 讀取休假備註
-                    financeStore.offDayNotes = val.offDayNotes || {}; 
+                    // 智慧判斷：資料是被包在 data 裡，還是直接就是資料？
+                    if (val.data || val.manualOffDays) {
+                        // 結構 A：標準格式
+                        financeStore.data = val.data || {};
+                        financeStore.manualOffDays = safeArray(val.manualOffDays);
+                        financeStore.offDayNotes = val.offDayNotes || {};
+                    } else {
+                        // 結構 B：資料直接散落在根目錄 (這是最常見造成「看得到卻讀不到」的原因)
+                        financeStore.data = val;
+                        financeStore.manualOffDays = [];
+                        financeStore.offDayNotes = {};
+                    }
                 }
                 renderFinancePage();
             });
         }
     }
 
-    // [修正] 合併後的正確儲存函數 (請取代原有的兩個 saveFinanceV2)
+    // [補回] 儲存財務資料
     function saveFinanceV2() {
         if (window.dbSet && window.dbRef) {
             window.dbSet(window.dbRef(window.firebaseDB, 'meawMeFinanceV2'), {
                 data: financeStore.data,
                 manualOffDays: financeStore.manualOffDays,
-                offDayNotes: financeStore.offDayNotes || {} // 確保備註被儲存
+                offDayNotes: financeStore.offDayNotes || {}
             }).then(() => {
                 // console.log("儲存成功");
             }).catch(e => {
@@ -2958,13 +3050,12 @@
             });
         }
         renderFinancePage();
-        // 如果當日詳情視窗是開啟的，也刷新它
         if(!document.getElementById('dayDetailModal').classList.contains('hidden')) {
             renderDayDetailList();
         }
-}
+    }
 
-    // [修正版] 渲染財務頁面 (修復上下班位置與時間計算)
+    // [修正版] 渲染財務頁面 (補上睫模顯示邏輯)
     function renderFinancePage() {
         const y = financeStore.viewDate.getFullYear();
         const m = financeStore.viewDate.getMonth();
@@ -3025,36 +3116,21 @@
             let dateColor = isRedDay ? 'text-[#ff6b6b]' : 'font-bold';
             let labelColor = isRedDay ? 'text-[#ff6b6b] font-bold' : 'opacity-30';
 
-            // [核心修正] 計算當日最早與最晚時間
-            // 邏輯：上班 = 第一筆開始； 下班 = 最後一筆開始 + 該筆時長
+            // 計算當日最早與最晚時間
             let minTimeStr = null;
             let maxTimeStr = null;
 
             if (entries.length > 0) {
-                // 1. 確保預約依照時間先後排序 (早 -> 晚)
                 entries.sort((a, b) => a.time.localeCompare(b.time));
-
-                // 2. 上班時間 = 第一筆的開始時間
                 minTimeStr = entries[0].time;
-
-                // 3. 下班時間 = 最後一筆的開始時間 + 該筆時長
                 const lastEntry = entries[entries.length - 1];
                 const [lastH, lastM] = lastEntry.time.split(':').map(Number);
-                
-                // 確保讀取時長 (如果資料庫是 0 或無資料，才預設 60，否則使用設定值)
                 let lastDur = parseInt(lastEntry.duration, 10);
                 if (isNaN(lastDur) || lastDur === 0) lastDur = 60;
-
-                // 計算結束分鐘數
                 let endMins = (lastH * 60) + lastM + lastDur;
-
-                // 轉回 HH:MM 格式
                 let endH = Math.floor(endMins / 60);
                 let endM = endMins % 60;
-                
-                // 處理跨日 (例如 25:00 變成 01:00)
                 if (endH >= 24) endH = endH - 24;
-                
                 maxTimeStr = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
             }
 
@@ -3073,7 +3149,12 @@
                     contentHtml += `<div class="fin-item is-note"><span>${note}</span></div>`;
                 });
 
-                const modelItemNames = new Set([...safeArray(serviceData.nail?.model).map(i => i.name), ...safeArray(serviceData.eyelash?.model).map(i => i.name)]);
+                // [修正] 在這裡補上 eyelash.practice 到集合中
+                const modelItemNames = new Set([
+                    ...safeArray(serviceData.nail?.model).map(i => i.name), 
+                    ...safeArray(serviceData.eyelash?.model).map(i => i.name),
+                    ...safeArray(serviceData.eyelash?.practice).map(i => i.name)
+                ]);
 
                 entries.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
                     count++;
@@ -3090,9 +3171,9 @@
 
                     let suffix = "";
                     if (financeStore.viewMode !== 'price') {
-                        if (hasRemoval && hasExtension) suffix = "☠︎"; 
-                        else if (hasRemoval) suffix = "☺︎"; 
-                        else if (hasExtension) suffix = "☹︎"; 
+                        if (hasRemoval && hasExtension) suffix = "☯"; 
+                        else if (hasRemoval) suffix = "♡"; 
+                        else if (hasExtension) suffix = "✩"; 
                     } 
 
                     let itemClass = '';
@@ -3109,7 +3190,6 @@
                     </div>`;
                 });
 
-                // [修正] 底部時間顯示： Start(左) ..... End(右)
                 if (minTimeStr && maxTimeStr) {
                     contentHtml += `
                         <div class="fin-day-footer">
@@ -3118,7 +3198,7 @@
                         </div>`;
                 }
 
-                contentHtml += `</div>`; // Close flex-1
+                contentHtml += `</div>`; 
             }
             
             box.innerHTML = contentHtml;
@@ -3411,7 +3491,7 @@
     };
 
     
-    // [修改] 全域查找項目資料 (回傳 價格 與 時長)
+    // [修正] 全域查找項目資料 (補上 practice 睫模欄位)
     function findItemData(itemName) {
         const allCats = ['nail', 'eyelash', 'skin'];
         for (const cat of allCats) {
@@ -3420,7 +3500,8 @@
             const lists = [
                 safeArray(serviceData[cat].main), 
                 safeArray(serviceData[cat].addon), 
-                safeArray(serviceData[cat].model)
+                safeArray(serviceData[cat].model),
+                safeArray(serviceData[cat].practice) // [新增] 確保搜尋睫模
             ];
 
             for (const list of lists) {
@@ -3439,113 +3520,105 @@
                     const isPrice2 = ["濃密", "體驗", "方案 B"].some(k => itemName.includes(k));
                     const price = (isPrice2 && found.price2) ? parsePrice(found.price2) : parsePrice(found.price);
                     // 回傳物件包含時長
-                    return { price: price, duration: found.duration || 60 }; // 預設 60 分
+                    return { price: price, duration: found.duration || 60 }; 
                 }
             }
         }
         return { price: 0, duration: 60 };
     }
 
-    // [修復] 開啟編輯視窗 (新增：即時衝突偵測 + 灰色時間選項)
+    // [修復] 開啟編輯視窗 (修正預設開啟第一個分頁)
     function openEditForm(entryId = null) {
         const modal = document.getElementById('finEditModal');
         if(modal) modal.classList.remove('hidden');
         
         editingEntryId = entryId;
         tempItems = [];
-        currentCat = 'nail'; 
+        currentCat = 'nail'; // 預設值，會被下方的 click 覆蓋
         
-        // [新增] 插入即時警告訊息框 (如果還沒有的話)
-        let warnBox = document.getElementById('conflict-msg');
-        if (!warnBox) {
-            warnBox = document.createElement('div');
-            warnBox.id = 'conflict-msg';
-            warnBox.className = "text-[#ff6b6b] text-xs font-bold text-center mb-2 hidden";
-            // 插在時間選擇器的下方
-            const timeContainer = document.getElementById('fe-h').parentElement.parentElement;
-            timeContainer.after(warnBox);
-        }
-        warnBox.classList.add('hidden'); // 重置隱藏
+        // 1. 初始化 DOM
+        const elNote = document.getElementById('fe-note');
+        if(elNote) elNote.value = ""; 
+        clearImage(); 
+        
+        const elTitle = document.getElementById('fe-title');
+        if(elTitle) elTitle.innerText = "新增預約"; 
 
-        // 準備現有預約資料 (用於標記灰色選項)
+        // 2. 建立小時選單
         const currentEntries = safeArray(financeStore.data[activeDateStr]);
         const busyHours = new Set();
         currentEntries.forEach(e => {
-            // 如果是正在編輯的這筆，不要視為忙碌
             if (editingEntryId && String(e.id) === String(editingEntryId)) return;
             const h = parseInt(e.time.split(':')[0], 10);
             busyHours.add(h);
         });
 
-        // 重新生成小時選單 (標記忙碌時間)
         const hSel = document.getElementById('fe-h');
         if(hSel) {
             hSel.innerHTML = '';
             for(let i=10; i<=22; i++) {
                 const val = String(i).padStart(2,'0');
                 const isBusy = busyHours.has(i);
-                // 如果忙碌，加上灰色樣式
                 const style = isBusy ? 'color: #ccc;' : 'color: #1a3a2e;';
                 const text = isBusy ? `${i} (忙)` : i;
                 hSel.innerHTML += `<option value="${val}" style="${style}">${text}</option>`;
             }
-            // 綁定即時檢查事件
             hSel.onchange = checkConflictUI;
         }
-
         const mSel = document.getElementById('fe-m');
-        if(mSel) mSel.onchange = checkConflictUI; // 綁定事件
-
-        // 綁定時長輸入框事件
+        if(mSel) mSel.onchange = checkConflictUI;
         const durInput = document.getElementById('fe-duration');
         if(durInput) durInput.oninput = checkConflictUI;
 
-        let defH = "10";
-        let defM = "00";
-        
+        // 3. 預設值
+        let defH = "10", defM = "00";
         const elPrice = document.getElementById('fe-price');
         const elDur = document.getElementById('fe-duration');
         const elDep = document.getElementById('fe-deposit');
-        const elTitle = document.getElementById('fe-title');
 
         if(elDep) elDep.checked = true;
         if(elPrice) elPrice.value = ""; 
         if(elDur) elDur.value = "";
-        if(elTitle) elTitle.innerText = "新增帳務";
 
-        // 載入舊資料
+        // 4. 載入舊資料 (如果是編輯)
         if (entryId) {
             const entry = currentEntries.find(e => String(e.id) === String(entryId));
             if (entry) {
-                if(elTitle) elTitle.innerText = "編輯帳務";
+                if(elTitle) elTitle.innerText = "編輯預約";
                 const parts = (entry.time || "10:00").split(':');
-                if(parts.length === 2) {
-                    defH = parts[0]; 
-                    defM = parts[1];
-                }
+                if(parts.length === 2) { defH = parts[0]; defM = parts[1]; }
                 if(elDep) elDep.checked = entry.hasDeposit;
-                
-                tempItems = safeArray(entry.items).map(n => {
-                    const data = findItemData(n); 
-                    return {
-                        name: n, 
-                        price: data.price, 
-                        duration: data.duration, 
-                        isPercent: n.includes('%') || String(data.price).includes('%') 
-                    };
-                });
+                if(elNote) elNote.value = entry.note || "";
+                if(entry.image) {
+                    currentImgBase64 = entry.image;
+                    const img = document.getElementById('fe-img-preview');
+                    const btn = document.getElementById('btn-clear-img');
+                    img.src = currentImgBase64; img.classList.add('show'); btn.classList.remove('hidden');
+                }
+
+                if (entry.itemsDetail) {
+                    tempItems = entry.itemsDetail;
+                } else {
+                    tempItems = safeArray(entry.items).map(n => {
+                        const data = findItemData(n); 
+                        return { name: n, price: data.price, duration: data.duration, isPercent: n.includes('%'), qty: 1 };
+                    });
+                }
             }
         }
-
+        
         if(hSel) hSel.value = String(defH).padStart(2,'0');
         if(mSel) mSel.value = defM;
 
+        // [核心修正] 自動點擊第一個分頁按鈕 (手模)，觸發資料載入
         const allTabs = document.querySelectorAll('.cat-tab-btn');
-        if(allTabs.length > 0) switchFinCat('model', allTabs[0]); 
+        if(allTabs.length > 0) {
+            allTabs[0].click(); 
+        }
         
         renderSelectedList();
         recalcTotal();
-        checkConflictUI(); // 開啟時先檢查一次
+        checkConflictUI();
     }
 
     // [新增] 即時衝突檢查 UI 顯示
@@ -3611,26 +3684,20 @@
         const m = document.getElementById('fe-m').value;
         const timeStr = `${h}:${m}`;
         const rawPrice = document.getElementById('fe-price').value; 
-        // [重點] 強制轉數字 (base 10)
         const duration = parseInt(document.getElementById('fe-duration').value, 10) || 0;
 
-        // 1. 計算新項目的時間區間 (分鐘數)
+        // 1. 衝突檢查
         const startH = parseInt(h, 10);
         const startM = parseInt(m, 10);
         const newStartMins = startH * 60 + startM;
         const newEndMins = newStartMins + duration;
 
-        // 2. 衝突偵測 (檢查財務紀錄內部)
         let isConflict = false;
         currentEntries.forEach(e => {
-            if (editingEntryId && String(e.id) === String(editingEntryId)) return; // 排除自己
-            
+            if (editingEntryId && String(e.id) === String(editingEntryId)) return;
             const [eH, eM] = e.time.split(':').map(Number);
             const eStart = eH * 60 + eM;
-            // 這裡讀取舊資料也要強制轉 int
             const eEnd = eStart + (parseInt(e.duration || 60, 10));
-
-            // 判斷重疊: (StartA < EndB) and (EndA > StartB)
             if (newStartMins < eEnd && newEndMins > eStart) isConflict = true; 
         });
 
@@ -3638,35 +3705,37 @@
             if(!confirm(`⚠️ 檢測到與現有帳務時間重疊 (${timeStr})\n\n確定要繼續新增嗎？`)) return;
         }
 
-        // [新增] 如果是「編輯模式」，先嘗試釋出「舊的時段」
+        // 2. 如果是編輯，先嘗試釋出舊時段 (行事曆邏輯)
         if (editingEntryId) {
              const oldEntry = currentEntries.find(e => String(e.id) === String(editingEntryId));
-             if (oldEntry && oldEntry.time !== timeStr) { // 如果時間有變動
+             if (oldEntry && oldEntry.time !== timeStr) {
                 const [yStr, mmStr, ddStr] = activeDateStr.split('-');
                 const bookingKey = `${parseInt(yStr)}-${parseInt(mmStr)-1}-${parseInt(ddStr)}`;
-                
                 if (!bookingState.data.bookings[bookingKey]) bookingState.data.bookings[bookingKey] = [];
                 const slots = bookingState.data.bookings[bookingKey];
-                
-                // 把舊時間加回去 (如果不在清單內)
                 if (!slots.includes(oldEntry.time)) {
                     slots.push(oldEntry.time);
                     slots.sort();
-                    // 這裡不用 saveBookingData，因為最後面會統一處理
                 }
              }
         }
 
-        // 3. 儲存財務資料
+        // 3. 建立新資料物件 (新增 note, image, itemsDetail)
         const newData = {
             id: editingEntryId || Date.now(),
             time: timeStr,
-            items: tempItems.length > 0 ? tempItems.map(i=>i.name) : ['自訂項目'],
+            // items 僅存字串供顯示 (如果有數量>1，名稱後面加 xN)
+            items: tempItems.length > 0 ? tempItems.map(i => i.qty > 1 ? `${i.name} x${i.qty}` : i.name) : ['自訂項目'],
+            // itemsDetail 儲存詳細資料 (含價格、時長、數量) 以便編輯
+            itemsDetail: tempItems,
             price: rawPrice, 
-            duration: duration, // 確保是數字
-            hasDeposit: document.getElementById('fe-deposit').checked
+            duration: duration,
+            hasDeposit: document.getElementById('fe-deposit').checked,
+            note: document.getElementById('fe-note').value, // [新增] 備註
+            image: currentImgBase64 // [新增] 圖片
         };
 
+        // 4. 更新陣列
         if (editingEntryId) {
             const idx = currentEntries.findIndex(e => String(e.id) === String(editingEntryId));
             if(idx > -1) currentEntries[idx] = newData;
@@ -3677,36 +3746,25 @@
         financeStore.data[activeDateStr] = currentEntries;
         saveFinanceV2(); 
 
-        // 4. 同步行事曆 (強力移除模式)
-        if (!bookingState.data.bookings) bookingState.data.bookings = {};
-        
-        // 修正 Booking Key: YYYY-M-D (月份不補零，日期不補零)
+        // 5. 同步行事曆 (移除被佔用的空檔)
         const [yStr, mmStr, ddStr] = activeDateStr.split('-');
         const bookingKey = `${parseInt(yStr)}-${parseInt(mmStr)-1}-${parseInt(ddStr)}`;
-        
         let currentBookingSlots = bookingState.data.bookings[bookingKey];
 
-        // 只有當該日期有資料時才處理
         if (currentBookingSlots && Array.isArray(currentBookingSlots)) {
             let hasChanged = false;
-            
-            // 過濾掉 "落在新預約區間內" 的空檔
             const updatedSlots = currentBookingSlots.filter(slot => {
                 const [sH, sM] = slot.split(':').map(Number);
                 const slotStartMins = sH * 60 + sM;
-                
-                // 檢查這個空檔是否在新預約的時間範圍內
-                // 如果空檔時間 >= 新預約開始 AND 空檔時間 < 新預約結束
                 if (slotStartMins >= newStartMins && slotStartMins < newEndMins) {
                     hasChanged = true;
                     return false; // 移除此空檔
                 }
-                return true; // 保留此空檔
+                return true;
             });
-
             if (hasChanged) {
                 bookingState.data.bookings[bookingKey] = updatedSlots;
-                saveBookingData(); // 儲存行事曆變更
+                saveBookingData();
             }
         }
         
@@ -3714,61 +3772,82 @@
         closeFinEditModal();   
     }
 
-    // 1. 切換類別：讀取價目表並顯示按鈕
-    // [修復] 切換類別：讀取價目表並顯示按鈕
-    window.switchFinCat = function(cat, btn) {
-        currentCat = cat; // 更新全域變數
+    // [修改] 1. 切換類別：支援手模與睫模獨立顯示
+    window.switchFinCat = function(catKey, btn) {
+        // 設定當前主要類別 (用於價格選擇器判斷款式名稱)
+        if (catKey.includes('nail')) currentCat = 'nail';
+        else if (catKey.includes('eyelash')) currentCat = 'eyelash';
+        else currentCat = 'skin';
 
+        // 更新按鈕樣式
         document.querySelectorAll('.cat-tab-btn').forEach(b => b.classList.remove('active'));
         if(btn) btn.classList.add('active');
         
-        let list = [];
-        
-        if (cat === 'model') {
-            // [修改] 手模分頁：只放「美甲」的手模
-            if(serviceData.nail) list = list.concat(safeArray(serviceData.nail.model));
-            
-        } else if (cat === 'eyelash') {
-            // [修改] 美睫分頁：放入 主項目 + 睫毛管理(Model) + 加購
-            if(serviceData.eyelash) {
-                list = list.concat(safeArray(serviceData.eyelash.main));
-                list = list.concat(safeArray(serviceData.eyelash.model)); // 睫毛管理移回這裡
-                list = list.concat(safeArray(serviceData.eyelash.addon));
-            }
-        } else {
-            // 美甲 或 美容：放入 主項目 + 加購
-            if(serviceData[cat]) {
-                list = list.concat(safeArray(serviceData[cat].main));
-                list = list.concat(safeArray(serviceData[cat].addon));
-            }
-        }
-
         const grid = document.getElementById('fe-item-grid');
         if(!grid) return;
+        grid.innerHTML = '';
 
-        if (list.length === 0) {
-            grid.innerHTML = `<div class="col-span-2 text-center text-gray-400 text-xs py-4">尚無項目</div>`;
-            return;
-        }
-
-        grid.innerHTML = list.map(i => {
+        // 建立按鈕的 helper
+        const createBtn = (i) => {
             const p1Disp = String(i.price).includes('%') ? i.price : `$${i.price}`;
             const hasP2 = (i.price2 !== undefined && i.price2 !== "" && i.price2 != 0);
             const p2Str = hasP2 ? i.price2 : "";
             const dur = i.duration || 0;
 
             if (hasP2) {
-                return `
-                <button class="item-option-btn" onclick="openPriceSelector('${cat}', '${i.name}', '${i.price}', '${p2Str}', ${dur})">
-                    ${i.name} <span class="opacity-60 text-[10px] ml-1">選</span>
-                </button>`;
+                return `<button class="item-option-btn" onclick="openPriceSelector('${currentCat}', '${i.name}', '${i.price}', '${p2Str}', ${dur})">${i.name} <span class="opacity-60 text-[10px] ml-1">選</span></button>`;
             } else {
-                return `
-                <button class="item-option-btn" onclick="addItemToTemp('${i.name}', '${i.price}', ${dur})">
-                    ${i.name} <span class="opacity-60 text-[10px]">(${p1Disp})</span>
-                </button>`;
+                return `<button class="item-option-btn" onclick="addItemToTemp('${i.name}', '${i.price}', ${dur})">${i.name} <span class="opacity-60 text-[10px]">(${p1Disp})</span></button>`;
             }
-        }).join('');
+        };
+
+        // [核心修改] 依據 catKey 渲染對應資料
+        if (catKey === 'nail_model') {
+            // 手模專區
+            if (serviceData.nail && safeArray(serviceData.nail.model).length > 0) {
+                grid.innerHTML += `<div class="fe-section-title">--- 手模專區 ---</div>` + safeArray(serviceData.nail.model).map(createBtn).join('');
+            }
+        } else if (catKey === 'eyelash_practice') {
+            // 睫模專區
+            if (serviceData.eyelash && safeArray(serviceData.eyelash.practice).length > 0) {
+                 grid.innerHTML += `<div class="fe-section-title">--- 睫模專區 ---</div>` + safeArray(serviceData.eyelash.practice).map(createBtn).join('');
+            }
+        } else if (catKey === 'nail') {
+            // 美甲 (主項目 + 加購)
+            if (serviceData.nail) {
+                if (safeArray(serviceData.nail.main).length > 0) {
+                    grid.innerHTML += `<div class="fe-section-title">--- 美甲項目 ---</div>` + safeArray(serviceData.nail.main).map(createBtn).join('');
+                }
+                if (safeArray(serviceData.nail.addon).length > 0) {
+                    grid.innerHTML += `<div class="fe-section-title">--- 加購項目 ---</div>` + safeArray(serviceData.nail.addon).map(createBtn).join('');
+                }
+            }
+        } else if (catKey === 'eyelash') {
+            // 美睫 (主項目 + 加購 + 睫毛管理)
+            if (serviceData.eyelash) {
+                if (safeArray(serviceData.eyelash.main).length > 0) {
+                    grid.innerHTML += `<div class="fe-section-title">--- 美睫項目 ---</div>` + safeArray(serviceData.eyelash.main).map(createBtn).join('');
+                }
+                if (safeArray(serviceData.eyelash.model).length > 0) {
+                    grid.innerHTML += `<div class="fe-section-title">--- 睫毛管理 ---</div>` + safeArray(serviceData.eyelash.model).map(createBtn).join('');
+                }
+                if (safeArray(serviceData.eyelash.addon).length > 0) {
+                    grid.innerHTML += `<div class="fe-section-title">--- 加購項目 ---</div>` + safeArray(serviceData.eyelash.addon).map(createBtn).join('');
+                }
+            }
+        } else if (catKey === 'skin') {
+            // 美容
+            if (serviceData.skin) {
+                 if (safeArray(serviceData.skin.main).length > 0) {
+                    grid.innerHTML += `<div class="fe-section-title">--- 美容項目 ---</div>` + safeArray(serviceData.skin.main).map(createBtn).join('');
+                }
+                if (safeArray(serviceData.skin.addon).length > 0) {
+                    grid.innerHTML += `<div class="fe-section-title">--- 加購項目 ---</div>` + safeArray(serviceData.skin.addon).map(createBtn).join('');
+                }
+            }
+        }
+
+        if (grid.innerHTML === '') grid.innerHTML = `<div class="col-span-2 text-center text-gray-400 text-xs py-4">尚無項目</div>`;
     };
 
     // 2. [修改] 開啟價格選擇視窗 (客製化文字：自然/濃密, 原價/體驗)
@@ -3815,10 +3894,7 @@
     // 4. [修改] 加入項目 (偵測是否為百分比)
     window.addItemToTemp = function(name, priceStr, dur) {
         const pStr = String(priceStr);
-        // 只要包含 % 就視為折扣
         const isPercent = pStr.includes('%');
-        
-        // 抓取數字： "70%" -> 70, "$1100" -> 1100
         const priceVal = parseInt(pStr.replace(/[^0-9]/g, '')) || 0;
         const durVal = parseInt(dur) || 0;
 
@@ -3826,9 +3902,11 @@
             name: name, 
             price: priceVal, 
             duration: durVal,
-            isPercent: isPercent // 重要標記
+            isPercent: isPercent,
+            qty: 1 // [新增] 預設數量為 1
         });
 
+        // 預設先加一次時長，稍後 recalcTotal 會再精準計算
         const currentDur = parseInt(document.getElementById('fe-duration').value) || 0;
         document.getElementById('fe-duration').value = currentDur + durVal;
 
@@ -3859,30 +3937,29 @@
         let currentRunningTotal = 0;
         let currentTotalDuration = 0;
 
-        // 依照 tempItems 的順序一一處理
         tempItems.forEach(item => {
             const val = parseFloat(item.price) || 0;
             const dur = parseInt(item.duration) || 0;
+            const qty = parseInt(item.qty) || 1; // 取得數量
             
-            // 1. 計算金額 (循序折扣邏輯)
             if (!item.isPercent) {
-                currentRunningTotal += val;
+                // 一般金額：單價 * 數量
+                currentRunningTotal += (val * qty);
             } else {
-                // 百分比只乘以前面的累計
+                // 百分比折扣：直接打折 (通常折扣不乘數量，而是作用在總額)
                 currentRunningTotal = currentRunningTotal * (val / 100);
                 currentRunningTotal = Math.round(currentRunningTotal);
             }
 
-            // 2. 計算時長 (單純累加)
-            currentTotalDuration += dur;
+            // 總時長：單次時長 * 數量
+            currentTotalDuration += (dur * qty);
         });
 
-        // 更新 UI
         const priceInput = document.getElementById('fe-price');
         const durInput = document.getElementById('fe-duration');
         
         if (priceInput) priceInput.value = currentRunningTotal;
-        if (durInput) durInput.value = currentTotalDuration; // 自動更新總時長
+        if (durInput) durInput.value = currentTotalDuration;
     };
 
     // [修改] 渲染已選清單 (新增時長輸入框)
@@ -3892,28 +3969,23 @@
         if(!list) return;
 
         list.innerHTML = tempItems.map((item, idx) => {
-            // 判斷顯示符號
             const symbolClass = item.isPercent ? 'currency-symbol hidden-symbol' : 'currency-symbol';
             const suffix = item.isPercent ? '<span class="text-xs font-bold text-[var(--gold-main)] ml-1">%</span>' : '';
+            const qty = item.qty || 1;
             
             return `
             <div class="selected-list-item">
                 <span class="selected-name flex-1">${item.name}</span>
                 
                 <div class="flex items-center">
-                    <input type="number" inputmode="numeric" 
-                           class="item-duration-input" 
-                           value="${item.duration}" 
-                           onfocus="this.select()"
-                           onchange="updateListDuration(${idx}, this.value)">
+                    <span class="text-[9px] text-gray-400 mr-1">x</span>
+                    <input type="number" inputmode="numeric" class="item-qty-input" value="${qty}" onfocus="this.select()" onchange="updateItemQty(${idx}, this.value)">
+
+                    <input type="number" inputmode="numeric" class="item-duration-input" value="${item.duration}" onfocus="this.select()" onchange="updateListDuration(${idx}, this.value)">
                     <span class="text-[9px] text-gray-400 mr-2">分</span>
 
                     <span class="${symbolClass}">$</span>
-                    <input type="number" inputmode="numeric" 
-                           class="item-price-input" 
-                           value="${item.price}" 
-                           onfocus="this.select()" 
-                           onchange="updateListPrice(${idx}, this.value)">
+                    <input type="number" inputmode="numeric" class="item-price-input" value="${item.price}" onfocus="this.select()" onchange="updateListPrice(${idx}, this.value)">
                     ${suffix}
                     
                     <span class="del-item-btn ml-2" onclick="removeItemFromTemp(${idx})">✕</span>
@@ -3988,41 +4060,33 @@
         window.location.reload();
     };
 
-    // [新增] 路由控制器：根據網址 Hash 顯示對應頁面
     function router() {
-        // 1. 取得當前 Hash，預設為 home
         const hash = location.hash.slice(1) || 'home';
         
-        // --- [修改] 控制首頁標題文字顯示 & 距離調整 ---
+        // 1. 控制 Header 文字顯示 (非首頁時隱藏)
         const headerTexts = document.querySelectorAll('.studio-name, .studio-name2, .studio-subtitle');
         const brandHeader = document.querySelector('.brand-header');
         
         if (hash === 'home') {
-            // 首頁：顯示文字、恢復原本留白
             headerTexts.forEach(el => el.style.display = ''); 
             if(brandHeader) brandHeader.classList.remove('header-compact');
         } else {
-            // 非首頁：隱藏文字、縮減留白
             headerTexts.forEach(el => el.style.display = 'none'); 
             if(brandHeader) brandHeader.classList.add('header-compact');
         }
-        // --------------------------------
 
-        // 2. 定義後台頁面清單 (需要權限)
-        const adminPages = ['admin-nail', 'admin-eyelash', 'admin-skin', 'admin-calc', 'budget', 'admin-finance'];
-        
-        // 3. 權限檢查
+        // 2. 定義後台頁面清單 (新增了 admin-pricelist)
+        const adminPages = ['admin-pricelist', 'admin-calc', 'budget', 'admin-finance'];
         const isAdmin = document.body.classList.contains('admin-mode');
         
-        // 如果想去後台頁面但沒權限
+        // 3. 權限檢查
         if (adminPages.includes(hash) && !isAdmin) {
-            // 強制跳回首頁並跳出登入窗
             location.hash = 'home';
             showAdminLogin();
             return;
         }
 
-        // 4. 隱藏所有頁面，顯示目標頁面
+        // 4. 切換頁面顯示
         document.querySelectorAll('.page-content').forEach(p => {
             p.classList.remove('active');
             p.style.display = 'none'; 
@@ -4034,20 +4098,20 @@
             targetPage.style.display = 'block'; 
         }
 
-        // 5. 更新底部導航按鈕狀態 (自動高亮)
+        // 5. 更新底部導航按鈕狀態
         document.querySelectorAll('.tab-button').forEach(btn => {
             btn.classList.remove('active');
-            // 檢查按鈕的 onclick 是否包含當前 hash
             const onclickAttr = btn.getAttribute('onclick');
             if (onclickAttr && onclickAttr.includes(`'${hash}'`)) {
                 btn.classList.add('active');
             }
         });
 
-        // 6. 觸發特定頁面的渲染邏輯
+        // 6. 特殊頁面初始化
         window.scrollTo(0,0);
         if (hash === 'booking') {
             renderCalendar();
+            // 顯示預約須知
             const isAdmin = document.body.classList.contains('admin-mode');
             if (!isAdmin && !hasSeenBookingNotice) {
                 setTimeout(() => {
@@ -4058,6 +4122,7 @@
         }
         if(hash === 'budget') renderCalendar(); 
         if(hash === 'admin-finance') renderFinancePage();
+        if(hash === 'admin-pricelist') renderAdminList(); // 進入價目表時渲染列表
     }
 
     // [重要] 啟動監聽：只要網址變了，就執行 router
@@ -4169,11 +4234,10 @@
         renderAdminList();     
         initCalc();           
         
-        syncServiceData();     
-        syncBookingData();     
-        syncFinanceV2();       
-
-        // [新增這行] 網頁載入時，檢查網址並顯示對應頁面
+        syncServiceData();    
+        syncBookingData();    
+        syncFinanceV2(); // <--- 關鍵！這行必須存在，預約才會出來
+        
         router();
     };
 
@@ -4188,6 +4252,78 @@
             if (checkFirebase) clearInterval(checkFirebase);
             if (typeof window.initSystem === 'function') window.initSystem();
         }, 3000);
+    };
+
+    // ============================================================
+    // [新增功能區] 請貼在 Script 的後段
+    // ============================================================
+
+    // 1. 後台價目表內部分頁切換
+    window.switchAdminPriceTab = function(tabName, btn) {
+        const contents = [
+            'admin-cat-content-nail', 
+            'admin-cat-content-nail-model', 
+            'admin-cat-content-eyelash', 
+            'admin-cat-content-eyelash-practice', 
+            'admin-cat-content-skin'
+        ];
+        
+        contents.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.classList.add('hidden');
+        });
+
+        const target = document.getElementById('admin-cat-content-' + tabName);
+        if(target) target.classList.remove('hidden');
+
+        document.querySelectorAll('.admin-sub-tab-btn').forEach(b => b.classList.remove('active'));
+        if(btn) btn.classList.add('active');
+    };
+
+    // 2. 更新預約項目的數量
+    window.updateItemQty = function(idx, newQty) {
+        const qty = parseInt(newQty);
+        if (qty > 0 && tempItems[idx]) {
+            tempItems[idx].qty = qty;
+            recalcTotal(); // 數量變動後，重新計算總金額
+        }
+    };
+
+    // 3. 圖片上傳預覽
+    let currentImgBase64 = ""; // 全域變數存圖片
+    window.previewImage = function(input) {
+        const file = input.files[0];
+        if (file) {
+            // 限制大小 (例如 1MB)
+            if (file.size > 1024 * 1024) {
+                alert("圖片過大，請小於 1MB");
+                input.value = "";
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImgBase64 = e.target.result;
+                const img = document.getElementById('fe-img-preview');
+                const btn = document.getElementById('btn-clear-img');
+                img.src = currentImgBase64;
+                img.classList.add('show');
+                btn.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // 4. 清除圖片
+    window.clearImage = function() {
+        document.getElementById('fe-image-upload').value = "";
+        const img = document.getElementById('fe-img-preview');
+        if(img) {
+            img.src = "";
+            img.classList.remove('show');
+        }
+        const btn = document.getElementById('btn-clear-img');
+        if(btn) btn.classList.add('hidden');
+        currentImgBase64 = "";
     };
 
     // --- Top Button Logic ---
