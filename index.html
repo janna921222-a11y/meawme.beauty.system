@@ -1797,90 +1797,98 @@
     </div>
 
     <div id="finEditModal" class="cal-modal-overlay hidden">
-        <div class="cal-modal-content" style="max-width: 360px; text-align: left;">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="fe-title" class="text-center text-[var(--gold-main)] font-bold text-lg">新增帳務</h3>
-                <button onclick="closeFinEditModal()" class="opacity-50 text-2xl">✕</button>
-            </div>
+        <div class="cal-modal-content flex flex-col" style="max-width: 360px; height: 85vh; padding: 0; overflow: hidden; position: relative; background: #f2f2f2;">
             
-            <div class="mb-4 flex items-center gap-3 bg-gray-100 p-2 rounded border border-gray-300">
-                <label class="text-xs text-gray-500 font-bold">預約時間</label>
-                <div class="flex-1 flex items-center justify-center gap-1">
-                    <select id="fe-h" class="bg-transparent text-[#1a3a2e] font-bold text-xl outline-none text-center appearance-none w-16 border-b border-gray-400">
-                        </select>
-                    <span class="text-gray-400 font-bold">:</span>
-                    <select id="fe-m" class="bg-transparent text-[#1a3a2e] font-bold text-xl outline-none text-center appearance-none w-16 border-b border-gray-400">
-                        <option value="00">00</option>
-                        <option value="30">30</option>
-                    </select>
-                </div>
-            </div>
-
-            <div id="priceSelectorModal" class="cal-modal-overlay hidden" style="z-index: 6000;">
-                <div class="cal-modal-content" style="max-width: 300px; background: #1a3a2e; border: 2px solid var(--gold-main); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                    <h3 class="text-[var(--gold-main)] font-bold text-xl mb-6 tracking-widest text-center">請選擇方案</h3>
-                    <div id="price-options-container" class="grid gap-3">
-                        </div>
-                    <button onclick="document.getElementById('priceSelectorModal').classList.add('hidden')" class="w-full mt-6 py-3 border border-[#c9b896] text-[#c9b896] rounded-lg text-xs font-bold tracking-widest hover:bg-[#c9b896] hover:text-[#1a3a2e] transition-all">取消</button>
-                </div>
-            </div>
-
-            <div class="mb-2">
-                <label class="text-xs text-gray-400 block mb-1">選擇類別</label>
-                <div class="cat-tab-group">
-                    <div class="cat-tab-btn active" onclick="switchFinCat('nail_model', this)">手模</div>
-                    <div class="cat-tab-btn" onclick="switchFinCat('eyelash_practice', this)">睫模</div>
-                    <div class="cat-tab-btn" onclick="switchFinCat('nail', this)">美甲</div>
-                    <div class="cat-tab-btn" onclick="switchFinCat('eyelash', this)">美睫</div>
-                    <div class="cat-tab-btn" onclick="switchFinCat('skin', this)">美容</div>
-                </div>
-                <div id="fe-item-grid" class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1"></div>
-            </div>
-
-            <div class="mb-2 bg-gray-50 p-3 rounded border border-gray-200">
-                <div class="flex justify-between text-xs mb-2 text-gray-500">
-                    <span>已選項目清單</span>
-                    <span id="fe-count">0 項</span>
-                </div>
-                <div id="fe-selected-list" class="max-h-24 overflow-y-auto mb-3"></div>
-
-                <div class="flex justify-between items-center mb-3 pt-2 border-t border-gray-200">
-                    <label class="flex items-center gap-2 text-xs cursor-pointer text-gray-600 font-bold">
-                        <input type="checkbox" id="fe-deposit" checked class="w-4 h-4 accent-[var(--gold-main)]">
-                        已付定金 ($100)
-                    </label>
-                </div>
-
-                <div class="flex gap-2 items-center">
-                    <div class="flex-1">
-                        <label class="text-[10px] block text-gray-400">總金額</label>
-                        <input type="number" inputmode="numeric" id="fe-price" class="edit-input w-full font-bold text-[#2d4639] text-lg bg-white border border-gray-300">
-                    </div>
-                    <div class="flex-1">
-                        <label class="text-[10px] block text-gray-400">總時長(分)</label>
-                        <input type="number" inputmode="numeric" id="fe-duration" class="edit-input w-full text-center bg-white border border-gray-300">
-                    </div>
-                </div>
-            </div>
-
-            <div class="mb-2 bg-gray-50 p-3 rounded border border-gray-200">
-                <label class="text-[10px] block text-gray-400 mb-1">備註 (Note)</label>
-                <textarea id="fe-note" rows="2" class="w-full text-xs p-2 border border-gray-300 rounded bg-white text-gray-800" placeholder="輸入備註..."></textarea>
+            <div class="flex-shrink-0 bg-white z-20 shadow-md">
                 
-                <div class="img-upload-box">
-                    <label for="fe-image-upload" class="cursor-pointer text-xs text-[var(--gold-main)] font-bold flex items-center justify-center gap-2">
-                        📷 上傳圖片 / 照片
-                        <input type="file" id="fe-image-upload" accept="image/*" class="hidden" onchange="previewImage(this)">
-                    </label>
-                    <img id="fe-img-preview" src="" class="img-preview">
-                    <button id="btn-clear-img" onclick="clearImage()" class="hidden text-[10px] text-red-400 mt-1 underline">移除圖片</button>
+                <div class="flex justify-between items-center p-3 border-b border-gray-100">
+                    <h3 id="fe-title" class="text-[var(--gold-main)] font-bold text-base tracking-wide">新增帳務</h3>
+                    <button onclick="closeFinEditModal()" class="text-gray-400 text-xl w-8 h-8 flex items-center justify-center hover:bg-gray-50 rounded-full">✕</button>
+                </div>
+
+                <div class="p-3 pb-0 space-y-2">
+                    <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                        <label class="text-xs text-gray-500 font-bold whitespace-nowrap">預約時間</label>
+                        <div class="flex-1 flex items-center justify-center gap-1">
+                            <select id="fe-h" class="bg-transparent text-[#1a3a2e] font-bold text-lg outline-none text-center appearance-none w-16 border-b border-gray-400 p-0"></select>
+                            <span class="text-gray-400 font-bold">:</span>
+                            <select id="fe-m" class="bg-transparent text-[#1a3a2e] font-bold text-lg outline-none text-center appearance-none w-16 border-b border-gray-400 p-0">
+                                <option value="00">00</option>
+                                <option value="30">30</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="cat-tab-group shadow-sm bg-white border border-gray-200" style="margin-bottom: -1px;">
+                        <div class="cat-tab-btn active" onclick="switchFinCat('nail_model', this)">手模</div>
+                        <div class="cat-tab-btn" onclick="switchFinCat('eyelash_practice', this)">睫模</div>
+                        <div class="cat-tab-btn" onclick="switchFinCat('nail', this)">美甲</div>
+                        <div class="cat-tab-btn" onclick="switchFinCat('eyelash', this)">美睫</div>
+                        <div class="cat-tab-btn" onclick="switchFinCat('skin', this)">美容</div>
+                    </div>
                 </div>
             </div>
+            <div class="flex-1 overflow-y-auto p-3 pt-4 bg-[#f2f2f2] relative" style="overscroll-behavior: contain;">
 
-            <div class="flex gap-2 mt-2">
-                <button onclick="saveFinData()" class="w-full py-3 bg-[var(--gold-main)] text-[#1a3a2e] rounded-full text-sm font-bold shadow-md hover:opacity-90">確認儲存</button>
+                <div id="conflict-msg" class="hidden mb-3 p-3 bg-red-50 text-red-500 text-xs font-bold rounded-lg text-center border border-red-200 shadow-sm"></div>
+
+                <div id="priceSelectorModal" class="cal-modal-overlay hidden" style="z-index: 6000;">
+                    <div class="cal-modal-content" style="max-width: 300px; background: #1a3a2e; border: 2px solid var(--gold-main); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <h3 class="text-[var(--gold-main)] font-bold text-xl mb-6 tracking-widest text-center">請選擇方案</h3>
+                        <div id="price-options-container" class="grid gap-3"></div>
+                        <button onclick="document.getElementById('priceSelectorModal').classList.add('hidden')" class="w-full mt-6 py-3 border border-[#c9b896] text-[#c9b896] rounded-lg text-xs font-bold tracking-widest hover:bg-[#c9b896] hover:text-[#1a3a2e] transition-all">取消</button>
+                    </div>
+                </div>
+
+                <div id="fe-item-grid" class="grid grid-cols-2 gap-2 p-1 mb-4"></div>
+
+                <div class="mb-3 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="flex justify-between text-xs mb-2 text-gray-500 font-bold border-b border-gray-100 pb-2">
+                        <span>已選項目清單</span>
+                        <span id="fe-count">0 項</span>
+                    </div>
+                    
+                    <div id="fe-selected-list" class="mb-3 space-y-1"></div>
+
+                    <div class="flex justify-between items-center mb-3 pt-2 border-t border-gray-100">
+                        <label class="flex items-center gap-2 text-xs cursor-pointer text-gray-600 font-bold hover:bg-gray-50 p-1 rounded transition-colors w-full">
+                            <input type="checkbox" id="fe-deposit" checked class="w-4 h-4 accent-[var(--gold-main)]">
+                            已付定金 ($100)
+                        </label>
+                    </div>
+
+                    <div class="flex gap-2 items-center">
+                        <div class="flex-1">
+                            <label class="text-[10px] block text-gray-400 mb-1">總金額</label>
+                            <input type="number" inputmode="numeric" id="fe-price" class="edit-input w-full font-bold text-[#2d4639] text-lg bg-gray-50 border border-gray-200 rounded px-2 py-2">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-[10px] block text-gray-400 mb-1">總時長(分)</label>
+                            <input type="number" inputmode="numeric" id="fe-duration" class="edit-input w-full text-center bg-gray-50 border border-gray-200 rounded px-2 py-2 font-bold text-gray-600">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-2 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                    <label class="text-[10px] block text-gray-400 mb-1">備註 (Note)</label>
+                    <textarea id="fe-note" rows="2" class="w-full text-xs p-2 border border-gray-200 rounded bg-gray-50 text-gray-800 resize-none" placeholder="輸入備註..."></textarea>
+                    
+                    <div class="img-upload-box mt-3 border-dashed border-2 border-gray-200 bg-gray-50 rounded-lg p-2">
+                        <label for="fe-image-upload" class="cursor-pointer text-xs text-[var(--gold-main)] font-bold flex items-center justify-center gap-2 py-3 hover:bg-gray-100 transition-colors rounded-lg w-full">
+                            📷 上傳照片 (可多選)
+                            <input type="file" id="fe-image-upload" accept="image/*" multiple class="hidden" onchange="handleImageUpload(this)">
+                        </label>
+                        
+                        <div id="fe-preview-container" class="grid grid-cols-3 gap-2 mt-2">
+                            </div>
+                    </div>
+                
+                <div class="h-4"></div>
             </div>
-        </div>
+            <div class="flex-shrink-0 p-3 border-t border-gray-200 bg-white z-20 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
+                <button onclick="saveFinData()" class="w-full py-3 bg-[var(--gold-main)] text-[#1a3a2e] rounded-xl text-sm font-bold shadow-lg hover:brightness-105 active:scale-[0.98] transition-all">確認儲存</button>
+            </div>
+            </div>
     </div>
 </section>
 
@@ -3541,8 +3549,23 @@
         if(elNote) elNote.value = ""; 
         clearImage(); 
         
+        // --- [修改開始] 計算星期並更新標題 ---
         const elTitle = document.getElementById('fe-title');
-        if(elTitle) elTitle.innerText = "新增預約"; 
+        if(elTitle) {
+            // 準備星期對照表
+            const dayNames = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
+            // 解析日期字串 YYYY-MM-DD (避免時區問題，直接拆解)
+            const [y, m, d] = activeDateStr.split('-').map(Number);
+            // 建立日期物件 (月份是 0-base)
+            const dateObj = new Date(y, m - 1, d);
+            const dayName = dayNames[dateObj.getDay()];
+            
+            // 組合字串
+            const titleDate = `${activeDateStr} ${dayName}`;
+            
+            elTitle.innerText = entryId ? `編輯預約 (${titleDate})` : `新增預約 (${titleDate})`; 
+        }
+        // --- [修改結束] ---
 
         // 2. 建立小時選單
         const currentEntries = safeArray(financeStore.data[activeDateStr]);
@@ -3584,17 +3607,22 @@
         if (entryId) {
             const entry = currentEntries.find(e => String(e.id) === String(entryId));
             if (entry) {
-                if(elTitle) elTitle.innerText = "編輯預約";
                 const parts = (entry.time || "10:00").split(':');
                 if(parts.length === 2) { defH = parts[0]; defM = parts[1]; }
                 if(elDep) elDep.checked = entry.hasDeposit;
                 if(elNote) elNote.value = entry.note || "";
-                if(entry.image) {
-                    currentImgBase64 = entry.image;
-                    const img = document.getElementById('fe-img-preview');
-                    const btn = document.getElementById('btn-clear-img');
-                    img.src = currentImgBase64; img.classList.add('show'); btn.classList.remove('hidden');
+                // [修改] 圖片讀取邏輯 (支援多張 + 相容舊資料)
+                currentImagesList = []; // 先清空陣列
+                
+                if (entry.images && Array.isArray(entry.images)) {
+                    // 新格式：直接讀取陣列
+                    currentImagesList = [...entry.images];
+                } else if (entry.image) {
+                    // 舊格式：如果是單張字串，轉成陣列存入
+                    currentImagesList = [entry.image];
                 }
+                // 呼叫渲染函數顯示圖片
+                renderPreviewImages();
 
                 if (entry.itemsDetail) {
                     tempItems = entry.itemsDetail;
@@ -3610,7 +3638,7 @@
         if(hSel) hSel.value = String(defH).padStart(2,'0');
         if(mSel) mSel.value = defM;
 
-        // [核心修正] 自動點擊第一個分頁按鈕 (手模)，觸發資料載入
+        // 自動點擊第一個分頁按鈕 (手模)，觸發資料載入
         const allTabs = document.querySelectorAll('.cat-tab-btn');
         if(allTabs.length > 0) {
             allTabs[0].click(); 
@@ -3732,7 +3760,10 @@
             duration: duration,
             hasDeposit: document.getElementById('fe-deposit').checked,
             note: document.getElementById('fe-note').value, // [新增] 備註
-            image: currentImgBase64 // [新增] 圖片
+            // [修改] 儲存圖片陣列
+            images: currentImagesList, 
+            // 為了保持系統穩定，若有圖片，將第一張也存入舊欄位 image (當作封面圖)
+            image: currentImagesList.length > 0 ? currentImagesList[0] : ""
         };
 
         // 4. 更新陣列
@@ -4287,6 +4318,73 @@
             tempItems[idx].qty = qty;
             recalcTotal(); // 數量變動後，重新計算總金額
         }
+    };
+
+    // ==========================================
+    // [新功能] 多圖上傳邏輯
+    // ==========================================
+    
+    let currentImagesList = []; // 改用陣列儲存多張圖片
+
+    // 1. 處理圖片上傳
+    window.handleImageUpload = function(input) {
+        const files = input.files;
+        if (!files || files.length === 0) return;
+
+        // 限制一次最多上傳幾張 (例如 5 張)
+        if (currentImagesList.length + files.length > 5) {
+            alert("最多只能上傳 5 張照片");
+            input.value = "";
+            return;
+        }
+
+        Array.from(files).forEach(file => {
+            // 限制大小 (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert(`檔案 ${file.name} 過大，請小於 2MB`);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // 將 Base64 字串加入陣列
+                currentImagesList.push(e.target.result);
+                renderPreviewImages(); // 讀取完一張就渲染一次
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 清空 input 讓同個檔案可以再次被選取 (如果使用者刪除後後悔)
+        input.value = "";
+    };
+
+    // 2. 渲染預覽圖 (含刪除按鈕)
+    window.renderPreviewImages = function() {
+        const container = document.getElementById('fe-preview-container');
+        if (!container) return;
+        container.innerHTML = "";
+
+        currentImagesList.forEach((imgSrc, index) => {
+            const div = document.createElement('div');
+            div.className = "relative group aspect-square"; // 正方形容器
+            div.innerHTML = `
+                <img src="${imgSrc}" class="w-full h-full object-cover rounded-lg border border-gray-200 shadow-sm" onclick="viewLargeImage('${imgSrc}')">
+                <button onclick="removeImage(${index})" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-md hover:bg-red-600 transition-all">✕</button>
+            `;
+            container.appendChild(div);
+        });
+    };
+
+    // 3. 刪除單張圖片
+    window.removeImage = function(index) {
+        currentImagesList.splice(index, 1);
+        renderPreviewImages();
+    };
+
+    // (選用) 點擊圖片放大檢視
+    window.viewLargeImage = function(src) {
+        const win = window.open("", "_blank");
+        win.document.write(`<img src="${src}" style="width:100%">`);
     };
 
     // 3. 圖片上傳預覽
