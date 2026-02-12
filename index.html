@@ -1133,6 +1133,56 @@
         .img-preview { max-width: 100%; max-height: 150px; border-radius: 4px; margin-top: 5px; display: none; }
         .img-preview.show { display: block; margin: 5px auto 0; }
 
+        /* --- [新增] 圖片全螢幕預覽 Modal --- */
+        #img-preview-overlay {
+            position: fixed; 
+            inset: 0; 
+            z-index: 10000; /* 確保在最上層 */
+            background: rgba(0,0,0,0.95); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            opacity: 0; 
+            pointer-events: none; 
+            transition: opacity 0.3s ease; 
+            backdrop-filter: blur(5px);
+        }
+        #img-preview-overlay.active { 
+            opacity: 1; 
+            pointer-events: auto; 
+        }
+        #img-preview-overlay img { 
+            max-width: 95vw; 
+            max-height: 85vh; 
+            object-fit: contain; 
+            border-radius: 4px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); 
+        }
+        .pv-btn {
+            position: absolute; 
+            top: 40px; /* 避開瀏海區 */
+            width: 44px; 
+            height: 44px;
+            background: rgba(255,255,255,0.15); 
+            color: white; 
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer; 
+            z-index: 10001; 
+            font-size: 18px; 
+            backdrop-filter: blur(4px); 
+            transition: all 0.2s;
+        }
+        .pv-btn:active { 
+            transform: scale(0.9); 
+            background: rgba(255,255,255,0.3); 
+        }
+        .pv-close { left: 20px; }  /* 叉叉改到左邊 */
+        .pv-dl { right: 20px; }    /* 下載改到右邊 */
+
     </style>
 </head>
 <body>
@@ -4429,10 +4479,55 @@
         renderPreviewImages();
     };
 
-    // (選用) 點擊圖片放大檢視
+    // (選用) 點擊圖片放大檢視 (全螢幕 Modal + 左上關閉 / 右上下載)
     window.viewLargeImage = function(src) {
-        const win = window.open("", "_blank");
-        win.document.write(`<img src="${src}" style="width:100%">`);
+        // 1. 檢查是否已經建立了 overlay
+        let overlay = document.getElementById('img-preview-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'img-preview-overlay';
+            // 這裡 HTML 結構也順便交換順序，方便閱讀 (Close在前，DL在後)
+            overlay.innerHTML = `
+                <div class="pv-btn pv-close" onclick="closeLargeImage()">✕</div>
+                <div class="pv-btn pv-dl" onclick="downloadPreviewImage()">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                </div>
+                <img id="preview-img-target" src="">
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        // 2. 設定圖片與狀態
+        const img = document.getElementById('preview-img-target');
+        img.src = src;
+        overlay.dataset.currentSrc = src; // 暫存給下載用
+
+        // 3. 顯示動畫
+        requestAnimationFrame(() => overlay.classList.add('active'));
+    };
+
+    // 關閉預覽
+    window.closeLargeImage = function() {
+        const overlay = document.getElementById('img-preview-overlay');
+        if(overlay) overlay.classList.remove('active');
+    };
+
+    // 下載圖片 (觸發瀏覽器下載行為)
+    window.downloadPreviewImage = function() {
+        const overlay = document.getElementById('img-preview-overlay');
+        const src = overlay.dataset.currentSrc;
+        if(!src) return;
+
+        const a = document.createElement('a');
+        a.href = src;
+        // 產生檔名：meawme_日期時間.png
+        const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0,14);
+        a.download = `meawme_${timestamp}.png`;
+        
+        // 必須將 anchor 加入 body 才能在某些手機瀏覽器觸發點擊
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     };
 
     // 3. 圖片上傳預覽
