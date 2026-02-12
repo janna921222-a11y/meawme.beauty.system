@@ -2728,22 +2728,48 @@
         renderCalendar();
     }
 
+    // [修正] 時段管理開啟邏輯 (同步排除：週日、國定假日、手動排休日)
     function toggleMonthStatus() {
         const y = bookingState.viewDate.getFullYear();
         const m = bookingState.viewDate.getMonth();
         const mKey = `${y}-${m}`;
         const idx = bookingState.data.openMonths.indexOf(mKey);
         
+        // 取得假日表
+        const holidayMap = window.getTaiwanHolidays(); 
+
         if (idx > -1) {
+            // 如果原本是開啟，則關閉 (從清單移除)
             bookingState.data.openMonths.splice(idx, 1);
         } else {
+            // 如果原本是關閉，則開啟 (加入清單並生成時段)
             bookingState.data.openMonths.push(mKey);
             const lastDate = new Date(y, m + 1, 0).getDate();
+            
             for(let d=1; d<=lastDate; d++) {
                 const day = new Date(y, m, d).getDay();
-                const key = `${y}-${m}-${d}`;
-                if (day !== 0 && (!bookingState.data.bookings[key] || bookingState.data.bookings[key].length === 0)) {
-                      if (!bookingState.data.bookings[key]) bookingState.data.bookings[key] = [...DEFAULTS_TIMES];
+                const key = `${y}-${m}-${d}`; // Booking Key (YYYY-M-D)
+                
+                // 產生 Finance Key (YYYY-MM-DD) 用來對照排休表
+                const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                
+                // 1. 檢查是否國定假日
+                const isHoliday = !!holidayMap[dateStr];
+                
+                // 2. [新增] 檢查是否在「預約管理」的手動排休名單中
+                const isManualOff = (financeStore.manualOffDays || []).includes(dateStr);
+
+                // 核心邏輯：
+                // 非週日 (day !== 0)
+                // 且 非國定假日 (!isHoliday)
+                // 且 非手動排休 (!isManualOff)
+                // 才產生預設時段
+                if (day !== 0 && !isHoliday && !isManualOff) {
+                    // 只針對「還沒有設定時段」或「時段為空」的日子填入預設值
+                    // 避免覆蓋掉原本已經手動調整過的時段
+                    if (!bookingState.data.bookings[key] || bookingState.data.bookings[key].length === 0) {
+                         bookingState.data.bookings[key] = [...DEFAULTS_TIMES];
+                    }
                 }
             }
         }
@@ -3440,20 +3466,17 @@
         }
     };
 
-        // [修改] 排休/上班切換邏輯 (支援國定假日預設休假)
+    // [修改] 排休/上班切換邏輯
     window.toggleDayOff = function() {
         const holidayMap = window.getTaiwanHolidays();
         const isHoliday = !!holidayMap[activeDateStr];
         const dayOfWeek = new Date(activeDateStr).getDay();
         const isSun = dayOfWeek === 0;
 
-        // 1. 判斷「目前」是否處於休假狀態
-        // 定義：如果在手動休假名單中，或者 (是國定假日/週日 且 沒有時段)，都視為「休假中」
-        const inManualList = financeStore.manualOffDays.includes(activeDateStr);
-        
-        // 取得目前行事曆時段
         const [y, mm, dd] = activeDateStr.split('-');
         const bookingKey = `${parseInt(y)}-${parseInt(mm)-1}-${parseInt(dd)}`;
+
+        const inManualList = financeStore.manualOffDays.includes(activeDateStr);
         const currentSlots = bookingState.data.bookings[bookingKey] || [];
         const hasSlots = currentSlots.length > 0;
 
@@ -3461,57 +3484,34 @@
         const isCurrentlyOff = inManualList || ((isHoliday || isSun) && !hasSlots);
 
         if (isCurrentlyOff) {
-            // ===========================================
-            // 情境 A：目前是休假 -> 切換為「上班」
-            // ===========================================
-            
-            // 1. 從手動休假名單移除 (恢復為工作日狀態)
+            // 切換為上班：移除排休、開啟時段
             if (inManualList) {
                 const idx = financeStore.manualOffDays.indexOf(activeDateStr);
                 financeStore.manualOffDays.splice(idx, 1);
             }
-
-            // 2. 自動開啟時段 (智慧避開已存在的財務預約)
             const finEntries = safeArray(financeStore.data[activeDateStr]);
-            
-            // 篩選出安全的預設時段 (10, 13, 16, 19)
             const safeDefaults = DEFAULTS_TIMES.filter(defaultTime => {
                 const [dH, dM] = defaultTime.split(':').map(Number);
                 const dMins = dH * 60 + dM;
-
-                // 檢查是否被任何帳務行程佔用
                 const isOccupied = finEntries.some(e => {
                      const [eH, eM] = e.time.split(':').map(Number);
                      const eStart = eH * 60 + eM;
                      const eDur = parseInt(e.duration || 60, 10);
-                     // 判斷時間重疊
                      return (dMins >= eStart && dMins < (eStart + eDur));
                 });
-                return !isOccupied; // 沒被佔用才開啟
+                return !isOccupied;
             });
-            
-            // 寫入行事曆 (如果沒有可用時段，至少初始化為空陣列，代表已非休假但客滿)
             bookingState.data.bookings[bookingKey] = safeDefaults;
-
         } else {
-            // ===========================================
-            // 情境 B：目前是上班 -> 切換為「休假」
-            // ===========================================
-            
-            // 1. 加入手動休假名單
-            if (!inManualList) {
-                financeStore.manualOffDays.push(activeDateStr);
-            }
-
-            // 2. 強制清空所有時段 (同步行事曆)
+            // 切換為休假：加入排休、清空時段
+            if (!inManualList) financeStore.manualOffDays.push(activeDateStr);
             bookingState.data.bookings[bookingKey] = [];
         }
 
-        // 儲存並更新畫面
         saveFinanceV2();
         saveBookingData();
-        updateDayOffButton(); // 更新按鈕文字
-        renderFinancePage();  // 刷新日曆背景
+        updateDayOffButton();
+        renderFinancePage();
     };
 
     // [新增] 編輯休假原因
@@ -4206,22 +4206,34 @@
         };
     };
 
-    // --- [修正] 舊資料校正工具 (含：自動補時長 + 自動開啟空檔) ---
+    // [修正] 舊資料校正工具 (增強版：自動修復假日狀態)
     window.fixLegacyData = function() {
-        if(!confirm("⚠️ 系統校正 (進階版)：\n\n1. 自動補齊舊帳務的「時長」\n2. 重置行事曆狀態：\n   - 休假：清空時段\n   - 上班：自動開啟所有「無行程」的預設時段 (10, 13, 16, 19)\n\n這將會把舊日期的行事曆「重置」為標準狀態，確定執行嗎？")) return;
+        if(!confirm("⚠️ 系統校正 (進階版)：\n\n1. 自動補齊舊帳務的「時長」\n2. 重置行事曆狀態：\n   - 休假/國定假日：若無真實預約，強制清空時段 (讓狀態變回休假)\n   - 上班日：自動開啟預設時段\n\n確定執行嗎？")) return;
 
         let updatedDays = 0;
         const allDates = Object.keys(financeStore.data);
+        const holidayMap = window.getTaiwanHolidays(); // 取得假日表
 
-        allDates.forEach(dateStr => {
+        // 為了確保所有日期都被掃描到（包含沒有帳務但有開時段的假日），我們掃描 bookingState 裡的開放月份
+        // 這裡簡化：針對目前 financeStore 有資料的日期 + 手動掃描當前檢視月份
+        const y = bookingState.viewDate.getFullYear();
+        const m = bookingState.viewDate.getMonth();
+        const lastDate = new Date(y, m + 1, 0).getDate();
+        
+        // 建立當月所有日期的清單
+        let targetDates = [...allDates];
+        for(let d=1; d<=lastDate; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            if(!targetDates.includes(dateStr)) targetDates.push(dateStr);
+        }
+
+        targetDates.forEach(dateStr => {
             const entries = financeStore.data[dateStr];
-            // 如果當天沒資料且不是休假，通常不需特別處理(或是也可以選擇要不要全開，這邊先針對有帳務的日期處理)
-            if ((!entries || entries.length === 0) && !financeStore.manualOffDays.includes(dateStr)) return;
-
+            const hasRealBooking = (entries && entries.length > 0);
             let dataModified = false;
 
-            // 1. 修正財務資料：補上 duration
-            if (entries) {
+            // 1. 修正財務資料：補上 duration (這部分維持原樣)
+            if (hasRealBooking) {
                 entries.forEach(entry => {
                     if (!entry.duration || parseInt(entry.duration) === 0) {
                         let newDur = 0;
@@ -4235,22 +4247,25 @@
                 });
             }
 
-            // 2. 同步行事曆 (重算當日該有的時段)
-            // 轉換日期格式 YYYY-MM-DD -> YYYY-M-D
-            const [y, m, d] = dateStr.split('-');
-            const bookingKey = `${parseInt(y)}-${parseInt(m)-1}-${parseInt(d)}`;
+            // 2. 同步行事曆 (假日邏輯修正)
+            const [yStr, mStr, dStr] = dateStr.split('-');
+            const bookingKey = `${parseInt(yStr)}-${parseInt(mStr)-1}-${parseInt(dStr)}`;
             
-            const isOff = financeStore.manualOffDays.includes(dateStr);
+            const isManualOff = financeStore.manualOffDays.includes(dateStr);
+            const isHoliday = !!holidayMap[dateStr];
+            const isSun = new Date(dateStr).getDay() === 0;
+
             let calculatedSlots = [];
 
-            if (isOff) {
-                // 情境 A: 休假 -> 應為空
-                calculatedSlots = [];
+            // ★ 關鍵修正：如果是 (手動休假) 或 (國定假日) 或 (週日)
+            // 且「沒有真實帳務預約」，則強制清空時段
+            if ((isManualOff || isHoliday || isSun) && !hasRealBooking) {
+                calculatedSlots = []; 
             } else {
-                // 情境 B: 上班 -> 應為 (預設時段 - 衝突時段)
-                // 這是您要求的「無行程時段需自動開啟」核心邏輯
+                // 上班日 (或假日但有接客)：開啟 (預設時段 - 衝突時段)
                 const finEntries = entries || [];
                 
+                // 取得原本已有的時段，如果是假日有接客，保留原狀或補滿，這裡選擇補滿邏輯
                 calculatedSlots = DEFAULTS_TIMES.filter(defaultTime => {
                     const [dH, dM] = defaultTime.split(':').map(Number);
                     const dMins = dH * 60 + dM;
@@ -4260,17 +4275,17 @@
                          const [eH, eM] = e.time.split(':').map(Number);
                          const eStart = eH * 60 + eM;
                          const eDur = parseInt(e.duration || 60, 10);
-                         const eEnd = eStart + eDur;
-                         
-                         return (dMins >= eStart && dMins < eEnd);
+                         return (dMins >= eStart && dMins < (eStart + eDur));
                     });
                     return !isOccupied; // 沒被佔用就開啟
                 });
+                
+                // 特例：如果該日原本就有時段(且不是空的)，且目前計算出來是空的(代表全滿?)
+                // 這裡保持簡單：覆蓋為計算後的結果
             }
 
             // 3. 比對與更新
             const currentSlots = bookingState.data.bookings[bookingKey] || [];
-            // 簡單排序比對
             const calcStr = JSON.stringify(calculatedSlots.sort());
             const currStr = JSON.stringify(currentSlots.sort());
 
@@ -4285,7 +4300,8 @@
         if (updatedDays > 0) {
             saveFinanceV2();
             saveBookingData();
-            alert(`✅ 校正完成！\n已同步更新 ${updatedDays} 天的資料。\n(缺失的時段已自動補上、衝突的已關閉)`);
+            alert(`✅ 校正完成！\n已修復 ${updatedDays} 天的資料狀態。\n(國定假日時段已關閉、舊帳務已補齊)`);
+            renderFinancePage(); // 刷新畫面
         } else {
             alert("🎉 資料已是最新狀態，無需更新。");
         }
