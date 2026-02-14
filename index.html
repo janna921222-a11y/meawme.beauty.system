@@ -1346,7 +1346,13 @@
         .alloc-btn:active { background: #1a3a2e; color: var(--gold-main); border-color: #1a3a2e; }
         
         /* 唯讀與結算狀態 */
-        .readonly-mode .cash-input, .readonly-mode .alloc-btn { pointer-events: none; opacity: 0.8; border-color: transparent; background: #f9f9f9; }
+        /* 唯讀模式：禁止滑鼠事件，透明度降低 */
+        .readonly-mode .cash-input, 
+        .readonly-mode .alloc-btn { 
+            pointer-events: none !important; 
+            opacity: 0.7; 
+            background: #e5e7eb !important; /* 灰色底 */
+        }
         .settled-badge { display: inline-block; background: #1a4731; color: var(--gold-main); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-left: 10px; }
 
         /* --- [NEW] 財務報表專用樣式 --- */
@@ -2208,12 +2214,10 @@
                     <span>💵 零用金結算</span><span>❯</span>
                 </button>
                 
-                <div id="settle-readonly-area" class="hidden mt-4">
-                    <div class="settle-card">
-                        <div class="settle-title mb-2">結算摘要</div>
-                        <div class="text-xs text-gray-600 space-y-1" id="settle-summary-text"></div>
-                    </div>
-                    <button onclick="toggleSettlementEdit()" class="w-full py-2 border border-gray-300 text-gray-500 rounded-lg text-xs font-bold">編輯內容</button>
+                <div id="settle-action-area" class="mt-4 hidden">
+                    <button onclick="toggleSettlementEdit()" class="w-full py-3 border-2 border-dashed border-gray-400 text-gray-500 rounded-xl font-bold text-sm hover:bg-gray-100 hover:text-gray-700 transition-all">
+                        🔓 解除鎖定 / 編輯內容
+                    </button>
                 </div>
             </div>
         </div>
@@ -2274,9 +2278,8 @@
                 </div>
             </div>
             
-            <div class="p-4 border-t border-gray-200">
-                <button onclick="saveSettlement()" class="w-full py-3 bg-[#1a4731] text-white rounded-xl font-bold shadow-lg text-lg">結算完畢</button>
-            </div>
+            <div id="cashier-footer" class="p-4 border-t border-gray-200">
+                </div>
         </div>
     </div>
 
@@ -2441,9 +2444,13 @@
                 <button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="absolute top-4 right-4 text-[var(--gold-main)] text-xl font-bold hover:text-white transition-colors p-2">✕</button>
             </div>
             <div class="flex-1 overflow-y-auto">
-                <div class="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
+               <div class="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
                     <span class="text-xs font-bold text-gray-500">已付定金 (<span id="pay-dep-method">無</span>)</span>
-                    <span class="font-bold text-[#1a3a2e]">$<span id="pay-dep-amount">0</span></span>
+                    <div class="flex items-center border-b border-gray-300">
+                        <span class="font-bold text-[#1a3a2e] mr-1">$</span>
+                        <input type="number" id="pay-dep-input" class="w-16 bg-transparent text-right font-bold text-[#1a3a2e] outline-none p-0" 
+                            value="0" oninput="updatePayRemaining()" onfocus="this.select()">
+                    </div>
                 </div>
                 <div class="mt-2">
                     <div class="pay-method-row selected" onclick="selectPayMethod('cash', this)"><div class="flex items-center"><div class="pay-radio"></div><span class="font-bold text-sm">現金</span></div><span class="font-bold text-[#1a3a2e] pay-amt" id="pay-val-cash">$0</span></div>
@@ -2500,7 +2507,13 @@
                     <div class="flex justify-between text-xs mb-2 text-gray-500 font-bold border-b border-gray-100 pb-2"><span>已選項目清單</span><span id="fe-count">0 項</span></div>
                     <div id="fe-selected-list" class="mb-3 space-y-1"></div>
                    <div class="mb-3 pt-2 border-t border-gray-100">
-                        <label class="text-[10px] text-gray-400 font-bold mb-2 block">定金狀態 ($100)</label>
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="text-[10px] text-gray-400 font-bold">定金設定</label>
+                            <div class="flex items-center border-b border-gray-300 pb-0.5">
+                                <span class="text-[10px] text-gray-400 mr-1">$</span>
+                                <input type="number" id="fe-dep-amount" class="w-14 bg-transparent text-right font-bold text-[#1a3a2e] text-sm outline-none p-0" value="100" placeholder="金額">
+                            </div>
+                        </div>
                         <div class="flex gap-1 flex-wrap">
                             <button type="button" class="dep-opt-btn" onclick="setDepositMethod('cash', this)">現金</button>
                             <button type="button" class="dep-opt-btn" onclick="setDepositMethod('transfer', this)">匯款</button>
@@ -4193,48 +4206,70 @@
         checkSettlementStatus(); 
     };
 
-    // 2. 檢查並更新結算狀態 UI
-    function checkSettlementStatus() {
-        const isSettled = settlementData[activeDateStr] && settlementData[activeDateStr].status === 'settled';
+    // 2 檢查結算狀態 (控制按鈕與唯讀)
+    window.checkSettlementStatus = function() {
+        // 1. 取得當前狀態
+        const record = settlementData[activeDateStr];
+        const isSettled = record && record.status === 'settled';
+        
+        // 2. 取得 UI 元素
         const badge = document.getElementById('settle-status-badge');
         const btnCashier = document.getElementById('btn-open-cashier');
-        const readOnlyArea = document.getElementById('settle-readonly-area');
-        const btnDailySettle = document.getElementById('btn-daily-settle');
+        const btnUnlockArea = document.getElementById('settle-action-area'); // 剛剛修改的區域
+        const btnDailySettle = document.getElementById('btn-daily-settle'); // 當日行程頁面的按鈕
 
-        // 更新 DayDetail 上的按鈕樣式
+        // 3. 更新「當日行程頁面」的按鈕文字
         if (btnDailySettle) {
             if (isSettled) {
-                btnDailySettle.innerText = "結算資訊";
+                btnDailySettle.innerText = "📋 結算詳情"; // 結算後變詳情
                 btnDailySettle.className = "settle-btn settle-btn-main"; 
             } else {
-                btnDailySettle.innerText = "當日結算";
+                btnDailySettle.innerText = "💰 當日結算"; // 未結算顯示結算
                 btnDailySettle.className = "settle-btn settle-btn-outline"; 
             }
         }
 
+        // 4. 更新「結算視窗」內部狀態
         if (isSettled) {
-            badge.className = 'settled-badge';
-            badge.innerText = '已結算';
-            btnCashier.classList.add('hidden');
-            readOnlyArea.classList.remove('hidden');
-            
-            // 顯示摘要
-            const data = settlementData[activeDateStr];
-            document.getElementById('settle-summary-text').innerHTML = `
-                <div>現金總額: $${data.cashTotal}</div>
-                <div>零用金留存: $${data.pettyCash}</div>
-                <div>盈餘: $${data.surplus}</div>
-                <div>存放: ${data.allocations.map(a => `${a.target}($${a.amount})`).join(', ')}</div>
-            `;
+            // --- 狀態：已結算 (唯讀模式) ---
+            if(badge) {
+                badge.className = 'settled-badge';
+                badge.innerText = '已結算 (唯讀)';
+            }
+
+            // 零用金按鈕：變為「查看」且傳入 true (開啟唯讀)
+            if(btnCashier) {
+                btnCashier.classList.remove('hidden');
+                btnCashier.innerHTML = `<span>💵 查看零用金 (唯讀)</span><span>❯</span>`;
+                btnCashier.onclick = () => openCashier(true); 
+                btnCashier.classList.add('opacity-80');
+            }
+
+            // 顯示「編輯/解除鎖定」按鈕
+            if(btnUnlockArea) btnUnlockArea.classList.remove('hidden');
+
         } else {
-            badge.className = '';
-            badge.innerText = '';
-            btnCashier.classList.remove('hidden');
-            readOnlyArea.classList.add('hidden');
+            // --- 狀態：未結算 / 編輯中 (可編輯模式) ---
+            if(badge) {
+                badge.className = '';
+                badge.innerText = '';
+            }
+
+            // 零用金按鈕：變為「結算」且傳入 false (可編輯)
+            if(btnCashier) {
+                btnCashier.classList.remove('hidden');
+                btnCashier.innerHTML = `<span>💵 零用金結算</span><span>❯</span>`;
+                btnCashier.onclick = () => openCashier(false);
+                btnCashier.classList.remove('opacity-80');
+            }
+
+            // 隱藏「解除鎖定」按鈕 (因為現在已經是編輯狀態了)
+            if(btnUnlockArea) btnUnlockArea.classList.add('hidden');
         }
 
+        // 計算並顯示上半部的金額 (定金與服務)
         calculateDailyFinancials(); 
-    }
+    };
 
     // 3. 計算當日財務 (定金 + 服務)
     function calculateDailyFinancials() {
@@ -4302,18 +4337,33 @@
         document.getElementById(`settle-detail-${type}`).classList.toggle('hidden');
     };
 
-    // --- 零用金計算機邏輯 ---
+    // --- 零用金計算機邏輯 (修正版) ---
     const DENOMINATIONS = [1000, 500, 100, 50, 10, 5, 1];
     
-    window.openCashier = function() {
+    // 1. 開啟零用金視窗 (接收 isReadOnly 參數)
+    window.openCashier = function(isReadOnly = false) {
         document.getElementById('cashierModal').classList.remove('hidden');
+        // 將狀態存入 modal 的 dataset 以便渲染時判斷
+        document.getElementById('cashierModal').dataset.readonly = isReadOnly;
         renderCashierInputs();
     };
 
+    // 2. 渲染內容 (包含鎖定判斷與底部按鈕生成)
     window.renderCashierInputs = function() {
+        const isReadOnly = document.getElementById('cashierModal').dataset.readonly === 'true';
+        const container = document.getElementById('cashierModal');
+        
+        // 根據狀態設定 CSS class (控制 input 是否可點)
+        if (isReadOnly) {
+            container.classList.add('readonly-mode');
+        } else {
+            container.classList.remove('readonly-mode');
+        }
+
+        // A. 渲染面額輸入框
         const renderGrid = (type) => {
-            const container = document.getElementById(`cash-grid-${type}`);
-            container.innerHTML = DENOMINATIONS.map(d => `
+            const gridContainer = document.getElementById(`cash-grid-${type}`);
+            gridContainer.innerHTML = DENOMINATIONS.map(d => `
                 <div class="cash-grid">
                     <div class="cash-label">${d}</div>
                     <input type="number" class="cash-input" data-type="${type}" data-denom="${d}" oninput="calcCashTotal('${type}')">
@@ -4323,128 +4373,157 @@
         renderGrid('current');
         renderGrid('reserve');
 
-        // --- 自動驗算邏輯 ---
-        const dates = Object.keys(settlementData).sort();
-        const currentIdx = dates.indexOf(activeDateStr);
-        let prevReserve = 3000; // 預設保留金
-        if (currentIdx > 0) {
-            const prevSettle = settlementData[dates[currentIdx - 1]];
-            prevReserve = prevSettle.pettyCash || 0;
-        }
+        // B. 填入數據邏輯
+        if (isReadOnly && settlementData[activeDateStr]) {
+            // [唯讀模式]：回填歷史資料
+            const savedData = settlementData[activeDateStr];
+            document.getElementById('cash-total-current').innerText = savedData.cashTotal;
+            document.getElementById('cash-total-reserve').innerText = savedData.pettyCash;
+            document.getElementById('cash-surplus').innerText = savedData.surplus;
+            
+            const storedTotal = (savedData.allocations || []).reduce((sum, a) => sum + a.amount, 0);
+            document.getElementById('cash-stored').innerText = storedTotal;
+            document.getElementById('cash-remaining').innerText = 0; 
 
-        let todayCashRev = 0;
-        const dayEntries = safeArray(financeStore.data[activeDateStr]);
-        dayEntries.forEach(e => {
-            if (e.status === 'checked' && e.checkoutDetails && e.checkoutDetails.paymentMethod === 'cash') {
-                todayCashRev += (parseInt(e.checkoutDetails.finalTotal) - parseInt(e.checkoutDetails.paidDeposit || 0));
+            // 填入分配金額 (雖不可點，但需顯示)
+            ['backup', 'yongfeng', 'ctbc', 'wallet'].forEach(id => {
+                const targetName = id === 'backup'?'備用金':(id==='yongfeng'?'永豐':(id==='ctbc'?'中信':'錢包'));
+                const found = (savedData.allocations || []).find(a => a.target === targetName);
+                const el = document.getElementById(`alloc-${id}`);
+                if(el) el.value = found ? found.amount : '';
+            });
+            
+            // 隱藏差額顯示，直接顯示結算總額
+            const headerContainer = document.getElementById('current-cash-summary-container');
+            if (headerContainer) headerContainer.innerHTML = `<div class="text-right font-bold text-lg text-[#1a3a2e] mt-2 border-t pt-2">結算總額: $${savedData.cashTotal}</div>`;
+
+        } else {
+            // [編輯/新增模式]：執行自動預算
+            const dates = Object.keys(settlementData).sort();
+            const currentIdx = dates.indexOf(activeDateStr);
+            let prevReserve = 2000; 
+            if (currentIdx > 0) {
+                const prevSettle = settlementData[dates[currentIdx - 1]];
+                prevReserve = prevSettle.pettyCash || 0;
             }
-        });
-        Object.keys(financeStore.data).forEach(k => {
-            safeArray(financeStore.data[k]).forEach(e => {
-                if (e.depositDate === activeDateStr && e.depositMethod === 'cash') {
-                    todayCashRev += parseInt(e.depositAmount || 100);
+
+            let todayCashRev = 0;
+            const dayEntries = safeArray(financeStore.data[activeDateStr]);
+            dayEntries.forEach(e => {
+                if (e.status === 'checked' && e.checkoutDetails && e.checkoutDetails.paymentMethod === 'cash') {
+                    todayCashRev += (parseInt(e.checkoutDetails.finalTotal) - parseInt(e.checkoutDetails.paidDeposit || 0));
                 }
             });
-        });
+            Object.keys(financeStore.data).forEach(k => {
+                safeArray(financeStore.data[k]).forEach(e => {
+                    if (e.depositDate === activeDateStr && e.depositMethod === 'cash') {
+                        todayCashRev += parseInt(e.depositAmount || 100);
+                    }
+                });
+            });
 
-        const expectedTotal = prevReserve + todayCashRev;
-        
-        // [修改重點] 改為抓取我們剛剛在 HTML 新增的固定容器 ID
-        const headerContainer = document.getElementById('current-cash-summary-container');
-        
-        if (headerContainer) {
-            // 直接覆蓋內容，確保不會堆疊
-            headerContainer.innerHTML = `
-                <div class="text-[11px] mb-1 p-2 rounded bg-gray-100 border border-gray-200 flex justify-between items-center">
-                    <span>
-                        <span class="opacity-60">應有總額:</span> <b class="text-[#1a3a2e]">$${expectedTotal}</b>
-                    </span>
-                    <span id="cash-diff-msg" class="font-bold text-[#ff6b6b]">差額: -$${expectedTotal}</span>
-                </div>
-                <div class="text-right font-bold text-lg text-[#1a3a2e]">實數總計: $<span id="cash-total-current" data-expected="${expectedTotal}">0</span></div>
-            `;
+            const expectedTotal = prevReserve + todayCashRev;
+            const headerContainer = document.getElementById('current-cash-summary-container');
+            if (headerContainer) {
+                headerContainer.innerHTML = `
+                    <div class="text-[11px] mb-1 p-2 rounded bg-gray-100 border border-gray-200 flex justify-between items-center">
+                        <span><span class="opacity-60">應有總額:</span> <b class="text-[#1a3a2e]">$${expectedTotal}</b></span>
+                        <span id="cash-diff-msg" class="font-bold text-[#ff6b6b]">差額: -$${expectedTotal}</span>
+                    </div>
+                    <div class="text-right font-bold text-lg text-[#1a3a2e]">實數總計: $<span id="cash-total-current" data-expected="${expectedTotal}">0</span></div>
+                `;
+            }
+            updateSurplus();
         }
 
-        // 清零所有分配輸入框
-        ['backup', 'yongfeng', 'ctbc', 'wallet'].forEach(id => {
-            const el = document.getElementById(`alloc-${id}`);
-            if(el) el.value = '';
-        });
-        updateSurplus();
+        // C. 決定底部按鈕 (顯示編輯 或 結算完畢)
+        const footerContainer = document.getElementById('cashier-footer');
+        if (footerContainer) {
+            if (isReadOnly) {
+                // 顯示編輯按鈕
+                footerContainer.innerHTML = `<button onclick="toggleCashierEdit()" class="w-full py-3 bg-gray-500 text-white rounded-xl font-bold shadow-lg text-lg">編輯內容 (解鎖)</button>`;
+            } else {
+                // 顯示結算按鈕
+                footerContainer.innerHTML = `<button onclick="saveSettlement()" class="w-full py-3 bg-[#1a4731] text-white rounded-xl font-bold shadow-lg text-lg">結算完畢</button>`;
+            }
+        }
     };
 
+    // [新增] 切換編輯模式 (解鎖按鈕的動作)
+    window.toggleCashierEdit = function() {
+        if(!confirm("確定要修改已結算的內容嗎？")) return;
+        
+        document.getElementById('cashierModal').dataset.readonly = 'false';
+        document.body.classList.add('editing-mode'); // 標記正在編輯
+        
+        // 重新渲染 -> 解鎖 Input，按鈕變回 "結算完畢"
+        renderCashierInputs();
+    };
+
+    // (原有的計算邏輯保留)
     window.calcCashTotal = function(type) {
         let total = 0;
         document.querySelectorAll(`.cash-input[data-type="${type}"]`).forEach(input => {
             total += (parseInt(input.value) || 0) * parseInt(input.dataset.denom);
         });
-        
         const display = document.getElementById(`cash-total-${type}`);
         display.innerText = total;
 
-        // 如果是計算「當前現金」，則進行差額驗算
         if (type === 'current') {
             const expected = parseInt(display.dataset.expected) || 0;
             const diff = total - expected;
             const msgEl = document.getElementById('cash-diff-msg');
             if (msgEl) {
                 msgEl.innerText = `差額: ${diff >= 0 ? '+' : ''}${diff}`;
-                msgEl.style.color = diff === 0 ? '#1a4731' : '#ff6b6b'; // 0 元顯示深綠，有差額顯示紅色
+                msgEl.style.color = diff === 0 ? '#1a4731' : '#ff6b6b';
             }
         }
-        
         updateSurplus();
     };
 
     window.updateSurplus = function() {
-    const current = parseInt(document.getElementById('cash-total-current').innerText) || 0;
-    const reserve = parseInt(document.getElementById('cash-total-reserve').innerText) || 0;
-    
-    // 盈餘計算 (當前輸入的總額 - 準備留下的保留金)
-    const surplus = current - reserve;
-    document.getElementById('cash-surplus').innerText = surplus;
+        const current = parseInt(document.getElementById('cash-total-current').innerText) || 0;
+        const reserve = parseInt(document.getElementById('cash-total-reserve').innerText) || 0;
+        const surplus = current - reserve;
+        document.getElementById('cash-surplus').innerText = surplus;
+        const allocated = ['backup', 'yongfeng', 'ctbc', 'wallet'].reduce((sum, id) => sum + (parseInt(document.getElementById(`alloc-${id}`).value) || 0), 0);
+        document.getElementById('cash-stored').innerText = allocated;
+        document.getElementById('cash-remaining').innerText = surplus - allocated;
+    };
 
-    const allocated = ['backup', 'yongfeng', 'ctbc', 'wallet'].reduce((sum, id) => sum + (parseInt(document.getElementById(`alloc-${id}`).value) || 0), 0);
-    document.getElementById('cash-stored').innerText = allocated;
-    document.getElementById('cash-remaining').innerText = surplus - allocated;
-};
-
-    /* --- 盈餘分配邏輯：切換時先歸零 --- */
     window.allocateSurplus = function(target) {
         const surplus = parseInt(document.getElementById('cash-surplus').innerText) || 0;
-        
-        // 1. 先將所有分配輸入框歸零
         ['backup', 'yongfeng', 'ctbc', 'wallet'].forEach(id => {
             const input = document.getElementById(`alloc-${id}`);
-            if(input) {
-                input.value = '';
-                // 觸發事件讓系統知道數值變了
-                input.dispatchEvent(new Event('input')); 
-            }
+            if(input) { input.value = ''; input.dispatchEvent(new Event('input')); }
         });
-        
-        // 2. 將總盈餘全數填入點擊的目標
         const targetInput = document.getElementById(`alloc-${target}`);
         if (targetInput) {
-            // 分配時暫時允許寫入，填完後再由鍵盤邏輯控管
             targetInput.value = surplus;
-            // 重要：手動觸發事件
             targetInput.dispatchEvent(new Event('input'));
-            targetInput.dispatchEvent(new Event('change'));
         }
-        
         updateSurplus();
     };
 
+    // 6. 儲存結算 (結算完畢)
     window.saveSettlement = function() {
-        if (!confirm("確定結算完畢？\n結算後內容將變為唯讀。")) return;
+        const isEditing = document.body.classList.contains('editing-mode');
+        
+        // 如果是唯讀模式下誤觸 (防呆)
+        if (document.getElementById('cashierModal').dataset.readonly === 'true') {
+            document.getElementById('cashierModal').classList.add('hidden');
+            return;
+        }
 
+        if (!confirm("確定結算完畢？\n\n・內容將變為「唯讀」\n・如需修改請點選「編輯」按鈕")) return;
+
+        // 1. 構建資料
         const data = {
             date: activeDateStr,
-            status: 'settled',
-            cashTotal: parseInt(document.getElementById('cash-total-current').innerText),
-            pettyCash: parseInt(document.getElementById('cash-total-reserve').innerText),
-            surplus: parseInt(document.getElementById('cash-surplus').innerText),
+            status: 'settled', // 標記為已結算
+            cashTotal: parseInt(document.getElementById('cash-total-current').innerText) || 0,
+            pettyCash: parseInt(document.getElementById('cash-total-reserve').innerText) || 0,
+            surplus: parseInt(document.getElementById('cash-surplus').innerText) || 0,
             allocations: ['backup', 'yongfeng', 'ctbc', 'wallet'].map(id => ({
                 target: id === 'backup'?'備用金':(id==='yongfeng'?'永豐':(id==='ctbc'?'中信':'錢包')),
                 amount: parseInt(document.getElementById(`alloc-${id}`).value) || 0
@@ -4452,23 +4531,43 @@
             timestamp: new Date().toISOString()
         };
 
+        // 2. 寫入 Firebase
         if (window.dbSet && window.dbRef) {
             window.dbSet(window.dbRef(window.firebaseDB, `meawMeSettlements/${activeDateStr}`), data)
                 .then(() => {
-                    alert("結算成功！");
-                    document.getElementById('cashierModal').classList.add('hidden');
-                    checkSettlementStatus(); 
+                    alert("✅ 結算成功！");
                 });
         }
+
+        // 3. 【關鍵修正】本地立即更新狀態 (不等 Firebase 回調，讓 UI 馬上變)
+        settlementData[activeDateStr] = data;
+
+        // 4. 關閉視窗 (自動跳回預約資訊)
+        // 同時關閉零用金與結算選單
+        document.getElementById('cashierModal').classList.add('hidden');
+        document.getElementById('settlementModal').classList.add('hidden');
+        
+        // 5. 清除編輯模式 CSS Class
+        document.body.classList.remove('editing-mode');
+
+        // 6. 刷新當日行程頁面的按鈕 (讓它立刻變成 "結算詳情")
+        checkSettlementStatus(); 
     };
 
     window.toggleSettlementEdit = function() {
-        if (confirm("確定要重新編輯結算內容嗎？")) {
-            if (window.dbSet && window.dbRef) {
-                window.dbSet(window.dbRef(window.firebaseDB, `meawMeSettlements/${activeDateStr}/status`), 'editing')
-                    .then(() => checkSettlementStatus());
-            }
+        if (!confirm("⚠️ 確定要解除鎖定嗎？\n\n這將允許您修改結算金額與內容。")) return;
+
+        // 1. 更新本地狀態為 'editing' (非 settled)
+        if (!settlementData[activeDateStr]) settlementData[activeDateStr] = {};
+        settlementData[activeDateStr].status = 'editing';
+
+        // 2. 更新 Firebase (讓雲端也同步解鎖)
+        if (window.dbSet && window.dbRef) {
+            window.dbSet(window.dbRef(window.firebaseDB, `meawMeSettlements/${activeDateStr}/status`), 'editing');
         }
+
+        // 3. 刷新 UI -> 變回可編輯狀態，隱藏解鎖按鈕
+        checkSettlementStatus();
     };
 
     // [補回] 儲存財務資料
@@ -4952,32 +5051,28 @@
         }
     };
 
-    // [修正版] 開啟詳情視窗 (修復 DOM 元素被刪除導致二次開啟報錯的問題)
+    // [修正版] 開啟預約詳情視窗
     window.openBookingDetail = function(entry) {
         currentCheckoutEntry = entry; 
         const modal = document.getElementById('bookingDetailModal');
         modal.classList.remove('hidden');
 
-        // 1. 確保關閉按鈕明顯
+        // 1. 關閉按鈕樣式
         const closeBtn = modal.querySelector('button.absolute');
         if(closeBtn) {
             closeBtn.className = "absolute top-4 right-4 text-[var(--gold-main)] text-2xl font-bold opacity-100 hover:text-white transition-colors";
-            closeBtn.style.textShadow = "0 2px 5px rgba(0,0,0,0.5)";
         }
 
         const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
         const [y, m, d] = activeDateStr.split('-').map(Number);
         const dateObj = new Date(y, m-1, d);
         
-        // 日期
+        // 日期與時間
         document.getElementById('bd-date').innerText = activeDateStr;
-        
-        // 星期
         const elDay = document.getElementById('bd-day');
         elDay.innerText = dayNames[dateObj.getDay()];
         elDay.className = "text-gold-force text-sm mt-1 font-bold tracking-widest"; 
         
-        // 時段
         const [sH, sM] = entry.time.split(':').map(Number);
         const dur = parseInt(entry.duration || 60);
         const endMins = sH * 60 + sM + dur;
@@ -4989,10 +5084,9 @@
         elTime.innerText = `${entry.time} - ${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
         elTime.className = "text-gold-force text-2xl font-bold mt-2 font-serif";
 
-        // --- [關鍵修正] 狀態與爽約按鈕 ---
-        // 改為抓取容器，而不是抓取會被刪除的子元素
+        // 狀態標籤與按鈕
         const statusContainer = document.getElementById('bd-status-container');
-        statusContainer.innerHTML = ''; // 安全清空內容
+        statusContainer.innerHTML = ''; 
 
         const statusMap = { 'pending': '尚未到來', 'checked': '已報到', 'noshow': '爽約' };
         const statusClass = { 'pending': 'status-pending', 'checked': 'status-checked', 'noshow': 'status-noshow' };
@@ -5003,7 +5097,6 @@
         badge.innerText = statusMap[st];
         statusContainer.appendChild(badge);
 
-        // 如果是尚未到來，顯示爽約按鈕
         if (st === 'pending') {
             const noShowBtn = document.createElement('button');
             noShowBtn.className = "btn-noshow";
@@ -5011,17 +5104,23 @@
             noShowBtn.onclick = () => markAsNoShow(entry.id);
             statusContainer.appendChild(noShowBtn);
         }
-        // -----------------------------
 
-        // 定金
-        const depMap = { 'transfer': '匯款', 'linepay': 'Line Pay', 'none': '無' };
-        const depTxt = entry.depositMethod ? depMap[entry.depositMethod] : (entry.hasDeposit ? '匯款(舊)' : '無');
-        document.getElementById('bd-deposit').innerText = `${depTxt} ${((entry.depositMethod && entry.depositMethod!=='none')||entry.hasDeposit)?'$100':''}`;
+        // --- [修正重點] 定金顯示邏輯 (這裡修正了顯示不同步的問題) ---
+        const depMap = { 'transfer': '匯款', 'linepay': 'Line Pay', 'none': '無', 'cash': '現金', 'stored': '儲值金' };
+        // 優先使用 depositMethod，若沒有則回退舊邏輯
+        const methodKey = entry.depositMethod || (entry.hasDeposit ? 'transfer' : 'none');
+        const depTxt = depMap[methodKey] || methodKey;
 
-        // 項目
+        // 讀取金額，預設 100
+        const depAmount = entry.depositAmount || 100;
+        const hasDep = (methodKey !== 'none');
+
+        document.getElementById('bd-deposit').innerText = `${depTxt} ${hasDep ? '$' + depAmount : ''}`;
+        // -------------------------------------------------------
+
+        // 項目與備註
         document.getElementById('bd-items').innerHTML = safeArray(entry.items).map(i => `<div>${i}</div>`).join('');
         
-        // 備註
         const noteArea = document.getElementById('bd-note-area');
         if(entry.note) { 
             document.getElementById('bd-note').innerText = entry.note; 
@@ -5089,7 +5188,7 @@
         }
         
         items.forEach(i => { if(!i.discount) i.discount = { type: 'none', val: 0 }; });
-        const deposit = ((entry.depositMethod && entry.depositMethod !== 'none') || entry.hasDeposit) ? 100 : 0;
+        const deposit = ((entry.depositMethod && entry.depositMethod !== 'none') || entry.hasDeposit) ? (parseInt(entry.depositAmount) || 100) : 0;
 
         checkoutState = { entry: entry, items: items, globalDiscount: { type: 'none', val: 0 }, deposit: deposit, payMethod: 'cash', finalTotal: 0 };
         renderCheckoutList();
@@ -5169,24 +5268,43 @@
         document.getElementById('co-grand-total').innerText = currentTotal;
     };
 
+    // [修正版] 開啟支付視窗
     window.openPaymentModal = function() {
+        // 1. 顯示總金額
         document.getElementById('pay-total-amount').innerText = checkoutState.finalTotal;
-        const depMap = { 'transfer': '匯款', 'linepay': 'Line Pay', 'none': '無' };
-        const entryDepMethod = checkoutState.entry.depositMethod || (checkoutState.entry.hasDeposit ? 'transfer' : 'none');
-        document.getElementById('pay-dep-method').innerText = depMap[entryDepMethod];
-        document.getElementById('pay-dep-amount').innerText = checkoutState.deposit;
+        
+        // 2. 取得當前結帳的預約資料
+        const entry = checkoutState.entry; 
+
+        // 3. 判斷定金方式 (用於顯示文字)
+        const depMap = { 'transfer': '匯款', 'linepay': 'Line Pay', 'none': '無', 'cash': '現金', 'stored': '儲值金' };
+        const methodKey = entry.depositMethod || (entry.hasDeposit ? 'transfer' : 'none');
+        const depTxt = depMap[methodKey] || methodKey;
+        
+        // 更新 UI 文字：已付定金 (方式)
+        document.getElementById('pay-dep-method').innerText = depTxt;
+
+        // 4. [修正重點] 將定金數值填入 Input (使用 checkoutState 中的數據)
+        // 這裡會自動帶入在 initCheckout 中已經計算好的金額 (即您手動輸入的金額)
+        document.getElementById('pay-dep-input').value = checkoutState.deposit;
+
+        // 5. 預設選取現金，並觸發一次計算
         selectPayMethod('cash', document.querySelector('.pay-method-row')); 
+        
+        // 6. 顯示視窗
         document.getElementById('paymentModal').classList.remove('hidden');
     };
 
+    // [修改] 選擇支付方式
     window.selectPayMethod = function(method, row) {
         checkoutState.payMethod = method;
+        
+        // 處理 UI 選中狀態
         document.querySelectorAll('.pay-method-row').forEach(r => r.classList.remove('selected'));
         if (row) row.classList.add('selected');
-        document.querySelectorAll('.pay-amt').forEach(el => el.innerText = "");
-        const remaining = Math.max(0, checkoutState.finalTotal - checkoutState.deposit);
-        document.getElementById(`pay-val-${method}`).innerText = `$${remaining}`;
-        document.getElementById('btn-pay-total').innerText = checkoutState.finalTotal;
+        
+        // 呼叫剛剛寫好的計算函式 (這樣邏輯就統一了)
+        updatePayRemaining();
     };
 
     window.confirmCheckout = function() {
@@ -5303,6 +5421,17 @@
                 if (entry.depositMethod) depMethod = entry.depositMethod;
                 else if (entry.hasDeposit) depMethod = 'transfer';
                 setDepositMethod(depMethod);
+
+                // 2. 🔴 在它【下面】加入這段 (讀取定金金額，如果是舊資料預設 100)
+                const depAmountInput = document.getElementById('fe-dep-amount');
+                if (entryId) {
+                    const entry = currentEntries.find(e => String(e.id) === String(entryId));
+                    // 如果有儲存過金額就用儲存的，否則預設 100
+                    depAmountInput.value = (entry && entry.depositAmount) ? entry.depositAmount : 100;
+                } else {
+                    // 新增狀態預設 100
+                    depAmountInput.value = 100;
+                }
 
                 // [新增] 預設日期處理：如果是新資料，預設為選取的日期(activeDateStr)
                 const dateInput = document.getElementById('fe-dep-date');
@@ -5471,6 +5600,7 @@
 
         const depMethod = document.getElementById('fe-dep-method').value;
         const hasDeposit = (depMethod !== 'none');
+        const manualDepAmount = parseInt(document.getElementById('fe-dep-amount').value) || 0;
 
         // [修改] 處理定金日期邏輯 - 優先讀取手動輸入的日期
         const manualDepDate = document.getElementById('fe-dep-date').value;
@@ -5489,7 +5619,7 @@
             duration: duration,
             hasDeposit: hasDeposit,
             depositMethod: depMethod,
-            depositAmount: hasDeposit ? 100 : 0,
+            depositAmount: hasDeposit ? manualDepAmount : 0,
             depositDate: depositDate,
             note: document.getElementById('fe-note').value,
             images: currentImagesList, 
@@ -6387,6 +6517,34 @@
             observer.observe(el, { attributes: true, attributeFilter: ['class'] });
         });
     }
+
+    // [修正] 當修改定金時，自動重算餘額，並更新底部按鈕
+    window.updatePayRemaining = function() {
+        // 1. 取得目前輸入的定金
+        const val = parseInt(document.getElementById('pay-dep-input').value) || 0;
+        
+        // 2. 更新全域狀態
+        checkoutState.deposit = val;
+        
+        // 3. 計算剩餘應付 (總額 - 定金)
+        const remaining = Math.max(0, checkoutState.finalTotal - checkoutState.deposit);
+
+        // 4. 更新介面上所有支付方式的金額顯示
+        document.querySelectorAll('.pay-amt').forEach(el => el.innerText = "");
+        
+        // 只顯示在「目前被選中」的那一行
+        const currentMethod = checkoutState.payMethod;
+        const targetLabel = document.getElementById(`pay-val-${currentMethod}`);
+        if (targetLabel) {
+            targetLabel.innerText = `$${remaining}`;
+        }
+
+        // 5. [補回這行] 更新最底部的結帳按鈕金額！
+        const btnTotal = document.getElementById('btn-pay-total');
+        if (btnTotal) {
+            btnTotal.innerText = remaining;
+        }
+    };
 
 </script>
 
