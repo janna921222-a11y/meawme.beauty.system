@@ -1439,7 +1439,13 @@
         /* 功能鍵配色 */
         .num-op { background: rgba(201, 184, 150, 0.15); color: var(--gold-main); font-weight: 700; }
         .num-del { color: #ff6b6b; }
-        .num-confirm { background: var(--gold-main); color: var(--forest-bg); grid-column: span 2; font-weight: 800; letter-spacing: 2px; }
+        .num-confirm { 
+            background: var(--gold-main); 
+            color: var(--forest-bg); 
+            /* grid-column: span 2;  <-- 刪除這一行，讓它變回單格 */
+            font-weight: 800; 
+            letter-spacing: 2px; 
+        }
 
         /* 讓輸入框在喚起鍵盤時有光暈 */
         .numpad-focus { border: 2px solid var(--gold-main) !important; box-shadow: 0 0 15px rgba(201, 184, 150, 0.4) !important; }
@@ -2224,7 +2230,9 @@
                 <div>
                     <h4 class="font-bold text-[#1a3a2e] mb-2 border-l-4 border-[var(--gold-main)] pl-2">當前現金 (錢盒)</h4>
                     <div id="cash-grid-current"></div>
-                    <div class="text-right font-bold text-lg text-[#1a3a2e] mt-2 border-t pt-1">總計: $<span id="cash-total-current">0</span></div>
+                    <div id="current-cash-summary-container" class="mt-2 border-t pt-1">
+                        <div class="text-right font-bold text-lg text-[#1a3a2e]">總計: $<span id="cash-total-current">0</span></div>
+                    </div>
                 </div>
 
                 <div>
@@ -4340,17 +4348,22 @@
         });
 
         const expectedTotal = prevReserve + todayCashRev;
-        const headerContainer = document.getElementById('cash-total-current').parentElement;
         
-        // 建立一個提示區域
-        headerContainer.innerHTML = `
-            <div class="text-[11px] mb-1 p-2 rounded bg-gray-100 border border-gray-200">
-                <span class="opacity-60">應有總額:</span> <b class="text-[#1a3a2e]">$${expectedTotal}</b> 
-                <span class="mx-1 opacity-20">|</span>
-                <span id="cash-diff-msg" class="font-bold">差額: $0</span>
-            </div>
-            <div class="font-bold text-lg text-[#1a3a2e]">實數總計: $<span id="cash-total-current" data-expected="${expectedTotal}">0</span></div>
-        `;
+        // [修改重點] 改為抓取我們剛剛在 HTML 新增的固定容器 ID
+        const headerContainer = document.getElementById('current-cash-summary-container');
+        
+        if (headerContainer) {
+            // 直接覆蓋內容，確保不會堆疊
+            headerContainer.innerHTML = `
+                <div class="text-[11px] mb-1 p-2 rounded bg-gray-100 border border-gray-200 flex justify-between items-center">
+                    <span>
+                        <span class="opacity-60">應有總額:</span> <b class="text-[#1a3a2e]">$${expectedTotal}</b>
+                    </span>
+                    <span id="cash-diff-msg" class="font-bold text-[#ff6b6b]">差額: -$${expectedTotal}</span>
+                </div>
+                <div class="text-right font-bold text-lg text-[#1a3a2e]">實數總計: $<span id="cash-total-current" data-expected="${expectedTotal}">0</span></div>
+            `;
+        }
 
         // 清零所有分配輸入框
         ['backup', 'yongfeng', 'ctbc', 'wallet'].forEach(id => {
@@ -4421,16 +4434,6 @@
         }
         
         updateSurplus();
-    };
-
-    window.numpadInput = function(key) {
-        if (!currentActiveInput) return;
-        if (key === 'DEL') {
-            currentActiveInput.value = currentActiveInput.value.slice(0, -1);
-        } else {
-            currentActiveInput.value += key;
-        }
-        currentActiveInput.dispatchEvent(new Event('input'));
     };
 
     window.saveSettlement = function() {
@@ -5491,7 +5494,9 @@
             note: document.getElementById('fe-note').value,
             images: currentImagesList, 
             image: currentImagesList.length > 0 ? currentImagesList[0] : "",
-            status: editingEntryId ? (currentEntries.find(e => e.id == editingEntryId)?.status || 'pending') : 'pending'
+            
+            status: 'pending', 
+            checkoutDetails: null 
         };
 
         // 更新陣列
@@ -6251,16 +6256,53 @@
         }
     });
 
-    // 數字鍵盤輸入處理 (維持不變)
+    // 數字鍵盤輸入處理 (智慧版)
     window.numpadInput = function(key) {
         if (!currentActiveInput) return;
         let val = currentActiveInput.value;
 
         if (key === 'DEL') {
+            // 刪除鍵
             currentActiveInput.value = val.slice(0, -1);
         } else if (key === 'AC') {
+            // 清除鍵
             currentActiveInput.value = '';
+        } else if (key === '\n') {
+            // [智慧換行/跳格鍵]
+            if (currentActiveInput.tagName === 'TEXTAREA') {
+                // 情況 A：如果是備註欄 (textarea)，就執行「換行」
+                currentActiveInput.value += "\n";
+            } else {
+                // 情況 B：如果是單行輸入框 (input)，就執行「跳下一格」
+                
+                // 1. 抓出目前畫面上所有看得到、能輸入的欄位
+                const allInputs = Array.from(document.querySelectorAll('input:not([type="hidden"]), textarea'));
+                
+                // 2. 過濾出真正顯示在眼前的 (排除被 hidden 藏起來的彈窗欄位)
+                const visibleInputs = allInputs.filter(el => el.offsetParent !== null && !el.disabled);
+                
+                // 3. 找出目前游標在哪一個
+                const currentIndex = visibleInputs.indexOf(currentActiveInput);
+                
+                // 4. 如果後面還有欄位，就跳過去
+                if (currentIndex > -1 && currentIndex < visibleInputs.length - 1) {
+                    const nextInput = visibleInputs[currentIndex + 1];
+                    nextInput.focus(); // 這會觸發我們的 focusin 事件，鍵盤會自動跟過去
+                    
+                    // 如果是金額欄位，自動全選內容，方便直接覆寫
+                    if(nextInput.type === 'number' || nextInput.inputMode === 'numeric') {
+                        nextInput.select(); 
+                    }
+                } else {
+                    // 如果已經是最後一格，可以選擇收起鍵盤 (選用)
+                    // closeNumpad(); 
+                }
+                
+                // 跳格後不需要觸發 input 事件，直接結束
+                return; 
+            }
         } else {
+            // 一般數字輸入
             // 百分比處理：自動補上 *0.01
             if (key === '%' && val.length > 0 && !isNaN(val.slice(-1))) {
                 currentActiveInput.value += '*0.01';
@@ -6371,7 +6413,8 @@
     
     <button class="num-btn num-op" onclick="numpadInput('%')">%</button>
     <button class="num-btn num-op" onclick="numpadInput('AC')">AC</button>
-    <button class="num-btn num-confirm" onclick="closeNumpad()">確定結算</button>
+    <button class="num-btn num-op" onclick="numpadInput('\n')">↵</button> 
+    <button class="num-btn num-confirm" onclick="closeNumpad()">OK</button> </div>
 </div>
 
 </body>
