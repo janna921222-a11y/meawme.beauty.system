@@ -1,35 +1,36 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-    // 妳提供的金鑰
-    const firebaseConfig = {
-        apiKey: "AIzaSyC58dtm6RX_Ew-xEwusvq113m1hMq68JIo",
-        authDomain: "meawmesystem.firebaseapp.com",
-        databaseURL: "https://meawmesystem-default-rtdb.firebaseio.com",
-        projectId: "meawmesystem",
-        storageBucket: "meawmesystem.firebasestorage.app",
-        messagingSenderId: "436649468308",
-        appId: "1:436649468308:web:438437ac8d97ab56d06f81",
-        measurementId: "G-27RC3VTZZJ"
-    };
-
-    // 初始化連接
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    // 把雲端功能掛載到 window，讓原本的 script 可以抓到
-    window.firebaseDB = db;
-    window.dbRef = ref;
-    window.dbSet = set;
-    window.dbOnValue = onValue;
-</script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>| 繆米美學系統 |</title>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // 妳提供的金鑰
+        const firebaseConfig = {
+            apiKey: "AIzaSyC58dtm6RX_Ew-xEwusvq113m1hMq68JIo",
+            authDomain: "meawmesystem.firebaseapp.com",
+            databaseURL: "https://meawmesystem-default-rtdb.firebaseio.com",
+            projectId: "meawmesystem",
+            storageBucket: "meawmesystem.firebasestorage.app",
+            messagingSenderId: "436649468308",
+            appId: "1:436649468308:web:438437ac8d97ab56d06f81",
+            measurementId: "G-27RC3VTZZJ"
+        };
+
+        // 初始化連接
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // 把雲端功能掛載到 window，讓原本的 script 可以抓到
+        window.firebaseDB = db;
+        window.dbRef = ref;
+        window.dbSet = set;
+        window.dbOnValue = onValue;
+    </script>
 
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
@@ -127,16 +128,6 @@
         }
 
         /* 卡片樣式 */
-        .m-card { 
-            background: linear-gradient(165deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%) !important;
-            border: 1px solid rgba(201, 184, 150, 0.25) !important; 
-            border-radius: 20px !important; 
-            padding: 30px 25px !important; 
-            margin: 0 6% 25px 6% !important; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3) !important;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
         .info-title, .m-card h2 { 
             font-size: 20px !important; 
             font-weight: 700 !important; 
@@ -332,20 +323,26 @@
             height: 100%;
             display: flex;
         }
-        /* --- 同步平板與電腦版設定 --- */
+        
+        /* 調整日曆內小條目在電腦版的大小 */
         @media (min-width: 768px) {
-            /* 1000px 讓平板與電腦版寬度一致 */
-            .app-wrapper, .nav-inner { 
-                max-width: 1000px !important; 
+            .fin-cal-cell {
+                font-size: 11px !important; /* 原本是 8px */
             }
-            
-            .m-card { 
-                margin: 0 auto 20px auto !important; 
+            .fin-cal-row {
+                margin-bottom: 2px;
             }
+            .fin-cal-total {
+                font-size: 12px !important;
+                padding-top: 4px;
+            }
+        }
 
-            .calendar-grid {
-                gap: 6px !important; /* 電腦版間距稍微比手機大一點，比較精緻 */
-            }
+        /* 修正報表標題顏色，與日曆記帳一致 (使用 var(--white-main)) */
+        #report-month-title, #report-year-title {
+            color: var(--white-main) !important;
+            font-family: 'Playfair Display', serif;
+            letter-spacing: 0.1em;
         }
         /* [修改] 按鈕樣式：取消縮放動畫，改為純色塊區分 */
         .tab-button { 
@@ -1183,6 +1180,286 @@
         .pv-close { left: 20px; }  /* 叉叉改到左邊 */
         .pv-dl { right: 20px; }    /* 下載改到右邊 */
 
+        /* --- [NEW] 結帳與詳情視窗專用樣式 --- */
+        
+        /* 狀態標籤 */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+        .status-pending { background: rgba(255, 255, 255, 0.1); color: #ccc; border: 1px solid #666; }
+        .status-checked { background: #1a4731; color: var(--gold-main); border: 1px solid var(--gold-main); }
+        .status-noshow { background: rgba(255, 107, 107, 0.1); color: #ff6b6b; border: 1px solid #ff6b6b; }
+
+        /* 定金選擇按鈕 (取代原本的 checkbox) */
+        .dep-opt-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+            background: #fff;
+            transition: all 0.2s;
+        }
+        .dep-opt-btn.active {
+            background: var(--gold-main);
+            color: #1a3a2e;
+            border-color: var(--gold-main);
+            font-weight: bold;
+        }
+
+        /* 結帳列表項目 */
+        .checkout-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid #eee;
+            cursor: pointer;
+        }
+        .checkout-item:active { background: #f9f9f9; }
+        .checkout-price-group { text-align: right; }
+        .checkout-final-price { font-weight: 700; color: #1a3a2e; font-size: 15px; }
+        .checkout-discount-tag { font-size: 10px; color: #ff6b6b; display: block; }
+
+        /* 折扣按鈕網格 */
+        .discount-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .disc-btn {
+            padding: 8px 0;
+            text-align: center;
+            background: #f5f2ee;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+        }
+        .disc-btn:active { background: #ddd; }
+
+        /* 支付方式列 */
+        .pay-method-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .pay-method-row:last-child { border-bottom: none; }
+        .pay-method-row.selected { background: rgba(201, 184, 150, 0.1); }
+        .pay-radio {
+            width: 18px; height: 18px;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            margin-right: 10px;
+            position: relative;
+        }
+        .pay-method-row.selected .pay-radio {
+            border-color: var(--gold-main);
+            background: var(--gold-main);
+        }
+
+        /* --- [02/14 修正版] 視覺優化 --- */
+
+        /* 1. 月曆上的小條目：結帳後變「透白底 + 深綠字 + 深綠框」 */
+        .fin-item.status-checked {
+            background: rgba(180, 223, 247, 0.5) !important; /* 透白底 */
+            border-left: 3px solid #1a4731 !important;        /* 強制深綠框 */
+            color: #1a4731 !important;                        /* 強制深綠字 */
+            font-weight: 700 !important;
+        }
+        
+        /* 修正：讓原本的金/綠邊框邏輯只在「非結帳」狀態下生效 */
+        .fin-item:not(.status-checked):not(.is-model):not(.is-note):not(.is-price-view) {
+            border-left-color: var(--cal-gold) !important;
+        }
+        .fin-item:not(.status-checked).is-model {
+            border-left-color: #184629 !important;
+        }
+
+        /* 2. 當日行程列表卡片：已結帳變「淺綠底」 */
+        .day-detail-item.status-checked {
+            background: #e6f4ea !important; /* 淺綠底 */
+            border: 1px solid #34d399 !important; /* 綠框 */
+        }
+        /* 讓淺綠卡片裡面的文字深一點，比較好讀 */
+        .day-detail-item.status-checked .text-gray-400,
+        .day-detail-item.status-checked .text-\[\#c9b896\] { 
+            color: #065f46 !important; /* 深綠字 */
+        }
+        .day-detail-item.status-checked .text-\[\#4b3621\] {
+            color: #047857 !important;
+        }
+
+        /* 3. 爽約按鈕樣式 */
+        .btn-noshow {
+            font-size: 10px;
+            padding: 2px 8px;
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+            background: transparent;
+            border-radius: 12px;
+            margin-left: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-noshow:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        /* 4. 強制金色字體 (給星期/時段用) */
+        .text-gold-force { color: var(--gold-main) !important; }
+
+        /* [新增] 結算頁面專用樣式 */
+        .settle-btn { padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; margin-right: 10px;}
+        .settle-btn-main { background: var(--gold-main); color: #1a3a2e; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .settle-btn-outline { border-color: var(--gold-main); color: var(--gold-main); background: transparent; }
+        
+        .settle-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #eee; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .settle-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed #eee; cursor: pointer; }
+        .settle-title { font-size: 14px; font-weight: 700; color: #1a3a2e; display: flex; align-items: center; gap: 6px; }
+        .settle-total { font-size: 16px; font-weight: 800; color: #1a3a2e; font-family: 'Playfair Display', serif; }
+        
+        .settle-detail-row { display: flex; justify-content: space-between; font-size: 11px; padding: 6px 0; color: #666; border-bottom: 1px solid #f9f9f9; }
+        .settle-detail-row:last-child { border-bottom: none; }
+        
+        /* 鈔票計算機樣式 */
+        .cash-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .cash-label { font-size: 13px; font-weight: bold; color: #555; text-align: right; padding-right: 10px; }
+        .cash-input { background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 14px; text-align: right; width: 100%; font-weight: bold; color: #333; }
+        .cash-input:focus { border-color: var(--gold-main); background: #fff; outline: none; }
+        
+        .alloc-btn { padding: 8px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-size: 12px; color: #666; cursor: pointer; background: #fff; transition: all 0.2s; }
+        .alloc-btn:active { background: #1a3a2e; color: var(--gold-main); border-color: #1a3a2e; }
+        
+        /* 唯讀與結算狀態 */
+        .readonly-mode .cash-input, .readonly-mode .alloc-btn { pointer-events: none; opacity: 0.8; border-color: transparent; background: #f9f9f9; }
+        .settled-badge { display: inline-block; background: #1a4731; color: var(--gold-main); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-left: 10px; }
+
+        /* --- [NEW] 財務報表專用樣式 --- */
+        .report-tabs { display: flex; gap: 10px; margin-bottom: 15px; padding: 0 10px; }
+        .report-tab-btn { flex: 1; padding: 8px; text-align: center; border-radius: 8px; font-size: 13px; font-weight: 700; color: var(--gold-main); border: 1px solid var(--gold-main); background: transparent; transition: all 0.3s; }
+        .report-tab-btn.active { background: var(--gold-main); color: var(--forest-bg); }
+
+        /* 財務日曆格子 (與預約格子區分) */
+        .fin-cal-cell { font-size: 8px; line-height: 1.2; text-align: left; overflow: hidden; height: 100%; display: flex; flex-direction: column; padding-top: 2px; }
+        .fin-cal-row { display: flex; justify-content: space-between; margin-bottom: 0px; color: #555 !important;font-weight: 600; }
+        .fin-cal-total { margin-top: auto; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 1px; text-align: right; font-weight: bold; color: var(--gold-main); font-size: 9px; }
+
+        /* 報表卡片 */
+        .report-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .report-section-title { font-size: 14px; font-weight: 800; color: #1a3a2e; border-left: 4px solid var(--gold-main); padding-left: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .report-big-stat { font-size: 24px; font-weight: 800; color: #1a3a2e; font-family: 'Playfair Display', serif; text-align: center; margin: 10px 0; }
+        
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .stat-box { background: #f9f9f9; padding: 10px; border-radius: 8px; text-align: center; }
+        .stat-label { font-size: 10px; color: #888; font-weight: 700; }
+        .stat-val { font-size: 14px; font-weight: 800; color: #333; }
+
+        /* 支出表單 */
+        .expense-form-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+        .exp-input { flex: 1; background: #f2f2f2; border: 1px solid #ddd; padding: 8px; border-radius: 6px; font-size: 13px; color: #333 !important; }
+        .exp-select { background: #f2f2f2; border: 1px solid #ddd; padding: 8px; border-radius: 6px; font-size: 13px; color: #333; }
+        
+        /* 條列式項目 */
+        .list-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 12px; color: #555; }
+        .list-row:last-child { border-bottom: none; }
+        .list-row.header { font-weight: 800; color: #1a3a2e; background: #f9f9f9; padding: 8px; border-radius: 6px; margin-bottom: 5px; }
+
+        /* 圓餅圖替代方案 (長條) */
+        .bar-container { margin-bottom: 8px; }
+        .bar-label { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px; color: #555; }
+        .bar-bg { width: 100%; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--gold-main); border-radius: 3px; }
+
+        /* --- [修正] 財務頁面文字顏色優化 --- */
+        .fin-cal-row { color: #555 !important; font-weight: 600; } 
+        .fin-cal-row span:first-child { color: var(--gold-main) !important; font-weight: 800; }
+        .fin-cal-row.text-\[#ff6b6b\] { color: #ff6b6b !important; }
+        .fin-cal-row.text-\[#ff6b6b\] span:first-child { color: #ff6b6b !important; }
+        .fin-cal-total { border-top: 1px solid rgba(0,0,0,0.1) !important; color: #1a3a2e !important; }
+        #acc-date-title { color: #1a3a2e !important; }
+    
+        /* --- 高級自定義數字鍵盤樣式 --- */
+        /* --- 優化後的智能鍵盤樣式 --- */
+        #custom-numpad {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--nav-bg); /* 使用與導航欄相同的背景色 */
+            border-top: 2px solid var(--gold-main);
+            z-index: 9999;
+            
+            /* 動畫設定 */
+            transform: translateY(100%);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* 排版 */
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            padding: 8px;
+            
+            padding-bottom: calc(12px + env(safe-area-inset-bottom)); 
+            
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+            backdrop-filter: blur(20px);
+        }
+        
+        #custom-numpad.active {
+            transform: translateY(0);
+        }
+
+        /* 按鈕樣式微調 (可選，讓按鈕在小螢幕不要太高) */
+        .num-btn {
+            background: rgba(245, 241, 232, 0.05);
+            color: var(--white-main);
+            border: 1px solid rgba(201, 184, 150, 0.1);
+            padding: 15px 0; /* 稍微縮小內距 */
+            font-size: 20px;
+            font-weight: 500;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* 功能鍵配色 */
+        .num-op { background: rgba(201, 184, 150, 0.15); color: var(--gold-main); font-weight: 700; }
+        .num-del { color: #ff6b6b; }
+        .num-confirm { background: var(--gold-main); color: var(--forest-bg); grid-column: span 2; font-weight: 800; letter-spacing: 2px; }
+
+        /* 讓輸入框在喚起鍵盤時有光暈 */
+        .numpad-focus { border: 2px solid var(--gold-main) !important; box-shadow: 0 0 15px rgba(201, 184, 150, 0.4) !important; }
+
+        /* --- 智能鍵盤顯示時的版面調整 (修正版) --- */
+        
+        /* 1. 撐開主頁面 (針對非彈窗的輸入框) */
+        body.numpad-active {
+            padding-bottom: 50vh !important;
+            transition: padding-bottom 0.2s ease;
+        }
+
+        /* 2. ★★★ 關鍵修正：撐開彈窗內部的捲動區域 ★★★ */
+        /* 當鍵盤開啟時，強制讓所有彈窗內的捲動容器底部增加 400px 的空白 */
+        /* 這樣 el.scrollIntoView() 才有空間把底部的東西捲上來 */
+        body.numpad-active .cal-modal-content > .overflow-y-auto,
+        body.numpad-active .cal-modal-content .flex-1.overflow-y-auto {
+            padding-bottom: 400px !important; 
+        }
+
     </style>
 </head>
 <body>
@@ -1831,12 +2108,63 @@
         </div>
     </section>
 
+<section id="page-admin-report" class="page-content pb-32">
+        <h2 style="font-size: 28px !important; text-align: center !important; margin: 30px 0 10px !important; color: var(--gold-main); font-weight: 800; letter-spacing: 3px;">財務報表</h2>
+
+        <div class="report-tabs">
+            <button class="report-tab-btn active" onclick="switchReportTab('calendar', this)">日報表</button>
+            <button class="report-tab-btn" onclick="switchReportTab('month', this)">月報表</button>
+            <button class="report-tab-btn" onclick="switchReportTab('year', this)">年報表</button>
+        </div>
+
+        <div id="report-view-calendar">
+            <div class="flex justify-between items-center mb-4 px-8 max-w-sm mx-auto">
+                <button onclick="changeReportCalendarMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
+                <div id="rep-cal-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
+                <button onclick="changeReportCalendarMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+            </div>
+            
+            <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
+                <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
+                <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
+            </div>
+            <div id="report-calendar-grid" class="calendar-grid"></div>
+            
+            <div class="fin-footer mt-4">
+                <div class="text-center">本月營收 <span id="cal-month-rev">$0</span></div>
+                <div class="text-center text-[#ff6b6b]">本月支出 <span id="cal-month-exp">$0</span></div>
+                <div class="text-center text-[var(--gold-main)]">淨利 <span id="cal-month-net">$0</span></div>
+            </div>
+        </div>
+
+        <div id="report-view-month" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
+            <div class="flex justify-center items-center mb-4">
+                <button onclick="changeReportDate('month', -1)" class="text-[var(--gold-main)] text-lg px-4">❮</button>
+                <span id="report-month-title" class="font-bold text-white text-lg"></span>
+                <button onclick="changeReportDate('month', 1)" class="text-[var(--gold-main)] text-lg px-4">❯</button>
+            </div>
+            <div id="month-report-content"></div>
+        </div>
+
+        <div id="report-view-year" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
+            <div class="flex justify-center items-center mb-4">
+                <button onclick="changeReportDate('year', -1)" class="text-[var(--gold-main)] text-lg px-4">❮</button>
+                <span id="report-year-title" class="font-bold text-white text-lg"></span>
+                <button onclick="changeReportDate('year', 1)" class="text-[var(--gold-main)] text-lg px-4">❯</button>
+            </div>
+            <div id="year-report-content"></div>
+        </div>
+    </section>
+
 <section>
     <div id="dayDetailModal" class="cal-modal-overlay hidden">
         <div class="cal-modal-content" style="max-width: 340px; text-align: left; padding: 20px;">
             <div class="flex justify-between items-center mb-4">
                 <h3 id="dd-title" class="text-[var(--gold-main)] font-bold text-lg font-serif"></h3>
-                <button onclick="closeDayDetail()" class="text-2xl opacity-50">×</button>
+                <div class="flex items-center">
+                    <button id="btn-daily-settle" onclick="openSettlement()" class="settle-btn settle-btn-outline">當日結算</button>
+                    <button onclick="closeDayDetail()" class="text-2xl opacity-50 pl-2 border-l border-white/20 ml-2">×</button>
+                </div>
             </div>
             <div id="dd-list" class="day-detail-list"></div>
             <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/10">
@@ -1846,16 +2174,290 @@
         </div>
     </div>
 
-    <div id="finEditModal" class="cal-modal-overlay hidden">
-        <div class="cal-modal-content flex flex-col" style="max-width: 360px; height: 85vh; padding: 0; overflow: hidden; position: relative; background: #f2f2f2;">
+    <div id="settlementModal" class="cal-modal-overlay hidden" style="z-index: 7000;">
+        <div class="cal-modal-content flex flex-col" style="max-width: 360px; height: 90vh; background: #f9f9f9; color: #333; padding: 0; border-radius: 20px; overflow: hidden;">
+            <div class="bg-white p-4 shadow-sm z-10 flex justify-between items-center border-b border-gray-100">
+                <h3 class="font-bold text-lg text-[#1a3a2e] flex items-center gap-2"><span id="settle-date"></span> <span id="settle-status-badge"></span></h3>
+                <button onclick="document.getElementById('settlementModal').classList.add('hidden')" class="text-gray-400 text-xl">✕</button>
+            </div>
             
-            <div class="flex-shrink-0 bg-white z-20 shadow-md">
+            <div class="flex-1 overflow-y-auto p-4 bg-[#f2f2f2]">
+                <div class="settle-card">
+                    <div class="settle-header" onclick="toggleSettleDetail('deposit')">
+                        <div class="settle-title">💰 定金資訊</div>
+                        <div class="settle-total">$<span id="settle-deposit-total">0</span></div>
+                    </div>
+                    <div id="settle-detail-deposit" class="hidden"></div>
+                </div>
+
+                <div class="settle-card">
+                    <div class="settle-header" onclick="toggleSettleDetail('service')">
+                        <div class="settle-title">💅 服務結算 (不含定金)</div>
+                        <div class="settle-total">$<span id="settle-service-total">0</span></div>
+                    </div>
+                    <div id="settle-detail-service" class="hidden"></div>
+                </div>
+
+                <button id="btn-open-cashier" onclick="openCashier()" class="w-full py-4 bg-[#1a3a2e] text-[var(--gold-main)] rounded-xl font-bold text-sm shadow-lg flex justify-between px-6 items-center mt-4">
+                    <span>💵 零用金結算</span><span>❯</span>
+                </button>
                 
+                <div id="settle-readonly-area" class="hidden mt-4">
+                    <div class="settle-card">
+                        <div class="settle-title mb-2">結算摘要</div>
+                        <div class="text-xs text-gray-600 space-y-1" id="settle-summary-text"></div>
+                    </div>
+                    <button onclick="toggleSettlementEdit()" class="w-full py-2 border border-gray-300 text-gray-500 rounded-lg text-xs font-bold">編輯內容</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="cashierModal" class="cal-modal-overlay hidden" style="z-index: 7500;">
+        <div class="cal-modal-content flex flex-col" style="max-width: 360px; height: 90vh; background: #fff; color: #333; padding: 0; border-radius: 20px; overflow: hidden;">
+            <div class="bg-[#1a3a2e] p-4 text-center relative">
+                <h3 class="text-[var(--gold-main)] font-bold">零用金結算</h3>
+                <button onclick="document.getElementById('cashierModal').classList.add('hidden')" class="absolute top-4 right-4 text-[var(--gold-main)] text-xl font-bold p-2">✕</button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 space-y-6">
+                <div>
+                    <h4 class="font-bold text-[#1a3a2e] mb-2 border-l-4 border-[var(--gold-main)] pl-2">當前現金 (錢盒)</h4>
+                    <div id="cash-grid-current"></div>
+                    <div class="text-right font-bold text-lg text-[#1a3a2e] mt-2 border-t pt-1">總計: $<span id="cash-total-current">0</span></div>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-[#1a3a2e] mb-2 border-l-4 border-[var(--gold-main)] pl-2">保留零用金</h4>
+                    <div id="cash-grid-reserve"></div>
+                    <div class="text-right font-bold text-lg text-[#1a3a2e] mt-2 border-t pt-1">總計: $<span id="cash-total-reserve">0</span></div>
+                </div>
+
+                <div class="bg-[#f9f9f9] p-3 rounded-lg border border-gray-200">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-bold text-[#1a3a2e]">本日盈餘</span>
+                        <span class="font-bold text-xl text-[#ff6b6b]">$<span id="cash-surplus">0</span></span>
+                    </div>
+                    <div class="text-xs text-gray-400 mb-2">待分配金額: $<span id="cash-remaining">0</span></div>
+                    
+                    <div class="space-y-2" id="alloc-container">
+                        <div class="grid grid-cols-[80px_1fr] gap-2 items-center">
+                            <button class="alloc-btn" onclick="allocateSurplus('backup')">備用金</button>
+                            <input type="number" id="alloc-backup" class="cash-input" placeholder="0" oninput="updateSurplus()">
+                        </div>
+                        <div class="grid grid-cols-[80px_1fr] gap-2 items-center">
+                            <button class="alloc-btn" onclick="allocateSurplus('yongfeng')">永豐</button>
+                            <input type="number" id="alloc-yongfeng" class="cash-input" placeholder="0" oninput="updateSurplus()">
+                        </div>
+                        <div class="grid grid-cols-[80px_1fr] gap-2 items-center">
+                            <button class="alloc-btn" onclick="allocateSurplus('ctbc')">中信</button>
+                            <input type="number" id="alloc-ctbc" class="cash-input" placeholder="0" oninput="updateSurplus()">
+                        </div>
+                        <div class="grid grid-cols-[80px_1fr] gap-2 items-center">
+                            <button class="alloc-btn" onclick="allocateSurplus('wallet')">錢包</button>
+                            <input type="number" id="alloc-wallet" class="cash-input" placeholder="0" oninput="updateSurplus()">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between mt-3 pt-2 border-t text-sm font-bold">
+                        <span>已入庫總額</span>
+                        <span class="text-[#1a4731]">$<span id="cash-stored">0</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 border-t border-gray-200">
+                <button onclick="saveSettlement()" class="w-full py-3 bg-[#1a4731] text-white rounded-xl font-bold shadow-lg text-lg">結算完畢</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="accountingModal" class="cal-modal-overlay hidden" style="z-index: 7200;">
+        <div class="cal-modal-content flex flex-col" style="max-width: 360px; height: 90vh; background: #f9f9f9; color: #333; padding: 0; border-radius: 20px; overflow: hidden;">
+            <div class="bg-white p-4 shadow-sm z-10 flex justify-between items-center border-b border-gray-100">
+                <h3 class="font-bold text-lg text-[#1a3a2e]" id="acc-date-title">記帳本</h3>
+                <button onclick="document.getElementById('accountingModal').classList.add('hidden')" class="text-gray-400 text-xl">✕</button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                
+                <div class="report-card !mb-2 !p-3 bg-[#e8f5e9] border border-[#c8e6c9]">
+                    <div class="report-section-title !mb-2 !border-none !p-0 text-[#1a4731]">💵 店內庫存 (系統推算)</div>
+                    <div class="flex justify-between text-sm">
+                        <span>零用金: <b id="acc-petty-cash">$0</b></span>
+                        <span>備用金: <b id="acc-backup-cash">$0</b></span>
+                    </div>
+                    <div class="text-[10px] text-gray-400 mt-1 text-center">*錢包資金不計入店內庫存</div>
+                </div>
+
+                <div class="report-card !mb-2">
+                    <div class="report-section-title">今日營收 (自動計算)</div>
+                    <div id="acc-revenue-list" class="text-xs space-y-1 mb-2"></div>
+                    <div class="text-right border-t pt-2 font-bold text-[#1a3a2e]">總計: $<span id="acc-revenue-total">0</span></div>
+                </div>
+
+                <div class="report-card !mb-2 border-l-4 border-[#ffb74d]">
+                    <div class="report-section-title text-[#f57c00] !border-none !p-0">資金調度 (提領至錢包)</div>
+                    <div class="space-y-2 mt-2">
+                        <div class="flex gap-2 items-center">
+                            <span class="text-xs font-bold text-gray-500 whitespace-nowrap">從</span>
+                            <select id="transfer-source" class="exp-select flex-1">
+                                <option value="petty">零用金</option>
+                                <option value="backup">備用金</option>
+                            </select>
+                            <span class="text-xs font-bold text-gray-500 whitespace-nowrap">轉入錢包</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="number" id="transfer-amount" class="exp-input" placeholder="金額">
+                            <button onclick="addTransfer()" class="py-2 px-4 bg-[#ffb74d] text-white rounded-lg font-bold text-xs shadow">執行</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-section-title">記一筆支出</div>
+                    <div class="space-y-3">
+                        <div class="expense-form-row">
+                            <select id="exp-cat" class="exp-select w-1/3">
+                                <option value="耗材">耗材</option>
+                                <option value="設備">設備</option>
+                                <option value="固定支出">固定支出</option>
+                                <option value="退款">退款</option>
+                            </select>
+                            <input type="text" id="exp-name" class="exp-input w-2/3" placeholder="項目名稱">
+                        </div>
+                        <div class="expense-form-row">
+                            <input type="number" id="exp-amount" class="exp-input" placeholder="金額">
+                            <select id="exp-source" class="exp-select">
+                                <option value="petty">零用金支付</option>
+                                <option value="backup">備用金支付</option>
+                                <option value="wallet">錢包支付</option> </select>
+                        </div>
+                        <button onclick="addExpense()" class="w-full py-2 bg-[#ff6b6b] text-white rounded-lg font-bold text-sm shadow">新增支出</button>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-section-title">今日收支明細</div>
+                    <div id="acc-expense-list" class="text-xs space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="bookingDetailModal" class="cal-modal-overlay hidden" style="z-index: 6500;">
+        <div class="cal-modal-content flex flex-col" style="max-width: 320px; background: #fff; color: #333; padding: 0; border-radius: 20px; overflow: hidden;">
+            <div class="bg-[var(--forest-bg)] p-5 text-center relative">
+                <div id="bd-date" class="text-[var(--gold-main)] text-xl font-serif font-bold tracking-widest"></div>
+                <div id="bd-day" class="text-white/60 text-xs mt-1 font-bold tracking-widest"></div>
+                <div id="bd-time" class="text-white text-2xl font-bold mt-2 font-serif"></div>
+                <button onclick="document.getElementById('bookingDetailModal').classList.add('hidden')" class="absolute top-4 right-4 text-[var(--gold-main)] text-2xl font-bold opacity-100 hover:text-white transition-colors">✕</button>
+            </div>
+            <div class="p-5 flex-1 overflow-y-auto">
+                <div id="bd-status-container" class="text-center mb-6">
+                    <div class="status-badge status-pending">尚未到來</div>
+                </div>
+                <div class="space-y-4 text-sm">
+                    <div class="flex justify-between border-b border-gray-100 pb-2">
+                        <span class="text-gray-400 font-bold">定金支付</span>
+                        <span id="bd-deposit" class="font-bold text-[#1a3a2e]"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 font-bold block mb-1">服務項目</span>
+                        <div id="bd-items" class="font-bold text-[#1a3a2e] space-y-1"></div>
+                    </div>
+                    <div id="bd-note-area" class="bg-gray-50 p-3 rounded-lg text-xs text-gray-600 hidden">
+                        <span class="text-[10px] text-gray-400 block mb-1">備註</span>
+                        <span id="bd-note"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 grid grid-cols-2 gap-3 border-t border-gray-100">
+                <button id="btn-bd-edit" class="py-3 rounded-xl border border-gray-300 text-gray-500 font-bold text-sm">編輯預約</button>
+                <button id="btn-bd-checkout" class="py-3 rounded-xl bg-[var(--gold-main)] text-[#1a3a2e] font-bold text-sm shadow-lg">結帳</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="checkoutModal" class="cal-modal-overlay hidden" style="z-index: 7000;">
+        <div class="cal-modal-content flex flex-col" style="max-width: 360px; height: 85vh; background: #f2f2f2; color: #333; padding: 0; border-radius: 20px; overflow: hidden;">
+            <div class="bg-white p-4 shadow-sm z-10 flex justify-between items-center">
+                <h3 class="font-bold text-lg text-[#1a3a2e]">結帳櫃檯</h3>
+                <button onclick="closeCheckout()" class="text-gray-400 text-xl">✕</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                <div id="checkout-list"></div>
+                <button onclick="openDiscountModal('global')" class="w-full bg-white p-3 rounded-lg border border-dashed border-[#c9b896] text-[#c9b896] font-bold text-sm flex justify-between items-center">
+                    <span>全單折扣</span>
+                    <span id="global-disc-display">- $0</span>
+                </button>
+            </div>
+            <div class="bg-white p-4 border-t border-gray-200 z-10 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
+                <div class="flex justify-between items-end mb-2">
+                    <div class="text-xs text-gray-400">總額 $<span id="co-subtotal">0</span> <span class="mx-1">|</span> 折扣 $<span id="co-discount-total">0</span></div>
+                    <div class="text-2xl font-bold text-[#1a3a2e] font-serif">$<span id="co-grand-total">0</span></div>
+                </div>
+                <button onclick="openPaymentModal()" class="w-full py-3 bg-[#1a3a2e] text-[var(--gold-main)] rounded-xl font-bold text-sm shadow-lg flex justify-between px-6 items-center"><span>選擇支付方式</span><span>❯</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="discountModal" class="cal-modal-overlay hidden" style="z-index: 7500;">
+        <div class="cal-modal-content" style="max-width: 300px; background: #fff; color: #333; padding: 20px; text-align: left;">
+            <h3 class="font-bold text-center mb-4" id="disc-title">設定折扣</h3>
+            <div class="flex bg-gray-100 p-1 rounded-lg mb-4">
+                <button onclick="switchDiscType('cash')" id="tab-disc-cash" class="flex-1 py-1.5 text-xs font-bold rounded bg-white shadow-sm">現金 ($)</button>
+                <button onclick="switchDiscType('percent')" id="tab-disc-percent" class="flex-1 py-1.5 text-xs font-bold text-gray-400">折數 (%)</button>
+            </div>
+            <div class="mb-4"><input type="number" id="disc-input" class="w-full bg-gray-50 border border-gray-200 rounded p-3 text-center text-xl font-bold outline-none text-[#1a3a2e]" placeholder="輸入金額"></div>
+            <div id="disc-grid-cash" class="discount-grid">
+                <div class="disc-btn" onclick="setDiscVal(50)">50</div><div class="disc-btn" onclick="setDiscVal(100)">100</div><div class="disc-btn" onclick="setDiscVal(150)">150</div><div class="disc-btn" onclick="setDiscVal(200)">200</div>
+                <div class="disc-btn" onclick="setDiscVal(250)">250</div><div class="disc-btn" onclick="setDiscVal(300)">300</div><div class="disc-btn" onclick="setDiscVal(350)">350</div><div class="disc-btn" onclick="setDiscVal(400)">400</div>
+            </div>
+            <div id="disc-grid-percent" class="discount-grid hidden">
+                <div class="disc-btn" onclick="setDiscVal(95)">95折</div><div class="disc-btn" onclick="setDiscVal(92)">92折</div><div class="disc-btn" onclick="setDiscVal(90)">9折</div><div class="disc-btn" onclick="setDiscVal(88)">88折</div>
+                <div class="disc-btn" onclick="setDiscVal(85)">85折</div><div class="disc-btn" onclick="setDiscVal(80)">8折</div><div class="disc-btn" onclick="setDiscVal(75)">75折</div><div class="disc-btn" onclick="setDiscVal(70)">7折</div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-6">
+                <button onclick="document.getElementById('discountModal').classList.add('hidden')" class="py-2 border border-gray-300 rounded-lg text-xs font-bold text-gray-500">取消</button>
+                <button onclick="applyDiscount()" class="py-2 bg-[var(--gold-main)] text-[#1a3a2e] rounded-lg text-xs font-bold">確認</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="cal-modal-overlay hidden" style="z-index: 7600;">
+        <div class="cal-modal-content flex flex-col" style="max-width: 360px; height: 70vh; background: #fff; color: #333; padding: 0; border-radius: 20px; overflow: hidden;">
+            <div class="bg-[var(--forest-bg)] p-4 text-center relative">
+                <h3 class="text-[var(--gold-main)] font-bold mb-1">應付金額</h3>
+                <div class="text-3xl text-[var(--gold-main)] font-serif font-bold">$<span id="pay-total-amount">0</span></div>
+                <button onclick="document.getElementById('paymentModal').classList.add('hidden')" class="absolute top-4 right-4 text-[var(--gold-main)] text-xl font-bold hover:text-white transition-colors p-2">✕</button>
+            </div>
+            <div class="flex-1 overflow-y-auto">
+                <div class="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
+                    <span class="text-xs font-bold text-gray-500">已付定金 (<span id="pay-dep-method">無</span>)</span>
+                    <span class="font-bold text-[#1a3a2e]">$<span id="pay-dep-amount">0</span></span>
+                </div>
+                <div class="mt-2">
+                    <div class="pay-method-row selected" onclick="selectPayMethod('cash', this)"><div class="flex items-center"><div class="pay-radio"></div><span class="font-bold text-sm">現金</span></div><span class="font-bold text-[#1a3a2e] pay-amt" id="pay-val-cash">$0</span></div>
+                    <div class="pay-method-row" onclick="selectPayMethod('transfer', this)"><div class="flex items-center"><div class="pay-radio"></div><span class="font-bold text-sm">匯款</span></div><span class="font-bold text-[#1a3a2e] pay-amt" id="pay-val-transfer"></span></div>
+                    <div class="pay-method-row" onclick="selectPayMethod('linepay', this)"><div class="flex items-center"><div class="pay-radio"></div><span class="font-bold text-sm">LINE Pay</span></div><span class="font-bold text-[#1a3a2e] pay-amt" id="pay-val-linepay"></span></div>
+                    <div class="pay-method-row" onclick="selectPayMethod('jko', this)"><div class="flex items-center"><div class="pay-radio"></div><span class="font-bold text-sm">街口支付</span></div><span class="font-bold text-[#1a3a2e] pay-amt" id="pay-val-jko"></span></div>
+                    <div class="pay-method-row" onclick="selectPayMethod('stored', this)"><div class="flex items-center"><div class="pay-radio"></div><span class="font-bold text-sm">儲值金</span></div><span class="font-bold text-[#1a3a2e] pay-amt" id="pay-val-stored"></span></div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-200">
+                <button onclick="confirmCheckout()" class="w-full py-3 bg-[#1a4731] text-white rounded-xl font-bold shadow-lg text-lg">結帳 NT$<span id="btn-pay-total">0</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="finEditModal" class="cal-modal-overlay hidden">
+        <div class="cal-modal-content flex flex-col" style="max-width: 360px; height: 85vh; padding: 0; overflow: hidden; border-radius: 20px; position: relative; background: #f2f2f2;">
+            <div class="flex-shrink-0 bg-white z-20 shadow-md">
                 <div class="flex justify-between items-center p-3 border-b border-gray-100">
                     <h3 id="fe-title" class="text-[var(--gold-main)] font-bold text-base tracking-wide">新增帳務</h3>
                     <button onclick="closeFinEditModal()" class="text-gray-400 text-xl w-8 h-8 flex items-center justify-center hover:bg-gray-50 rounded-full">✕</button>
                 </div>
-
                 <div class="p-3 pb-0 space-y-2">
                     <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-200">
                         <label class="text-xs text-gray-500 font-bold whitespace-nowrap">預約時間</label>
@@ -1863,12 +2465,10 @@
                             <select id="fe-h" class="bg-transparent text-[#1a3a2e] font-bold text-lg outline-none text-center appearance-none w-16 border-b border-gray-400 p-0"></select>
                             <span class="text-gray-400 font-bold">:</span>
                             <select id="fe-m" class="bg-transparent text-[#1a3a2e] font-bold text-lg outline-none text-center appearance-none w-16 border-b border-gray-400 p-0">
-                                <option value="00">00</option>
-                                <option value="30">30</option>
+                                <option value="00">00</option><option value="30">30</option>
                             </select>
                         </div>
                     </div>
-
                     <div class="cat-tab-group shadow-sm bg-white border border-gray-200" style="margin-bottom: -1px;">
                         <div class="cat-tab-btn active" onclick="switchFinCat('nail_model', this)">手模</div>
                         <div class="cat-tab-btn" onclick="switchFinCat('eyelash_practice', this)">睫模</div>
@@ -1879,9 +2479,7 @@
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto p-3 pt-4 bg-[#f2f2f2] relative" style="overscroll-behavior: contain;">
-
                 <div id="conflict-msg" class="hidden mb-3 p-3 bg-red-50 text-red-500 text-xs font-bold rounded-lg text-center border border-red-200 shadow-sm"></div>
-
                 <div id="priceSelectorModal" class="cal-modal-overlay hidden" style="z-index: 6000;">
                     <div class="cal-modal-content" style="max-width: 300px; background: #1a3a2e; border: 2px solid var(--gold-main); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
                         <h3 class="text-[var(--gold-main)] font-bold text-xl mb-6 tracking-widest text-center">請選擇方案</h3>
@@ -1889,56 +2487,48 @@
                         <button onclick="document.getElementById('priceSelectorModal').classList.add('hidden')" class="w-full mt-6 py-3 border border-[#c9b896] text-[#c9b896] rounded-lg text-xs font-bold tracking-widest hover:bg-[#c9b896] hover:text-[#1a3a2e] transition-all">取消</button>
                     </div>
                 </div>
-
                 <div id="fe-item-grid" class="grid grid-cols-2 gap-2 p-1 mb-4"></div>
-
                 <div class="mb-3 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
-                    <div class="flex justify-between text-xs mb-2 text-gray-500 font-bold border-b border-gray-100 pb-2">
-                        <span>已選項目清單</span>
-                        <span id="fe-count">0 項</span>
-                    </div>
-                    
+                    <div class="flex justify-between text-xs mb-2 text-gray-500 font-bold border-b border-gray-100 pb-2"><span>已選項目清單</span><span id="fe-count">0 項</span></div>
                     <div id="fe-selected-list" class="mb-3 space-y-1"></div>
-
-                    <div class="flex justify-between items-center mb-3 pt-2 border-t border-gray-100">
-                        <label class="flex items-center gap-2 text-xs cursor-pointer text-gray-600 font-bold hover:bg-gray-50 p-1 rounded transition-colors w-full">
-                            <input type="checkbox" id="fe-deposit" checked class="w-4 h-4 accent-[var(--gold-main)]">
-                            已付定金 ($100)
-                        </label>
+                   <div class="mb-3 pt-2 border-t border-gray-100">
+                        <label class="text-[10px] text-gray-400 font-bold mb-2 block">定金狀態 ($100)</label>
+                        <div class="flex gap-1 flex-wrap">
+                            <button type="button" class="dep-opt-btn" onclick="setDepositMethod('cash', this)">現金</button>
+                            <button type="button" class="dep-opt-btn" onclick="setDepositMethod('transfer', this)">匯款</button>
+                            <button type="button" class="dep-opt-btn" onclick="setDepositMethod('linepay', this)">Line Pay</button>
+                            <button type="button" class="dep-opt-btn" onclick="setDepositMethod('stored', this)">儲值金</button>
+                            <button type="button" class="dep-opt-btn active" onclick="setDepositMethod('none', this)">無</button>
+                        </div>
+                        <div class="mb-3 pt-2 border-t border-gray-100 flex items-center justify-between">
+                        <label class="text-[10px] text-gray-400 font-bold block">定金歸帳日期</label>
+                        <input type="date" id="fe-dep-date" class="bg-gray-50 border border-gray-300 rounded px-2 py-1 text-xs text-[#1a3a2e] font-bold">
+                    </div>
+                        <input type="hidden" id="fe-dep-method" value="none">
                     </div>
 
                     <div class="flex gap-2 items-center">
-                        <div class="flex-1">
-                            <label class="text-[10px] block text-gray-400 mb-1">總金額</label>
-                            <input type="number" inputmode="numeric" id="fe-price" class="edit-input w-full font-bold text-[#2d4639] text-lg bg-gray-50 border border-gray-200 rounded px-2 py-2">
-                        </div>
-                        <div class="flex-1">
-                            <label class="text-[10px] block text-gray-400 mb-1">總時長(分)</label>
-                            <input type="number" inputmode="numeric" id="fe-duration" class="edit-input w-full text-center bg-gray-50 border border-gray-200 rounded px-2 py-2 font-bold text-gray-600">
-                        </div>
+                        <div class="flex-1"><label class="text-[10px] block text-gray-400 mb-1">總金額</label><input type="number" inputmode="numeric" id="fe-price" class="edit-input w-full font-bold text-[#2d4639] text-lg bg-gray-50 border border-gray-200 rounded px-2 py-2"></div>
+                        <div class="flex-1"><label class="text-[10px] block text-gray-400 mb-1">總時長(分)</label><input type="number" inputmode="numeric" id="fe-duration" class="edit-input w-full text-center bg-gray-50 border border-gray-200 rounded px-2 py-2 font-bold text-gray-600"></div>
                     </div>
                 </div>
-
                 <div class="mb-2 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
                     <label class="text-[10px] block text-gray-400 mb-1">備註 (Note)</label>
                     <textarea id="fe-note" rows="2" class="w-full text-xs p-2 border border-gray-200 rounded bg-gray-50 text-gray-800 resize-none" placeholder="輸入備註..."></textarea>
-                    
                     <div class="img-upload-box mt-3 border-dashed border-2 border-gray-200 bg-gray-50 rounded-lg p-2">
                         <label for="fe-image-upload" class="cursor-pointer text-xs text-[var(--gold-main)] font-bold flex items-center justify-center gap-2 py-3 hover:bg-gray-100 transition-colors rounded-lg w-full">
                             📷 上傳照片 (可多選)
                             <input type="file" id="fe-image-upload" accept="image/*" multiple class="hidden" onchange="handleImageUpload(this)">
                         </label>
-                        
-                        <div id="fe-preview-container" class="grid grid-cols-3 gap-2 mt-2">
-                            </div>
+                        <div id="fe-preview-container" class="grid grid-cols-3 gap-2 mt-2"></div>
                     </div>
-                
-                <div class="h-4"></div>
+                    <div class="h-4"></div>
+                </div>
+                <div class="flex-shrink-0 p-3 border-t border-gray-200 bg-white z-20 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
+                    <button onclick="saveFinData()" class="w-full py-3 bg-[var(--gold-main)] text-[#1a3a2e] rounded-xl text-sm font-bold shadow-lg hover:brightness-105 active:scale-[0.98] transition-all">確認儲存</button>
+                </div>
             </div>
-            <div class="flex-shrink-0 p-3 border-t border-gray-200 bg-white z-20 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
-                <button onclick="saveFinData()" class="w-full py-3 bg-[var(--gold-main)] text-[#1a3a2e] rounded-xl text-sm font-bold shadow-lg hover:brightness-105 active:scale-[0.98] transition-all">確認儲存</button>
-            </div>
-            </div>
+        </div>
     </div>
 </section>
 
@@ -1960,9 +2550,10 @@
             <div class="tab-button" onclick="switchPage('admin-calc', this)">計算</div>
             <div class="tab-button" onclick="switchPage('budget', this)">時段</div>
             <div class="tab-button" onclick="switchPage('admin-finance', this)">預約</div>
+            <div class="tab-button" onclick="switchPage('admin-report', this)">財報</div>
+            
             <div class="tab-button" onclick="logout()" style="color:#ff6b6b">儲存</div>
         </div>
-    </nav>
 
     <div id="admin-login-overlay">
         <form class="login-container" onsubmit="event.preventDefault(); checkAdminNew();">
@@ -1971,8 +2562,8 @@
             <input type="text" name="username" value="meawme" autocomplete="username" style="display:none;">
 
             <input type="password" id="admin-pwd" name="password" autocomplete="current-password" 
-                   class="pwd-input" placeholder="ACCESS CODE" inputmode="numeric" pattern="[0-9]*"
-                   oninput="if(this.value==='2002') checkAdminNew()">
+                    class="pwd-input" placeholder="ACCESS CODE" inputmode="numeric"
+                    oninput="if(this.value==='2002') checkAdminNew()">
             
             <div class="flex flex-col gap-6 items-center">
                 <button type="submit" class="login-action-btn">VERIFY</button>
@@ -2137,25 +2728,6 @@
         }
     }
 
-    // [修正] 儲存邏輯：確保 practice 欄位被寫入
-    function saveAndSync() {
-        if (window.dbSet && window.dbRef) {
-            let cleanData = JSON.parse(JSON.stringify(serviceData));
-            ['nail', 'eyelash', 'skin'].forEach(cat => {
-                const types = ['main', 'addon', 'model'];
-                if(cat === 'eyelash') types.push('practice'); // 寫入 practice
-
-                types.forEach(type => {
-                    cleanData[cat][type] = safeArray(cleanData[cat][type]);
-                });
-            });
-            window.dbSet(window.dbRef(window.firebaseDB, 'meawMeData'), cleanData);
-        }
-        renderServiceFront();
-        renderAdminList();
-        initCalc();
-    }
-
     function saveBookingData() {
         if (window.dbSet && window.dbRef) {
             // 寫入 Firebase 路徑 'meawMeBooking'
@@ -2250,13 +2822,32 @@
                 }
             });
 
-            // 3. 渲染睫毛管理 (這段您原本可能漏掉了)
+            // 3. 渲染睫毛管理 & [修正] 補上睫模專區
             if (cat === 'eyelash') {
                 const mgmt = document.getElementById('front-eyelash-management');
                 if (mgmt) {
-                    mgmt.innerHTML = `<table class="price-table">` + 
-                        modelItems.map(i => `<tr><td>${i.name}</td><td class="price-value">${formatPriceDisplay(i.price)}</td></tr>`).join('') + 
-                        `</table>`;
+                    // 這裡要手動抓取 practice 資料，因為上方的 const 定義沒有包含它
+                    const practiceItems = safeArray(categoryData.practice);
+                    
+                    let html = "";
+
+                    // 若有睫模項目，先渲染睫模標題與表格
+                    if (practiceItems.length > 0) {
+                        html += `<div class="subsection-title" style="color:var(--gold-main); font-weight:700; margin-top:20px; margin-bottom:10px; border-left:3px solid var(--gold-main); padding-left:10px;">睫模專區</div>`;
+                        html += `<table class="price-table">`;
+                        html += practiceItems.map(i => `<tr><td>${i.name}</td><td class="price-value">${formatPriceDisplay(i.price)}</td></tr>`).join('');
+                        html += `</table>`;
+                    }
+
+                    // 接著渲染原本的睫毛管理
+                    if (modelItems.length > 0) {
+                        html += `<div class="subsection-title" style="color:var(--gold-main); font-weight:700; margin-top:20px; margin-bottom:10px; border-left:3px solid var(--gold-main); padding-left:10px;">睫毛管理</div>`;
+                        html += `<table class="price-table">`;
+                        html += modelItems.map(i => `<tr><td>${i.name}</td><td class="price-value">${formatPriceDisplay(i.price)}</td></tr>`).join('');
+                        html += `</table>`;
+                    }
+
+                    mgmt.innerHTML = html;
                 }
             }
 
@@ -3115,9 +3706,767 @@
                     }
                 }
                 renderFinancePage();
+                if (!document.getElementById('dayDetailModal').classList.contains('hidden')) {
+                    renderDayDetailList();
+                }
             });
         }
     }
+
+    // [新增] 同步結算單資料
+    function syncSettlements() {
+        if (window.dbOnValue && window.dbRef) {
+            window.dbOnValue(window.dbRef(window.firebaseDB, 'meawMeSettlements'), (snapshot) => {
+                settlementData = snapshot.val() || {};
+                // 如果目前開著結算視窗，要重新檢查狀態
+                if (!document.getElementById('settlementModal').classList.contains('hidden')) {
+                    checkSettlementStatus();
+                }
+            });
+        }
+    }
+
+    // --- [NEW] 財務報表系統變數與同步 ---
+    let expenseData = {}; 
+    let reportState = { tab: 'calendar', date: new Date(), calDate: new Date() };
+
+    function syncExpenses() {
+        if (window.dbOnValue && window.dbRef) {
+            window.dbOnValue(window.dbRef(window.firebaseDB, 'meawMeExpenses'), (snapshot) => {
+                expenseData = snapshot.val() || {};
+                // 如果報表頁面開著，刷新它
+                if (document.getElementById('page-admin-report').classList.contains('active')) {
+                    if (reportState.tab === 'calendar') renderReportCalendar();
+                    else if (reportState.tab === 'month') renderMonthlyReport();
+                    else renderYearlyReport();
+                }
+                // 如果記帳彈窗開著，刷新它
+                if (!document.getElementById('accountingModal').classList.contains('hidden')) {
+                    renderAccountingModal();
+                }
+            });
+        }
+    }
+
+    // --- 頁面切換邏輯 ---
+    window.switchReportTab = function(tab, btn) {
+        reportState.tab = tab;
+        document.querySelectorAll('.report-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        document.getElementById('report-view-calendar').classList.add('hidden');
+        document.getElementById('report-view-month').classList.add('hidden');
+        document.getElementById('report-view-year').classList.add('hidden');
+        
+        document.getElementById(`report-view-${tab}`).classList.remove('hidden');
+        
+        if (tab === 'calendar') renderReportCalendar();
+        if (tab === 'month') renderMonthlyReport();
+        if (tab === 'year') renderYearlyReport();
+    };
+    
+    // 日曆切換月份
+    window.changeReportCalendarMonth = function(dir) {
+        reportState.calDate.setMonth(reportState.calDate.getMonth() + dir);
+        renderReportCalendar();
+    };
+
+    // 報表切換日期
+    window.changeReportDate = function(type, dir) {
+        if (type === 'month') reportState.date.setMonth(reportState.date.getMonth() + dir);
+        if (type === 'year') reportState.date.setFullYear(reportState.date.getFullYear() + dir);
+        
+        if (type === 'month') renderMonthlyReport();
+        if (type === 'year') renderYearlyReport();
+    };
+
+    // --- [NEW] 財務日曆渲染 ---
+    window.renderReportCalendar = function() {
+        const y = reportState.calDate.getFullYear();
+        const m = reportState.calDate.getMonth();
+        document.getElementById('rep-cal-month-display').textContent = `${y} / ${String(m+1).padStart(2,'0')}`;
+        
+        const grid = document.getElementById('report-calendar-grid');
+        grid.innerHTML = '';
+        
+        const firstDay = new Date(y, m, 1).getDay();
+        const offset = (firstDay === 0 ? 6 : firstDay - 1);
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        const holidayMap = window.getTaiwanHolidays();
+        
+        let mRev = 0, mExp = 0;
+
+        for(let i=0; i<offset; i++) grid.innerHTML += `<div></div>`;
+
+        for(let d=1; d<=daysInMonth; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const dayOfWeek = new Date(y, m, d).getDay();
+            const isRedDay = (dayOfWeek === 0 || dayOfWeek === 6 || holidayMap[dateStr] || financeStore.manualOffDays.includes(dateStr));
+            
+            // 1. 計算當日營收
+            let dailyRev = { cash:0, transfer:0, linepay:0, jko:0, stored:0, total:0 };
+            
+            // 服務收入
+            safeArray(financeStore.data[dateStr]).forEach(e => {
+                if (e.status === 'checked' && e.checkoutDetails) {
+                    const amt = parseInt(e.checkoutDetails.finalTotal) - parseInt(e.checkoutDetails.paidDeposit || 0);
+                    if(amt > 0) {
+                        const method = e.checkoutDetails.paymentMethod || 'cash';
+                        if (dailyRev[method] !== undefined) dailyRev[method] += amt;
+                        dailyRev.total += amt;
+                    }
+                }
+            });
+            // 定金收入
+            Object.keys(financeStore.data).forEach(k => {
+                safeArray(financeStore.data[k]).forEach(e => {
+                    if ((e.hasDeposit || (e.depositMethod && e.depositMethod!=='none')) && e.depositDate === dateStr) {
+                         const method = e.depositMethod || 'transfer';
+                         const amt = parseInt(e.depositAmount || 100);
+                         if (dailyRev[method] !== undefined) dailyRev[method] += amt;
+                         dailyRev.total += amt;
+                    }
+                });
+            });
+
+            // 2. 計算當日支出
+            let dailyExp = 0;
+            safeArray(expenseData[dateStr]).forEach(e => dailyExp += parseInt(e.amount));
+
+            mRev += dailyRev.total;
+            mExp += dailyExp;
+
+            // 渲染格子
+            const box = document.createElement('div');
+            box.className = `fin-day-box ${isRedDay ? 'is-holiday-bg' : ''}`;
+            box.style.minHeight = "100px";
+            box.onclick = () => openAccounting(dateStr);
+            
+            let html = `<div class="flex justify-between text-[10px] ${isRedDay?'text-[#ff6b6b] font-bold':'opacity-50'}">
+                <span>${d}</span><span>${isRedDay?'休':''}</span>
+            </div>`;
+            
+            html += `<div class="fin-cal-cell">`;
+            if (dailyRev.cash > 0) html += `<div class="fin-cal-row"><span>現</span><span>${dailyRev.cash}</span></div>`;
+            if (dailyRev.transfer > 0) html += `<div class="fin-cal-row"><span>匯</span><span>${dailyRev.transfer}</span></div>`;
+            if (dailyRev.linepay > 0) html += `<div class="fin-cal-row"><span>LP</span><span>${dailyRev.linepay}</span></div>`;
+            if (dailyRev.jko > 0) html += `<div class="fin-cal-row"><span>街</span><span>${dailyRev.jko}</span></div>`;
+            if (dailyRev.stored > 0) html += `<div class="fin-cal-row"><span>儲</span><span>${dailyRev.stored}</span></div>`;
+            
+            if (dailyExp > 0) html += `<div class="fin-cal-row text-[#ff6b6b] mt-1 border-t border-white/10 pt-1"><span>支</span><span>-${dailyExp}</span></div>`;
+            
+            html += `<div class="fin-cal-total">$${dailyRev.total}</div>`;
+            html += `</div>`;
+            
+            box.innerHTML = html;
+            grid.appendChild(box);
+        }
+        
+        document.getElementById('cal-month-rev').innerText = `$${mRev.toLocaleString()}`;
+        document.getElementById('cal-month-exp').innerText = `$${mExp.toLocaleString()}`;
+        document.getElementById('cal-month-net').innerText = `$${(mRev - mExp).toLocaleString()}`;
+    };
+
+    // --- [更新] 記帳彈窗邏輯 (包含轉帳與錢包) ---
+    window.openAccounting = function(dateStr) {
+        activeDateStr = dateStr;
+        document.getElementById('accountingModal').classList.remove('hidden');
+        document.getElementById('acc-date-title').innerText = `${dateStr} 記帳本`;
+        renderAccountingModal();
+    };
+
+    function renderAccountingModal() {
+        // 1. 庫存邏輯 (需要扣掉當天的轉出與支出)
+        const dates = Object.keys(settlementData).sort().reverse();
+        const lastDate = dates[0]; // 抓最近一次結算的餘額
+        const lastSettle = settlementData[lastDate] || { pettyCash: 0, allocations: [] };
+        
+        let petty = lastSettle.pettyCash || 0;
+        let backup = lastSettle.allocations ? (lastSettle.allocations.find(a => a.target === '備用金')?.amount || 0) : 0;
+        
+        // 簡易扣除今日的即時支出 (僅供參考，不精確回推歷史)
+        const exps = safeArray(expenseData[activeDateStr]);
+        exps.forEach(e => {
+            if (e.source === 'petty') petty -= e.amount;
+            if (e.source === 'backup') backup -= e.amount;
+            // wallet 支出不影響店內庫存
+        });
+
+        document.getElementById('acc-petty-cash').innerText = `$${petty}`;
+        document.getElementById('acc-backup-cash').innerText = `$${backup}`;
+
+        // 2. 營收 (與之前相同)
+        const revList = document.getElementById('acc-revenue-list');
+        revList.innerHTML = '';
+        let totalRev = 0;
+        let methods = { cash:0, transfer:0, linepay:0, jko:0, stored:0 };
+        
+        safeArray(financeStore.data[activeDateStr]).forEach(e => {
+            if (e.status === 'checked' && e.checkoutDetails) {
+                const amt = parseInt(e.checkoutDetails.finalTotal) - parseInt(e.checkoutDetails.paidDeposit || 0);
+                if(amt > 0) methods[e.checkoutDetails.paymentMethod || 'cash'] += amt;
+            }
+        });
+        Object.keys(financeStore.data).forEach(k => {
+            safeArray(financeStore.data[k]).forEach(e => {
+                if ((e.hasDeposit || (e.depositMethod && e.depositMethod!=='none')) && e.depositDate === activeDateStr) {
+                     methods[e.depositMethod || 'transfer'] += parseInt(e.depositAmount || 100);
+                }
+            });
+        });
+
+        for (let [k, v] of Object.entries(methods)) {
+            if (v > 0) {
+                totalRev += v;
+                revList.innerHTML += `<div class="flex justify-between"><span>${k==='cash'?'現金':(k==='transfer'?'匯款':(k==='linepay'?'LinePay':(k==='jko'?'街口':'儲值金')))}</span><span>$${v}</span></div>`;
+            }
+        }
+        document.getElementById('acc-revenue-total').innerText = totalRev;
+
+        // 3. 支出與轉帳明細
+        const expList = document.getElementById('acc-expense-list');
+        expList.innerHTML = '';
+        
+        exps.forEach((e, idx) => {
+            let badgeColor = "bg-gray-200 text-gray-600";
+            let amountColor = "text-[#ff6b6b]";
+            let sign = "-";
+            
+            // 如果是轉帳/提領
+            if (e.cat === 'transfer_out') {
+                badgeColor = "bg-[#ffcc80] text-[#e65100]";
+                amountColor = "text-[#f57c00]";
+            }
+            
+            const sourceMap = { 'petty': '零用金', 'backup': '備用金', 'wallet': '錢包', 'other': '其他' };
+            
+            expList.innerHTML += `
+                <div class="flex justify-between items-center bg-white p-2 rounded border border-gray-200">
+                    <div>
+                        <span class="text-[10px] px-1 rounded ${badgeColor}">${e.cat==='transfer_out'?'提領':e.cat}</span>
+                        <span class="font-bold ml-1">${e.name}</span>
+                        <div class="text-[10px] text-gray-400">來源: ${sourceMap[e.source]}</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold ${amountColor}">${sign}$${e.amount}</span>
+                        <button onclick="deleteExpense(${idx})" class="text-gray-400">✕</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    // [新增] 轉帳/提領功能
+    window.addTransfer = function() {
+        const source = document.getElementById('transfer-source').value;
+        const amount = parseInt(document.getElementById('transfer-amount').value);
+        
+        if (isNaN(amount) || amount <= 0) return alert("請輸入金額");
+        
+        if (!expenseData[activeDateStr]) expenseData[activeDateStr] = [];
+        
+        // 轉帳也被視為一種「支出」(從店內流出到錢包)
+        expenseData[activeDateStr].push({ 
+            cat: 'transfer_out', 
+            name: '提領至錢包', 
+            amount: amount, 
+            source: source, 
+            id: Date.now() 
+        });
+
+        saveExpenseToDB();
+    };
+
+    window.addExpense = function() {
+        const cat = document.getElementById('exp-cat').value;
+        const name = document.getElementById('exp-name').value;
+        const amount = parseInt(document.getElementById('exp-amount').value);
+        const source = document.getElementById('exp-source').value;
+
+        if (!name || isNaN(amount) || amount <= 0) return alert("請輸入正確資訊");
+
+        if (!expenseData[activeDateStr]) expenseData[activeDateStr] = [];
+        expenseData[activeDateStr].push({ cat, name, amount, source, id: Date.now() });
+
+        saveExpenseToDB();
+    };
+    
+    function saveExpenseToDB() {
+        window.dbSet(window.dbRef(window.firebaseDB, `meawMeExpenses/${activeDateStr}`), expenseData[activeDateStr])
+            .then(() => {
+                // 清空輸入框
+                document.getElementById('exp-name').value = '';
+                document.getElementById('exp-amount').value = '';
+                document.getElementById('transfer-amount').value = '';
+                
+                renderAccountingModal();
+                if(reportState.tab === 'calendar') renderReportCalendar();
+            });
+    }
+
+    window.deleteExpense = function(idx) {
+        if (!confirm("確定刪除此筆支出？")) return;
+        expenseData[activeDateStr].splice(idx, 1);
+        saveExpenseToDB();
+    };
+
+    // --- 月報表與年報表生成邏輯 ---
+    function generateReportData(year, month = null) {
+        const data = {
+            rev: { cash:0, credit:0, transfer:0, linepay:0, jko:0, stored:0, total:0 },
+            exp: { fixed:0, equip:0, consume:0, refund:0, total:0 },
+            services: {},
+            attendance: { total:0, checked:0, noshow:0 }
+        };
+
+        // 1. 統計營收與出席
+        Object.keys(financeStore.data).forEach(dateKey => {
+            const [y, m, d] = dateKey.split('-').map(Number);
+            if (y !== year) return;
+            if (month !== null && m !== (month + 1)) return;
+
+            const entries = safeArray(financeStore.data[dateKey]);
+            entries.forEach(e => {
+                data.attendance.total++;
+                if (e.status === 'checked') data.attendance.checked++;
+                if (e.status === 'noshow') data.attendance.noshow++;
+
+                safeArray(e.items).forEach(item => {
+                    const n = item.split(' x')[0]; // 去除數量
+                    data.services[n] = (data.services[n] || 0) + 1;
+                });
+                
+                if (e.status === 'checked' && e.checkoutDetails) {
+                    const amt = parseInt(e.checkoutDetails.finalTotal) - parseInt(e.checkoutDetails.paidDeposit || 0);
+                    if (amt > 0) {
+                        const method = e.checkoutDetails.paymentMethod || 'cash';
+                        if (data.rev[method] !== undefined) data.rev[method] += amt;
+                        data.rev.total += amt;
+                    }
+                }
+            });
+        });
+
+        // 2. 統計定金
+        Object.keys(financeStore.data).forEach(dateKey => {
+            safeArray(financeStore.data[dateKey]).forEach(e => {
+                if (e.depositDate) {
+                    const [dy, dm, dd] = e.depositDate.split('-').map(Number);
+                    if (dy !== year) return;
+                    if (month !== null && dm !== (month + 1)) return;
+
+                    if (e.hasDeposit || (e.depositMethod && e.depositMethod !== 'none')) {
+                         const method = e.depositMethod || 'transfer';
+                         const amt = parseInt(e.depositAmount || 100);
+                         if (data.rev[method] !== undefined) data.rev[method] += amt;
+                         data.rev.total += amt;
+                    }
+                }
+            });
+        });
+
+        // 3. 統計支出
+        Object.keys(expenseData).forEach(dateKey => {
+            const [y, m, d] = dateKey.split('-').map(Number);
+            if (y !== year) return;
+            if (month !== null && m !== (month + 1)) return;
+
+            safeArray(expenseData[dateKey]).forEach(e => {
+                const map = { '耗材':'consume', '設備':'equip', '固定支出':'fixed', '退款':'refund' };
+                const key = map[e.cat] || 'fixed';
+                data.exp[key] += parseInt(e.amount);
+                data.exp.total += parseInt(e.amount);
+            });
+        });
+
+        return data;
+    }
+
+    window.renderMonthlyReport = function() {
+        const y = reportState.date.getFullYear();
+        const m = reportState.date.getMonth();
+        document.getElementById('report-month-title').innerText = `${y} 年 ${m+1} 月`;
+        
+        const d = generateReportData(y, m);
+        const profit = d.rev.total - d.exp.total;
+        const margin = d.rev.total > 0 ? Math.round((profit / d.rev.total) * 100) : 0;
+        const attendRate = d.attendance.total > 0 ? Math.round((d.attendance.checked / d.attendance.total) * 100) : 0;
+        const sortedServices = Object.entries(d.services).sort((a,b) => b[1] - a[1]).slice(0, 5);
+
+        let html = `
+            <div class="report-card !bg-[#1a3a2e] !text-[#f5f1e8]">
+                <div class="text-center opacity-70 text-sm">本月淨利 (盈餘)</div>
+                <div class="report-big-stat text-[#c9b896]">$${profit.toLocaleString()}</div>
+                <div class="flex justify-around mt-4 border-t border-white/10 pt-2">
+                    <div><div class="text-xs opacity-50">總營收</div><div class="font-bold">$${d.rev.total.toLocaleString()}</div></div>
+                    <div><div class="text-xs opacity-50">總支出</div><div class="font-bold text-[#ff6b6b]">$${d.exp.total.toLocaleString()}</div></div>
+                    <div><div class="text-xs opacity-50">毛利率</div><div class="font-bold text-[#c9b896]">${margin}%</div></div>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-section-title">📊 營收來源分析</div>
+                <div class="stat-grid">
+                    <div class="stat-box"><div class="stat-label">現金</div><div class="stat-val">$${d.rev.cash}</div></div>
+                    <div class="stat-box"><div class="stat-label">匯款</div><div class="stat-val">$${d.rev.transfer}</div></div>
+                    <div class="stat-box"><div class="stat-label">Line Pay</div><div class="stat-val">$${d.rev.linepay}</div></div>
+                    <div class="stat-box"><div class="stat-label">街口</div><div class="stat-val">$${d.rev.jko}</div></div>
+                    <div class="stat-box"><div class="stat-label">儲值金扣抵</div><div class="stat-val">$${d.rev.stored}</div></div>
+                    <div class="stat-box"><div class="stat-label">信用卡</div><div class="stat-val">$${d.rev.credit}</div></div>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-section-title">💸 支出類別統計</div>
+                <div class="stat-grid">
+                    <div class="stat-box"><div class="stat-label">固定支出</div><div class="stat-val">$${d.exp.fixed}</div></div>
+                    <div class="stat-box"><div class="stat-label">耗材</div><div class="stat-val">$${d.exp.consume}</div></div>
+                    <div class="stat-box"><div class="stat-label">設備</div><div class="stat-val">$${d.exp.equip}</div></div>
+                    <div class="stat-box"><div class="stat-label">退款</div><div class="stat-val">$${d.exp.refund}</div></div>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <div class="report-section-title">🔥 熱門項目 & 出席</div>
+                <div class="flex justify-between mb-4 text-xs font-bold text-center bg-gray-50 p-2 rounded">
+                    <span>總預約: ${d.attendance.total}</span>
+                    <span>報到: ${d.attendance.checked}</span>
+                    <span class="text-[#ff6b6b]">爽約: ${d.attendance.noshow}</span>
+                    <span class="text-[#1a3a2e]">出席率: ${attendRate}%</span>
+                </div>
+                ${sortedServices.map(([name, count]) => `
+                    <div class="bar-container">
+                        <div class="bar-label"><span>${name}</span><span>${count}次</span></div>
+                        <div class="bar-bg"><div class="bar-fill" style="width:${(count/sortedServices[0][1])*100}%"></div></div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        document.getElementById('month-report-content').innerHTML = html;
+    };
+
+    window.renderYearlyReport = function() {
+        const y = reportState.date.getFullYear();
+        document.getElementById('report-year-title').innerText = `${y} 年度報表`;
+        
+        const d = generateReportData(y, null);
+        const profit = d.rev.total - d.exp.total;
+        const margin = d.rev.total > 0 ? Math.round((profit / d.rev.total) * 100) : 0;
+
+        let html = `
+            <div class="report-card !bg-[#1a3a2e] !text-[#f5f1e8]">
+                <div class="text-center opacity-70 text-sm">年度總淨利</div>
+                <div class="report-big-stat text-[#c9b896]">$${profit.toLocaleString()}</div>
+                 <div class="flex justify-around mt-4 border-t border-white/10 pt-2">
+                    <div><div class="text-xs opacity-50">總營收</div><div class="font-bold">$${d.rev.total.toLocaleString()}</div></div>
+                    <div><div class="text-xs opacity-50">總支出</div><div class="font-bold text-[#ff6b6b]">$${d.exp.total.toLocaleString()}</div></div>
+                    <div><div class="text-xs opacity-50">毛利率</div><div class="font-bold text-[#c9b896]">${margin}%</div></div>
+                </div>
+            </div>
+            
+            <div class="report-card">
+                 <div class="report-section-title">年度營收結構</div>
+                 <div class="list-row header"><span>方式</span><span>金額</span></div>
+                 <div class="list-row"><span>現金</span><span>$${d.rev.cash.toLocaleString()}</span></div>
+                 <div class="list-row"><span>匯款</span><span>$${d.rev.transfer.toLocaleString()}</span></div>
+                 <div class="list-row"><span>Line Pay</span><span>$${d.rev.linepay.toLocaleString()}</span></div>
+                 <div class="list-row"><span>街口</span><span>$${d.rev.jko.toLocaleString()}</span></div>
+                 <div class="list-row"><span>儲值金</span><span>$${d.rev.stored.toLocaleString()}</span></div>
+            </div>
+        `;
+        document.getElementById('year-report-content').innerHTML = html;
+    };
+
+    // --- [新增] 結算系統邏輯 ---
+    
+    // 1. 開啟結算視窗
+    window.openSettlement = function() {
+        document.getElementById('settlementModal').classList.remove('hidden');
+        document.getElementById('settle-date').innerText = activeDateStr;
+        checkSettlementStatus(); 
+    };
+
+    // 2. 檢查並更新結算狀態 UI
+    function checkSettlementStatus() {
+        const isSettled = settlementData[activeDateStr] && settlementData[activeDateStr].status === 'settled';
+        const badge = document.getElementById('settle-status-badge');
+        const btnCashier = document.getElementById('btn-open-cashier');
+        const readOnlyArea = document.getElementById('settle-readonly-area');
+        const btnDailySettle = document.getElementById('btn-daily-settle');
+
+        // 更新 DayDetail 上的按鈕樣式
+        if (btnDailySettle) {
+            if (isSettled) {
+                btnDailySettle.innerText = "結算資訊";
+                btnDailySettle.className = "settle-btn settle-btn-main"; 
+            } else {
+                btnDailySettle.innerText = "當日結算";
+                btnDailySettle.className = "settle-btn settle-btn-outline"; 
+            }
+        }
+
+        if (isSettled) {
+            badge.className = 'settled-badge';
+            badge.innerText = '已結算';
+            btnCashier.classList.add('hidden');
+            readOnlyArea.classList.remove('hidden');
+            
+            // 顯示摘要
+            const data = settlementData[activeDateStr];
+            document.getElementById('settle-summary-text').innerHTML = `
+                <div>現金總額: $${data.cashTotal}</div>
+                <div>零用金留存: $${data.pettyCash}</div>
+                <div>盈餘: $${data.surplus}</div>
+                <div>存放: ${data.allocations.map(a => `${a.target}($${a.amount})`).join(', ')}</div>
+            `;
+        } else {
+            badge.className = '';
+            badge.innerText = '';
+            btnCashier.classList.remove('hidden');
+            readOnlyArea.classList.add('hidden');
+        }
+
+        calculateDailyFinancials(); 
+    }
+
+    // 3. 計算當日財務 (定金 + 服務)
+    function calculateDailyFinancials() {
+        const depositDetails = [];
+        const serviceDetails = [];
+        let depositTotal = 0;
+        let serviceTotal = 0;
+
+        // A. 服務結算 (只看當天 activeDateStr 且已結帳)
+        const dayEntries = safeArray(financeStore.data[activeDateStr]);
+        dayEntries.forEach(entry => {
+            if (entry.status === 'checked' && entry.checkoutDetails) {
+                const d = entry.checkoutDetails;
+                // 服務結算 = 總金額 - 已付定金
+                const amount = parseInt(d.finalTotal) - parseInt(d.paidDeposit || 0);
+                if (amount > 0) {
+                    serviceTotal += amount;
+                    serviceDetails.push({
+                        type: d.paymentMethod, 
+                        amount: amount,
+                        date: activeDateStr, 
+                        time: entry.time
+                    });
+                }
+            }
+        });
+
+        // B. 定金結算 (掃描全資料庫，找出定金支付日是今天的)
+        Object.keys(financeStore.data).forEach(dateKey => {
+            const entries = safeArray(financeStore.data[dateKey]);
+            entries.forEach(entry => {
+                // 條件：有定金 且 定金日期 = 今天
+                if ((entry.hasDeposit || (entry.depositMethod && entry.depositMethod !== 'none')) && entry.depositDate === activeDateStr) {
+                    const depAmt = parseInt(entry.depositAmount || 100);
+                    depositTotal += depAmt;
+                    depositDetails.push({
+                        type: entry.depositMethod || 'transfer',
+                        amount: depAmt,
+                        date: dateKey, // 這是預約日期
+                        time: entry.time
+                    });
+                }
+            });
+        });
+
+        // 渲染 UI
+        document.getElementById('settle-deposit-total').innerText = depositTotal;
+        document.getElementById('settle-service-total').innerText = serviceTotal;
+
+        const renderList = (list) => {
+            if (list.length === 0) return '<div class="text-xs text-gray-400 p-2 text-center">無資料</div>';
+            const typeMap = {'cash':'現金', 'transfer':'匯款', 'linepay':'LinePay', 'jko':'街口', 'stored':'儲值金', 'none':'無'};
+            return list.map(i => `
+                <div class="settle-detail-row">
+                    <span>${i.date} ${i.time} (${typeMap[i.type]||i.type})</span>
+                    <span class="font-bold">$${i.amount}</span>
+                </div>`).join('');
+        };
+
+        document.getElementById('settle-detail-deposit').innerHTML = renderList(depositDetails);
+        document.getElementById('settle-detail-service').innerHTML = renderList(serviceDetails);
+    }
+
+    window.toggleSettleDetail = function(type) {
+        document.getElementById(`settle-detail-${type}`).classList.toggle('hidden');
+    };
+
+    // --- 零用金計算機邏輯 ---
+    const DENOMINATIONS = [1000, 500, 100, 50, 10, 5, 1];
+    
+    window.openCashier = function() {
+        document.getElementById('cashierModal').classList.remove('hidden');
+        renderCashierInputs();
+    };
+
+    window.renderCashierInputs = function() {
+        const renderGrid = (type) => {
+            const container = document.getElementById(`cash-grid-${type}`);
+            container.innerHTML = DENOMINATIONS.map(d => `
+                <div class="cash-grid">
+                    <div class="cash-label">${d}</div>
+                    <input type="number" class="cash-input" data-type="${type}" data-denom="${d}" oninput="calcCashTotal('${type}')">
+                </div>
+            `).join('');
+        };
+        renderGrid('current');
+        renderGrid('reserve');
+
+        // --- 自動驗算邏輯 ---
+        const dates = Object.keys(settlementData).sort();
+        const currentIdx = dates.indexOf(activeDateStr);
+        let prevReserve = 3000; // 預設保留金
+        if (currentIdx > 0) {
+            const prevSettle = settlementData[dates[currentIdx - 1]];
+            prevReserve = prevSettle.pettyCash || 0;
+        }
+
+        let todayCashRev = 0;
+        const dayEntries = safeArray(financeStore.data[activeDateStr]);
+        dayEntries.forEach(e => {
+            if (e.status === 'checked' && e.checkoutDetails && e.checkoutDetails.paymentMethod === 'cash') {
+                todayCashRev += (parseInt(e.checkoutDetails.finalTotal) - parseInt(e.checkoutDetails.paidDeposit || 0));
+            }
+        });
+        Object.keys(financeStore.data).forEach(k => {
+            safeArray(financeStore.data[k]).forEach(e => {
+                if (e.depositDate === activeDateStr && e.depositMethod === 'cash') {
+                    todayCashRev += parseInt(e.depositAmount || 100);
+                }
+            });
+        });
+
+        const expectedTotal = prevReserve + todayCashRev;
+        const headerContainer = document.getElementById('cash-total-current').parentElement;
+        
+        // 建立一個提示區域
+        headerContainer.innerHTML = `
+            <div class="text-[11px] mb-1 p-2 rounded bg-gray-100 border border-gray-200">
+                <span class="opacity-60">應有總額:</span> <b class="text-[#1a3a2e]">$${expectedTotal}</b> 
+                <span class="mx-1 opacity-20">|</span>
+                <span id="cash-diff-msg" class="font-bold">差額: $0</span>
+            </div>
+            <div class="font-bold text-lg text-[#1a3a2e]">實數總計: $<span id="cash-total-current" data-expected="${expectedTotal}">0</span></div>
+        `;
+
+        // 清零所有分配輸入框
+        ['backup', 'yongfeng', 'ctbc', 'wallet'].forEach(id => {
+            const el = document.getElementById(`alloc-${id}`);
+            if(el) el.value = '';
+        });
+        updateSurplus();
+    };
+
+    window.calcCashTotal = function(type) {
+        let total = 0;
+        document.querySelectorAll(`.cash-input[data-type="${type}"]`).forEach(input => {
+            total += (parseInt(input.value) || 0) * parseInt(input.dataset.denom);
+        });
+        
+        const display = document.getElementById(`cash-total-${type}`);
+        display.innerText = total;
+
+        // 如果是計算「當前現金」，則進行差額驗算
+        if (type === 'current') {
+            const expected = parseInt(display.dataset.expected) || 0;
+            const diff = total - expected;
+            const msgEl = document.getElementById('cash-diff-msg');
+            if (msgEl) {
+                msgEl.innerText = `差額: ${diff >= 0 ? '+' : ''}${diff}`;
+                msgEl.style.color = diff === 0 ? '#1a4731' : '#ff6b6b'; // 0 元顯示深綠，有差額顯示紅色
+            }
+        }
+        
+        updateSurplus();
+    };
+
+    window.updateSurplus = function() {
+    const current = parseInt(document.getElementById('cash-total-current').innerText) || 0;
+    const reserve = parseInt(document.getElementById('cash-total-reserve').innerText) || 0;
+    
+    // 盈餘計算 (當前輸入的總額 - 準備留下的保留金)
+    const surplus = current - reserve;
+    document.getElementById('cash-surplus').innerText = surplus;
+
+    const allocated = ['backup', 'yongfeng', 'ctbc', 'wallet'].reduce((sum, id) => sum + (parseInt(document.getElementById(`alloc-${id}`).value) || 0), 0);
+    document.getElementById('cash-stored').innerText = allocated;
+    document.getElementById('cash-remaining').innerText = surplus - allocated;
+};
+
+    /* --- 盈餘分配邏輯：切換時先歸零 --- */
+    window.allocateSurplus = function(target) {
+        const surplus = parseInt(document.getElementById('cash-surplus').innerText) || 0;
+        
+        // 1. 先將所有分配輸入框歸零
+        ['backup', 'yongfeng', 'ctbc', 'wallet'].forEach(id => {
+            const input = document.getElementById(`alloc-${id}`);
+            if(input) {
+                input.value = '';
+                // 觸發事件讓系統知道數值變了
+                input.dispatchEvent(new Event('input')); 
+            }
+        });
+        
+        // 2. 將總盈餘全數填入點擊的目標
+        const targetInput = document.getElementById(`alloc-${target}`);
+        if (targetInput) {
+            // 分配時暫時允許寫入，填完後再由鍵盤邏輯控管
+            targetInput.value = surplus;
+            // 重要：手動觸發事件
+            targetInput.dispatchEvent(new Event('input'));
+            targetInput.dispatchEvent(new Event('change'));
+        }
+        
+        updateSurplus();
+    };
+
+    window.numpadInput = function(key) {
+        if (!currentActiveInput) return;
+        if (key === 'DEL') {
+            currentActiveInput.value = currentActiveInput.value.slice(0, -1);
+        } else {
+            currentActiveInput.value += key;
+        }
+        currentActiveInput.dispatchEvent(new Event('input'));
+    };
+
+    window.saveSettlement = function() {
+        if (!confirm("確定結算完畢？\n結算後內容將變為唯讀。")) return;
+
+        const data = {
+            date: activeDateStr,
+            status: 'settled',
+            cashTotal: parseInt(document.getElementById('cash-total-current').innerText),
+            pettyCash: parseInt(document.getElementById('cash-total-reserve').innerText),
+            surplus: parseInt(document.getElementById('cash-surplus').innerText),
+            allocations: ['backup', 'yongfeng', 'ctbc', 'wallet'].map(id => ({
+                target: id === 'backup'?'備用金':(id==='yongfeng'?'永豐':(id==='ctbc'?'中信':'錢包')),
+                amount: parseInt(document.getElementById(`alloc-${id}`).value) || 0
+            })).filter(a => a.amount > 0),
+            timestamp: new Date().toISOString()
+        };
+
+        if (window.dbSet && window.dbRef) {
+            window.dbSet(window.dbRef(window.firebaseDB, `meawMeSettlements/${activeDateStr}`), data)
+                .then(() => {
+                    alert("結算成功！");
+                    document.getElementById('cashierModal').classList.add('hidden');
+                    checkSettlementStatus(); 
+                });
+        }
+    };
+
+    window.toggleSettlementEdit = function() {
+        if (confirm("確定要重新編輯結算內容嗎？")) {
+            if (window.dbSet && window.dbRef) {
+                window.dbSet(window.dbRef(window.firebaseDB, `meawMeSettlements/${activeDateStr}/status`), 'editing')
+                    .then(() => checkSettlementStatus());
+            }
+        }
+    };
 
     // [補回] 儲存財務資料
     function saveFinanceV2() {
@@ -3259,12 +4608,17 @@
                         else if (hasRemoval) suffix = "♡"; 
                         else if (hasExtension) suffix = "✩"; 
                     } 
-
+                    
                     let itemClass = '';
+                    // [修改] 判斷狀態，加入 checked 樣式 (透白底)
+                    if (e.status === 'checked') {
+                        itemClass = 'status-checked';
+                    }
+
                     if (financeStore.viewMode === 'price') {
-                        itemClass = 'is-price-view';
+                        itemClass += ' is-price-view';
                     } else {
-                        if (e.items.some(name => modelItemNames.has(name))) itemClass = 'is-model';
+                        if (e.items.some(name => modelItemNames.has(name))) itemClass += ' is-model';
                     }
 
                     contentHtml += `
@@ -3316,7 +4670,7 @@
 
     function closeDayDetail() { document.getElementById('dayDetailModal').classList.add('hidden'); }
 
-    // [修改] 顯示當日詳情 (新增：顯示結束時間)
+    // [修正版] 渲染當日行程列表 (修復點擊錯誤 + 新增淺綠色狀態)
     function renderDayDetailList() {
         const container = document.getElementById('dd-list');
         container.innerHTML = '';
@@ -3325,7 +4679,6 @@
         const isOff = financeStore.manualOffDays.includes(activeDateStr);
         if (isOff) {
             const notes = safeArray(financeStore.offDayNotes ? financeStore.offDayNotes[activeDateStr] : []);
-            
             const noteHeader = document.createElement('div');
             noteHeader.className = "text-xs font-bold mt-2 border-b pb-1 mb-2";
             noteHeader.style.color = "#ff6b6b"; 
@@ -3338,7 +4691,6 @@
                 row.className = 'flex justify-between items-center p-2 rounded mb-2 border';
                 row.style.borderColor = '#ff6b6b';
                 row.style.backgroundColor = 'rgba(255, 107, 107, 0.08)'; 
-                
                 row.innerHTML = `
                     <div class="flex items-center gap-2">
                         <span style="color:#ff6b6b; font-size:12px;">●</span>
@@ -3367,8 +4719,11 @@
             entryHeader.innerText = "預約行程";
             container.appendChild(entryHeader);
 
-            entries.sort((a,b) => a.time.localeCompare(b.time)).forEach(e => {
-                // 計算結束時間
+            // 排序
+            entries.sort((a,b) => a.time.localeCompare(b.time));
+
+            // [關鍵] 使用 forEach 確保 e 變數正確綁定
+            entries.forEach(e => {
                 const [sH, sM] = e.time.split(':').map(Number);
                 const dur = parseInt(e.duration || 60, 10);
                 const endMins = sH * 60 + sM + dur;
@@ -3378,22 +4733,34 @@
                 const endTimeStr = `${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
 
                 const div = document.createElement('div');
-                div.className = 'flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg mb-2 cursor-pointer hover:bg-gray-100 transition-all';
+                
+                // 預設樣式
+                let itemClass = 'day-detail-item flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg mb-2 cursor-pointer hover:bg-gray-100 transition-all';
+                
+                // [新增] 如果已結帳，加入 status-checked class (變淺綠色)
+                if (e.status === 'checked') {
+                    itemClass += ' status-checked';
+                }
+
+                div.className = itemClass;
+
+                // [關鍵] 這裡的 onclick 直接使用閉包內的 e，確保資料正確
                 div.onclick = (event) => {
                     if(event.target.classList.contains('del-btn')) return;
-                    openEditForm(e.id);
+                    openBookingDetail(e); 
                 };
+
                 div.innerHTML = `
                     <div class="flex-1">
-                            <div class="flex items-baseline gap-2">
-                                <span class="text-[#c9b896] font-extrabold text-lg font-serif">${e.time} - ${endTimeStr}</span>
-                                <span class="text-gray-400 text-xs font-bold tracking-wider">$${e.price}</span>
-                            </div>
-                            <div class="text-[15px] text-[#4b3621] font-bold mt-1 tracking-wide" 
-                                 style="text-shadow: 0 2px 4px rgba(75, 54, 33, 0.15), 0 1px 1px rgba(255,255,255,0.8);">
-                                ${safeArray(e.items).join(' + ')}
-                            </div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-[#c9b896] font-extrabold text-lg font-serif">${e.time} - ${endTimeStr}</span>
+                            <span class="text-gray-400 text-xs font-bold tracking-wider">$${e.price}</span>
                         </div>
+                        <div class="text-[15px] text-[#4b3621] font-bold mt-1 tracking-wide" 
+                             style="text-shadow: 0 2px 4px rgba(75, 54, 33, 0.15), 0 1px 1px rgba(255,255,255,0.8);">
+                            ${safeArray(e.items).join(' + ')}
+                        </div>
+                    </div>
                     <div class="flex items-center gap-3 pl-3 border-l border-gray-600">
                         <button class="del-btn text-red-400 font-bold text-lg px-2 py-1 hover:text-red-300 transition-colors" onclick="deleteSingleEntry('${e.id}')">✕</button>
                     </div>
@@ -3489,6 +4856,8 @@
         // 2. 刪除財務資料
         financeStore.data[activeDateStr] = currentEntries.filter(e => String(e.id) !== String(id));
         saveFinanceV2(); 
+        renderDayDetailList();
+        renderFinancePage();
 
         // 3. [新增] 自動釋出時段邏輯
         if (targetEntry && targetEntry.time) {
@@ -3580,7 +4949,263 @@
         }
     };
 
-    
+    // [修正版] 開啟詳情視窗 (修復 DOM 元素被刪除導致二次開啟報錯的問題)
+    window.openBookingDetail = function(entry) {
+        currentCheckoutEntry = entry; 
+        const modal = document.getElementById('bookingDetailModal');
+        modal.classList.remove('hidden');
+
+        // 1. 確保關閉按鈕明顯
+        const closeBtn = modal.querySelector('button.absolute');
+        if(closeBtn) {
+            closeBtn.className = "absolute top-4 right-4 text-[var(--gold-main)] text-2xl font-bold opacity-100 hover:text-white transition-colors";
+            closeBtn.style.textShadow = "0 2px 5px rgba(0,0,0,0.5)";
+        }
+
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const [y, m, d] = activeDateStr.split('-').map(Number);
+        const dateObj = new Date(y, m-1, d);
+        
+        // 日期
+        document.getElementById('bd-date').innerText = activeDateStr;
+        
+        // 星期
+        const elDay = document.getElementById('bd-day');
+        elDay.innerText = dayNames[dateObj.getDay()];
+        elDay.className = "text-gold-force text-sm mt-1 font-bold tracking-widest"; 
+        
+        // 時段
+        const [sH, sM] = entry.time.split(':').map(Number);
+        const dur = parseInt(entry.duration || 60);
+        const endMins = sH * 60 + sM + dur;
+        let eH = Math.floor(endMins / 60);
+        const eM = endMins % 60;
+        if(eH >= 24) eH -= 24;
+        
+        const elTime = document.getElementById('bd-time');
+        elTime.innerText = `${entry.time} - ${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
+        elTime.className = "text-gold-force text-2xl font-bold mt-2 font-serif";
+
+        // --- [關鍵修正] 狀態與爽約按鈕 ---
+        // 改為抓取容器，而不是抓取會被刪除的子元素
+        const statusContainer = document.getElementById('bd-status-container');
+        statusContainer.innerHTML = ''; // 安全清空內容
+
+        const statusMap = { 'pending': '尚未到來', 'checked': '已報到', 'noshow': '爽約' };
+        const statusClass = { 'pending': 'status-pending', 'checked': 'status-checked', 'noshow': 'status-noshow' };
+        const st = entry.status || 'pending';
+        
+        const badge = document.createElement('span');
+        badge.className = `status-badge ${statusClass[st]}`;
+        badge.innerText = statusMap[st];
+        statusContainer.appendChild(badge);
+
+        // 如果是尚未到來，顯示爽約按鈕
+        if (st === 'pending') {
+            const noShowBtn = document.createElement('button');
+            noShowBtn.className = "btn-noshow";
+            noShowBtn.innerText = "標記爽約";
+            noShowBtn.onclick = () => markAsNoShow(entry.id);
+            statusContainer.appendChild(noShowBtn);
+        }
+        // -----------------------------
+
+        // 定金
+        const depMap = { 'transfer': '匯款', 'linepay': 'Line Pay', 'none': '無' };
+        const depTxt = entry.depositMethod ? depMap[entry.depositMethod] : (entry.hasDeposit ? '匯款(舊)' : '無');
+        document.getElementById('bd-deposit').innerText = `${depTxt} ${((entry.depositMethod && entry.depositMethod!=='none')||entry.hasDeposit)?'$100':''}`;
+
+        // 項目
+        document.getElementById('bd-items').innerHTML = safeArray(entry.items).map(i => `<div>${i}</div>`).join('');
+        
+        // 備註
+        const noteArea = document.getElementById('bd-note-area');
+        if(entry.note) { 
+            document.getElementById('bd-note').innerText = entry.note; 
+            noteArea.classList.remove('hidden'); 
+        } else { 
+            noteArea.classList.add('hidden'); 
+        }
+
+        // 按鈕綁定
+        document.getElementById('btn-bd-edit').onclick = () => { modal.classList.add('hidden'); openEditForm(entry.id); };
+        document.getElementById('btn-bd-checkout').onclick = () => { modal.classList.add('hidden'); initCheckout(entry); };
+    };
+
+    // [NEW] 標記爽約功能
+    window.markAsNoShow = function(id) {
+        if(!confirm("確定標記此預約為「爽約」嗎？")) return;
+        
+        let currentEntries = safeArray(financeStore.data[activeDateStr]);
+        const idx = currentEntries.findIndex(e => String(e.id) === String(id));
+        
+        if (idx > -1) {
+            currentEntries[idx].status = 'noshow';
+            financeStore.data[activeDateStr] = currentEntries;
+            saveFinanceV2();
+            
+            // ★這裡修改：不要關閉視窗，而是重新載入該筆資料的詳情
+            openBookingDetail(currentEntries[idx]); 
+            
+            renderDayDetailList();
+            renderFinancePage();
+        }
+    };
+
+    // [NEW] 結帳系統核心
+    let checkoutState = { entry: null, items: [], globalDiscount: { type: 'none', val: 0 }, deposit: 0, payMethod: 'cash', finalTotal: 0 };
+    let activeDiscTarget = null; 
+    let settlementData = {}; // 存放結算單資料
+
+    // [修正版] 結帳初始化 (修復舊資料結帳錯誤)
+    window.initCheckout = function(entry) {
+        let items = [];
+        // [核心修正] 增加防呆解析
+        if (entry.itemsDetail && Array.isArray(entry.itemsDetail) && entry.itemsDetail.length > 0) {
+            items = JSON.parse(JSON.stringify(entry.itemsDetail));
+        } else {
+            items = safeArray(entry.items).map(rawName => {
+                // 嘗試分離名稱與數量
+                let name = rawName;
+                let qty = 1;
+                const match = rawName.match(/^(.*?)\s*x(\d+)$/);
+                if (match) {
+                    name = match[1];
+                    qty = parseInt(match[2]);
+                }
+
+                const info = findItemData(name);
+                return { 
+                    name: name, 
+                    price: info.price, 
+                    duration: info.duration, 
+                    qty: qty, 
+                    isPercent: name.includes('%') 
+                };
+            });
+        }
+        
+        items.forEach(i => { if(!i.discount) i.discount = { type: 'none', val: 0 }; });
+        const deposit = ((entry.depositMethod && entry.depositMethod !== 'none') || entry.hasDeposit) ? 100 : 0;
+
+        checkoutState = { entry: entry, items: items, globalDiscount: { type: 'none', val: 0 }, deposit: deposit, payMethod: 'cash', finalTotal: 0 };
+        renderCheckoutList();
+        updateCheckoutSummary();
+        document.getElementById('checkoutModal').classList.remove('hidden');
+    };
+    window.closeCheckout = function() { document.getElementById('checkoutModal').classList.add('hidden'); };
+
+    window.renderCheckoutList = function() {
+        const container = document.getElementById('checkout-list');
+        container.innerHTML = checkoutState.items.map((item, idx) => {
+            let finalPrice = item.price * (item.qty || 1);
+            let discountTxt = "";
+            if (item.discount.type === 'cash') { finalPrice -= item.discount.val; discountTxt = `- $${item.discount.val}`; } 
+            else if (item.discount.type === 'percent') { finalPrice = Math.round(finalPrice * (item.discount.val / 100)); discountTxt = `${item.discount.val}折`; }
+            
+            return `<div class="checkout-item" onclick="openDiscountModal(${idx})">
+                    <div><div class="font-bold text-sm text-[#1a3a2e]">${item.name} ${item.qty>1?'x'+item.qty:''}</div><div class="text-xs text-gray-400">原價 $${item.price}</div></div>
+                    <div class="checkout-price-group"><div class="checkout-final-price">$${finalPrice}</div>${discountTxt ? `<span class="checkout-discount-tag">${discountTxt}</span>` : ''}</div>
+                </div>`;
+        }).join('');
+    };
+
+    window.openDiscountModal = function(target) {
+        activeDiscTarget = target;
+        document.getElementById('disc-input').value = "";
+        switchDiscType('cash');
+        document.getElementById('disc-title').innerText = target === 'global' ? "整筆訂單折扣" : `折扣：${checkoutState.items[target].name}`;
+        document.getElementById('discountModal').classList.remove('hidden');
+    };
+
+    window.switchDiscType = function(type) {
+        const input = document.getElementById('disc-input');
+        input.dataset.type = type; 
+        input.placeholder = type === 'cash' ? "輸入金額" : "輸入折數 (如 90)";
+        document.getElementById('tab-disc-cash').className = type === 'cash' ? "flex-1 py-1.5 text-xs font-bold rounded bg-white shadow-sm" : "flex-1 py-1.5 text-xs font-bold text-gray-400";
+        document.getElementById('tab-disc-percent').className = type === 'percent' ? "flex-1 py-1.5 text-xs font-bold rounded bg-white shadow-sm" : "flex-1 py-1.5 text-xs font-bold text-gray-400";
+        document.getElementById('disc-grid-cash').classList.toggle('hidden', type !== 'cash');
+        document.getElementById('disc-grid-percent').classList.toggle('hidden', type !== 'percent');
+    };
+
+    window.setDiscVal = function(val) { document.getElementById('disc-input').value = val; };
+
+    window.applyDiscount = function() {
+        const val = parseInt(document.getElementById('disc-input').value) || 0;
+        const type = document.getElementById('disc-input').dataset.type;
+        if (activeDiscTarget === 'global') {
+            checkoutState.globalDiscount = { type, val };
+            let txt = type === 'cash' ? `- $${val}` : `${val}折`;
+            if (val === 0) txt = "- $0";
+            document.getElementById('global-disc-display').innerText = txt;
+        } else {
+            checkoutState.items[activeDiscTarget].discount = { type, val };
+            renderCheckoutList();
+        }
+        updateCheckoutSummary();
+        document.getElementById('discountModal').classList.add('hidden');
+    };
+
+    window.updateCheckoutSummary = function() {
+        let subtotal = 0, currentTotal = 0;
+        checkoutState.items.forEach(item => {
+            const itemTotal = item.price * (item.qty || 1);
+            subtotal += itemTotal;
+            let afterItemDisc = itemTotal;
+            if (item.discount.type === 'cash') afterItemDisc -= item.discount.val;
+            else if (item.discount.type === 'percent') afterItemDisc = Math.round(afterItemDisc * (item.discount.val / 100));
+            currentTotal += afterItemDisc;
+        });
+        if (checkoutState.globalDiscount.type === 'cash') currentTotal -= checkoutState.globalDiscount.val;
+        else if (checkoutState.globalDiscount.type === 'percent') currentTotal = Math.round(currentTotal * (checkoutState.globalDiscount.val / 100));
+        
+        if (currentTotal < 0) currentTotal = 0;
+        checkoutState.finalTotal = currentTotal;
+        document.getElementById('co-subtotal').innerText = subtotal;
+        document.getElementById('co-discount-total').innerText = subtotal - currentTotal;
+        document.getElementById('co-grand-total').innerText = currentTotal;
+    };
+
+    window.openPaymentModal = function() {
+        document.getElementById('pay-total-amount').innerText = checkoutState.finalTotal;
+        const depMap = { 'transfer': '匯款', 'linepay': 'Line Pay', 'none': '無' };
+        const entryDepMethod = checkoutState.entry.depositMethod || (checkoutState.entry.hasDeposit ? 'transfer' : 'none');
+        document.getElementById('pay-dep-method').innerText = depMap[entryDepMethod];
+        document.getElementById('pay-dep-amount').innerText = checkoutState.deposit;
+        selectPayMethod('cash', document.querySelector('.pay-method-row')); 
+        document.getElementById('paymentModal').classList.remove('hidden');
+    };
+
+    window.selectPayMethod = function(method, row) {
+        checkoutState.payMethod = method;
+        document.querySelectorAll('.pay-method-row').forEach(r => r.classList.remove('selected'));
+        if (row) row.classList.add('selected');
+        document.querySelectorAll('.pay-amt').forEach(el => el.innerText = "");
+        const remaining = Math.max(0, checkoutState.finalTotal - checkoutState.deposit);
+        document.getElementById(`pay-val-${method}`).innerText = `$${remaining}`;
+        document.getElementById('btn-pay-total').innerText = checkoutState.finalTotal;
+    };
+
+    window.confirmCheckout = function() {
+        if (!confirm(`確認結帳？\n總金額: $${checkoutState.finalTotal}`)) return;
+        const currentEntries = safeArray(financeStore.data[activeDateStr]);
+        const idx = currentEntries.findIndex(e => String(e.id) === String(checkoutState.entry.id));
+        if (idx > -1) {
+            const entry = currentEntries[idx];
+            entry.status = 'checked';
+            entry.checkoutDetails = { items: checkoutState.items, globalDiscount: checkoutState.globalDiscount, finalTotal: checkoutState.finalTotal, paymentMethod: checkoutState.payMethod, paidDeposit: checkoutState.deposit };
+            entry.price = checkoutState.finalTotal;
+            financeStore.data[activeDateStr] = currentEntries;
+            saveFinanceV2();
+        }
+        document.getElementById('paymentModal').classList.add('hidden');
+        document.getElementById('checkoutModal').classList.add('hidden');
+        document.getElementById('bookingDetailModal').classList.add('hidden');
+        renderFinancePage();
+        renderDayDetailList();
+        alert("結帳完成！");
+    };
+
     // [修正] 全域查找項目資料 (補上 practice 睫模欄位)
     function findItemData(itemName) {
         const allCats = ['nail', 'eyelash', 'skin'];
@@ -3617,39 +5242,26 @@
         return { price: 0, duration: 60 };
     }
 
-    // [修復] 開啟編輯視窗 (修正預設開啟第一個分頁)
+    // [修改] 開啟編輯視窗 (包含定金邏輯)
     function openEditForm(entryId = null) {
         const modal = document.getElementById('finEditModal');
         if(modal) modal.classList.remove('hidden');
         
         editingEntryId = entryId;
         tempItems = [];
-        currentCat = 'nail'; // 預設值，會被下方的 click 覆蓋
+        currentCat = 'nail';
+        document.getElementById('fe-note').value = ""; 
+        clearImage();
         
-        // 1. 初始化 DOM
-        const elNote = document.getElementById('fe-note');
-        if(elNote) elNote.value = ""; 
-        clearImage(); 
-        
-        // --- [修改開始] 計算星期並更新標題 ---
         const elTitle = document.getElementById('fe-title');
         if(elTitle) {
-            // 準備星期對照表
             const dayNames = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
-            // 解析日期字串 YYYY-MM-DD (避免時區問題，直接拆解)
             const [y, m, d] = activeDateStr.split('-').map(Number);
-            // 建立日期物件 (月份是 0-base)
             const dateObj = new Date(y, m - 1, d);
             const dayName = dayNames[dateObj.getDay()];
-            
-            // 組合字串
-            const titleDate = `${activeDateStr} ${dayName}`;
-            
-            elTitle.innerText = entryId ? `編輯預約 (${titleDate})` : `新增預約 (${titleDate})`; 
+            elTitle.innerText = entryId ? `編輯預約 (${activeDateStr} ${dayName})` : `新增預約 (${activeDateStr} ${dayName})`; 
         }
-        // --- [修改結束] ---
 
-        // 2. 建立小時選單
         const currentEntries = safeArray(financeStore.data[activeDateStr]);
         const busyHours = new Set();
         currentEntries.forEach(e => {
@@ -3657,16 +5269,13 @@
             const h = parseInt(e.time.split(':')[0], 10);
             busyHours.add(h);
         });
-
         const hSel = document.getElementById('fe-h');
         if(hSel) {
             hSel.innerHTML = '';
             for(let i=10; i<=22; i++) {
                 const val = String(i).padStart(2,'0');
                 const isBusy = busyHours.has(i);
-                const style = isBusy ? 'color: #ccc;' : 'color: #1a3a2e;';
-                const text = isBusy ? `${i} (忙)` : i;
-                hSel.innerHTML += `<option value="${val}" style="${style}">${text}</option>`;
+                hSel.innerHTML += `<option value="${val}" style="${isBusy?'color:#ccc':''}">${isBusy?i+' (忙)':i}</option>`;
             }
             hSel.onchange = checkConflictUI;
         }
@@ -3675,39 +5284,42 @@
         const durInput = document.getElementById('fe-duration');
         if(durInput) durInput.oninput = checkConflictUI;
 
-        // 3. 預設值
         let defH = "10", defM = "00";
-        const elPrice = document.getElementById('fe-price');
-        const elDur = document.getElementById('fe-duration');
-        const elDep = document.getElementById('fe-deposit');
+        document.getElementById('fe-price').value = ""; 
+        document.getElementById('fe-duration').value = "";
+        setDepositMethod('none'); // 預設無定金
 
-        if(elDep) elDep.checked = true;
-        if(elPrice) elPrice.value = ""; 
-        if(elDur) elDur.value = "";
-
-        // 4. 載入舊資料 (如果是編輯)
         if (entryId) {
             const entry = currentEntries.find(e => String(e.id) === String(entryId));
             if (entry) {
                 const parts = (entry.time || "10:00").split(':');
                 if(parts.length === 2) { defH = parts[0]; defM = parts[1]; }
-                if(elDep) elDep.checked = entry.hasDeposit;
-                if(elNote) elNote.value = entry.note || "";
-                // [修改] 圖片讀取邏輯 (支援多張 + 相容舊資料)
-                currentImagesList = []; // 先清空陣列
                 
-                if (entry.images && Array.isArray(entry.images)) {
-                    // 新格式：直接讀取陣列
-                    currentImagesList = [...entry.images];
-                } else if (entry.image) {
-                    // 舊格式：如果是單張字串，轉成陣列存入
-                    currentImagesList = [entry.image];
+                // 載入定金方式
+                let depMethod = 'none';
+                if (entry.depositMethod) depMethod = entry.depositMethod;
+                else if (entry.hasDeposit) depMethod = 'transfer';
+                setDepositMethod(depMethod);
+
+                // [新增] 預設日期處理：如果是新資料，預設為選取的日期(activeDateStr)
+                const dateInput = document.getElementById('fe-dep-date');
+                if (entryId) {
+                    const entry = currentEntries.find(e => String(e.id) === String(entryId));
+                    if (entry) {
+                        // 如果有舊資料，讀取舊的定金日期，如果沒有，則用預約日期
+                        dateInput.value = entry.depositDate || activeDateStr; 
+                    }
+                } else {
+                    // 新資料：預設為當前選取的日期 (補帳方便)
+                    dateInput.value = activeDateStr;
                 }
-                // 呼叫渲染函數顯示圖片
+
+                document.getElementById('fe-note').value = entry.note || "";
+                currentImagesList = (entry.images && Array.isArray(entry.images)) ? [...entry.images] : (entry.image ? [entry.image] : []);
                 renderPreviewImages();
 
                 if (entry.itemsDetail) {
-                    tempItems = entry.itemsDetail;
+                    tempItems = JSON.parse(JSON.stringify(entry.itemsDetail));
                 } else {
                     tempItems = safeArray(entry.items).map(n => {
                         const data = findItemData(n); 
@@ -3720,16 +5332,40 @@
         if(hSel) hSel.value = String(defH).padStart(2,'0');
         if(mSel) mSel.value = defM;
 
-        // 自動點擊第一個分頁按鈕 (手模)，觸發資料載入
         const allTabs = document.querySelectorAll('.cat-tab-btn');
-        if(allTabs.length > 0) {
-            allTabs[0].click(); 
-        }
+        if(allTabs.length > 0) allTabs[0].click(); 
         
         renderSelectedList();
         recalcTotal();
         checkConflictUI();
     }
+
+    // [修正] 設定定金方式 UI (支援 現金/匯款/LP/儲值/無)
+    window.setDepositMethod = function(method, btn) {
+        document.getElementById('fe-dep-method').value = method;
+        document.querySelectorAll('.dep-opt-btn').forEach(b => b.classList.remove('active'));
+        
+        if (btn) {
+            // 如果是點擊觸發，直接亮起該按鈕
+            btn.classList.add('active');
+        } else {
+            // 如果是載入資料觸發，自動尋找對應的按鈕亮起
+            const btns = document.querySelectorAll('.dep-opt-btn');
+            let found = false;
+            btns.forEach(b => {
+                // 檢查按鈕的 onclick 字串中是否包含該 method
+                if (b.getAttribute('onclick').includes(`'${method}'`)) {
+                    b.classList.add('active');
+                    found = true;
+                }
+            });
+            // 防呆：如果找不到對應按鈕 (例如舊資料格式)，預設選「無」
+            if (!found) {
+                // 假設最後一個按鈕是「無/不收取」
+                btns[btns.length - 1].classList.add('active');
+            }
+        }
+    };
 
     // [新增] 即時衝突檢查 UI 顯示
     function checkConflictUI() {
@@ -3783,28 +5419,27 @@
         if(modal) modal.classList.add('hidden');
     }
 
-    // [核心修改] 儲存帳務並同步至行事曆 (已修復同步邏輯與資料型別)
+    // [修改] 儲存帳務 (寫入 depositMethod 與 status，並在編輯後刷新詳情)
     function saveFinData() {
         if (!activeDateStr) return;
         if (!financeStore.data[activeDateStr]) financeStore.data[activeDateStr] = [];
         
         let currentEntries = safeArray(financeStore.data[activeDateStr]);
-
         const h = document.getElementById('fe-h').value;
         const m = document.getElementById('fe-m').value;
         const timeStr = `${h}:${m}`;
-        const rawPrice = document.getElementById('fe-price').value; 
+        const rawPrice = parseInt(document.getElementById('fe-price').value) || 0; 
         const duration = parseInt(document.getElementById('fe-duration').value, 10) || 0;
-
-        // 1. 衝突檢查
+        
+        // 衝突檢查
         const startH = parseInt(h, 10);
         const startM = parseInt(m, 10);
         const newStartMins = startH * 60 + startM;
         const newEndMins = newStartMins + duration;
-
         let isConflict = false;
+        
         currentEntries.forEach(e => {
-            if (editingEntryId && String(e.id) === String(editingEntryId)) return;
+            if (editingEntryId && String(e.id) === String(editingEntryId)) return; // 排除自己
             const [eH, eM] = e.time.split(':').map(Number);
             const eStart = eH * 60 + eM;
             const eEnd = eStart + (parseInt(e.duration || 60, 10));
@@ -3815,7 +5450,7 @@
             if(!confirm(`⚠️ 檢測到與現有帳務時間重疊 (${timeStr})\n\n確定要繼續新增嗎？`)) return;
         }
 
-        // 2. 如果是編輯，先嘗試釋出舊時段 (行事曆邏輯)
+        // 舊時段釋出 (包含自動同步到雲端)
         if (editingEntryId) {
              const oldEntry = currentEntries.find(e => String(e.id) === String(editingEntryId));
              if (oldEntry && oldEntry.time !== timeStr) {
@@ -3826,29 +5461,40 @@
                 if (!slots.includes(oldEntry.time)) {
                     slots.push(oldEntry.time);
                     slots.sort();
+                    saveBookingData(); // 強制同步舊時段釋出
                 }
              }
         }
 
-        // 3. 建立新資料物件 (新增 note, image, itemsDetail)
+        const depMethod = document.getElementById('fe-dep-method').value;
+        const hasDeposit = (depMethod !== 'none');
+
+        // [修改] 處理定金日期邏輯 - 優先讀取手動輸入的日期
+        const manualDepDate = document.getElementById('fe-dep-date').value;
+        let depositDate = null;
+        if (hasDeposit) {
+            depositDate = manualDepDate || activeDateStr;
+        }
+
+        // 建立新資料物件
         const newData = {
             id: editingEntryId || Date.now(),
             time: timeStr,
-            // items 僅存字串供顯示 (如果有數量>1，名稱後面加 xN)
             items: tempItems.length > 0 ? tempItems.map(i => i.qty > 1 ? `${i.name} x${i.qty}` : i.name) : ['自訂項目'],
-            // itemsDetail 儲存詳細資料 (含價格、時長、數量) 以便編輯
             itemsDetail: tempItems,
             price: rawPrice, 
             duration: duration,
-            hasDeposit: document.getElementById('fe-deposit').checked,
-            note: document.getElementById('fe-note').value, // [新增] 備註
-            // [修改] 儲存圖片陣列
+            hasDeposit: hasDeposit,
+            depositMethod: depMethod,
+            depositAmount: hasDeposit ? 100 : 0,
+            depositDate: depositDate,
+            note: document.getElementById('fe-note').value,
             images: currentImagesList, 
-            // 為了保持系統穩定，若有圖片，將第一張也存入舊欄位 image (當作封面圖)
-            image: currentImagesList.length > 0 ? currentImagesList[0] : ""
+            image: currentImagesList.length > 0 ? currentImagesList[0] : "",
+            status: editingEntryId ? (currentEntries.find(e => e.id == editingEntryId)?.status || 'pending') : 'pending'
         };
 
-        // 4. 更新陣列
+        // 更新陣列
         if (editingEntryId) {
             const idx = currentEntries.findIndex(e => String(e.id) === String(editingEntryId));
             if(idx > -1) currentEntries[idx] = newData;
@@ -3856,22 +5502,24 @@
             currentEntries.push(newData);
         }
         
+        // 儲存至全域變數與雲端
         financeStore.data[activeDateStr] = currentEntries;
         saveFinanceV2(); 
 
-        // 5. 同步行事曆 (移除被佔用的空檔)
+        // 同步行事曆時段 (若是手動排休/營業時間調整)
         const [yStr, mmStr, ddStr] = activeDateStr.split('-');
         const bookingKey = `${parseInt(yStr)}-${parseInt(mmStr)-1}-${parseInt(ddStr)}`;
         let currentBookingSlots = bookingState.data.bookings[bookingKey];
-
+        
         if (currentBookingSlots && Array.isArray(currentBookingSlots)) {
             let hasChanged = false;
             const updatedSlots = currentBookingSlots.filter(slot => {
                 const [sH, sM] = slot.split(':').map(Number);
                 const slotStartMins = sH * 60 + sM;
+                // 如果該時段與新預約時間重疊，則移除該空檔
                 if (slotStartMins >= newStartMins && slotStartMins < newEndMins) {
                     hasChanged = true;
-                    return false; // 移除此空檔
+                    return false; 
                 }
                 return true;
             });
@@ -3881,8 +5529,19 @@
             }
         }
         
+        // 1. 刷新後台列表
         renderDayDetailList(); 
-        closeFinEditModal();   
+        
+        // 2. 關閉編輯視窗
+        closeFinEditModal();    
+
+        // 3. [關鍵修正] 編輯後直接用 newData 刷新視窗，確保顯示剛剛輸入的內容
+        if (editingEntryId) {
+            setTimeout(() => {
+                // 直接把剛建立好的 newData 丟進去顯示，不依賴陣列查找，速度最快且最準確
+                openBookingDetail(newData);
+            }, 50);
+        }
     }
 
     // [修改] 1. 切換類別：支援手模與睫模獨立顯示
@@ -4027,24 +5686,6 @@
         renderSelectedList();
     };
 
-    // 5. 更新列表價格
-    window.updateListPrice = function(idx, newPriceStr) {
-        const newPrice = parseInt(newPriceStr) || 0;
-        if (tempItems[idx]) {
-            tempItems[idx].price = newPrice;
-        }
-        recalcTotal();
-    };
-
-    // [新增] 更新單一項目的時長
-    window.updateListDuration = function(idx, newDurStr) {
-        const newDur = parseInt(newDurStr) || 0;
-        if (tempItems[idx]) {
-            tempItems[idx].duration = newDur;
-        }
-        recalcTotal(); // 更新總時長
-    };
-
     // [核心修改] 重新計算總金額與總時長 (修正編輯時時長歸零問題)
     window.recalcTotal = function() {
         let currentRunningTotal = 0;
@@ -4160,9 +5801,10 @@
         renderFinancePage();
     }
 
-    // 新的代碼變得很簡單，只負責通知瀏覽器網址變了
+    // 修改後的換頁函式
     window.switchPage = function(id) {
-        location.hash = id; // 只要改網址就好，剩下的交給 router()
+        closeNumpad(); // ★ 切換分頁時，強制先關閉鍵盤
+        location.hash = id; 
     };
 
     // [修改] 登出/儲存功能：移除延遲，強制立刻刷新
@@ -4189,7 +5831,7 @@
         }
 
         // 2. 定義後台頁面清單 (新增了 admin-pricelist)
-        const adminPages = ['admin-pricelist', 'admin-calc', 'budget', 'admin-finance'];
+        const adminPages = ['admin-pricelist', 'admin-calc', 'budget', 'admin-finance', 'admin-report'];
         const isAdmin = document.body.classList.contains('admin-mode');
         
         // 3. 權限檢查
@@ -4235,6 +5877,20 @@
         }
         if(hash === 'budget') renderCalendar(); 
         if(hash === 'admin-finance') renderFinancePage();
+        /* --- 找到 router 函數內部的對應位置並替換 --- */
+        if (hash === 'admin-report') {
+            // 延遲 50ms 確保 DOM 已載入，並根據當前標籤刷新內容
+            setTimeout(() => {
+                // 修正：統一判斷 logic
+                if (reportState.tab === 'calendar' || reportState.tab === 'day') { 
+                    renderReportCalendar(); 
+                } else if (reportState.tab === 'month') { 
+                    renderMonthlyReport(); 
+                } else if (reportState.tab === 'year') { 
+                    renderYearlyReport(); 
+                }
+            }, 50);
+        }
         if(hash === 'admin-pricelist') renderAdminList(); // 進入價目表時渲染列表
     }
 
@@ -4366,6 +6022,8 @@
         syncServiceData();    
         syncBookingData();    
         syncFinanceV2(); // <--- 關鍵！這行必須存在，預約才會出來
+
+        syncExpenses();
         
         router();
     };
@@ -4375,11 +6033,18 @@
             if (window.firebaseDB && window.dbRef) {
                 clearInterval(checkFirebase);
                 if (typeof window.initSystem === 'function') window.initSystem();
+                
+                // ★ 啟動自動關閉鍵盤的監聽器
+                if (typeof window.initAutoCloseNumpad === 'function') window.initAutoCloseNumpad();
             }
         }, 100);
+        
         setTimeout(() => {
             if (checkFirebase) clearInterval(checkFirebase);
             if (typeof window.initSystem === 'function') window.initSystem();
+            
+            // ★ 防止 Firebase 延遲，這裡也補跑一次
+            if (typeof window.initAutoCloseNumpad === 'function') window.initAutoCloseNumpad();
         }, 3000);
     };
 
@@ -4530,57 +6195,184 @@
         document.body.removeChild(a);
     };
 
-    // 3. 圖片上傳預覽
-    let currentImgBase64 = ""; // 全域變數存圖片
-    window.previewImage = function(input) {
-        const file = input.files[0];
-        if (file) {
-            // 限制大小 (例如 1MB)
-            if (file.size > 1024 * 1024) {
-                alert("圖片過大，請小於 1MB");
-                input.value = "";
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                currentImgBase64 = e.target.result;
-                const img = document.getElementById('fe-img-preview');
-                const btn = document.getElementById('btn-clear-img');
-                img.src = currentImgBase64;
-                img.classList.add('show');
-                btn.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    // 4. 清除圖片
+    // 4. 清除圖片 (修正版：適配多圖上傳)
     window.clearImage = function() {
-        document.getElementById('fe-image-upload').value = "";
-        const img = document.getElementById('fe-img-preview');
-        if(img) {
-            img.src = "";
-            img.classList.remove('show');
-        }
-        const btn = document.getElementById('btn-clear-img');
-        if(btn) btn.classList.add('hidden');
-        currentImgBase64 = "";
+        const input = document.getElementById('fe-image-upload');
+        if(input) input.value = "";
+        currentImagesList = []; // 清空陣列
+        renderPreviewImages();  // 重新渲染(清空畫面)
     };
 
-    // --- Top Button Logic ---
-    window.onscroll = function() { scrollFunction() };
-    function scrollFunction() {
-        const btn = document.getElementById("scrollTopBtn");
-        if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
-            btn.classList.add('show');
-        } else {
-            btn.classList.remove('show');
+    /* --- 智能算術鍵盤系統 (修正版) --- */
+    let currentActiveInput = null;
+
+    // 全域監聽輸入框聚焦
+    document.addEventListener('focusin', (e) => {
+        const el = e.target;
+
+        // 1. 判斷條件
+        const isTargetInput = el.tagName === 'INPUT' && 
+                            (el.type === 'number' || el.type === 'tel' || el.inputMode === 'numeric' || el.classList.contains('cash-input')) &&
+                            el.type !== 'password' && el.id !== 'admin-pwd';
+
+        // 2. 裝置判斷
+        if (isTargetInput && window.innerWidth < 1025) {
+            
+            // 阻擋原生鍵盤
+            el.setAttribute('inputmode', 'none'); 
+            el.readOnly = true;
+            
+            if (!el.dataset.oldType) el.dataset.oldType = el.type;
+            el.type = 'text'; 
+            
+            // 焦點樣式
+            if(currentActiveInput && currentActiveInput !== el) {
+                currentActiveInput.classList.remove('numpad-focus');
+            }
+            currentActiveInput = el;
+            el.classList.add('numpad-focus');
+            
+            // 喚出智能鍵盤
+            const numpad = document.getElementById('custom-numpad');
+            numpad.classList.add('active');
+
+            // 觸發 CSS 撐開高度
+            document.body.classList.add('numpad-active');
+
+            // ★★★ 捲動邏輯優化 ★★★
+            // 延遲 300ms 讓 CSS 的 padding-bottom 生效後再捲動
+            setTimeout(() => {
+                el.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center',  // 強制將輸入框置於畫面正中央
+                    inline: 'nearest' 
+                });
+            }, 300);
         }
-    }
-    window.scrollToTop = function() {
-        window.scrollTo({top: 0, behavior: 'smooth'});
+    });
+
+    // 數字鍵盤輸入處理 (維持不變)
+    window.numpadInput = function(key) {
+        if (!currentActiveInput) return;
+        let val = currentActiveInput.value;
+
+        if (key === 'DEL') {
+            currentActiveInput.value = val.slice(0, -1);
+        } else if (key === 'AC') {
+            currentActiveInput.value = '';
+        } else {
+            // 百分比處理：自動補上 *0.01
+            if (key === '%' && val.length > 0 && !isNaN(val.slice(-1))) {
+                currentActiveInput.value += '*0.01';
+            } else {
+                currentActiveInput.value += key;
+            }
+        }
+        
+        // 手動觸發 input 事件，讓原本的金額計算邏輯能即時運作
+        currentActiveInput.dispatchEvent(new Event('input'));
+    };
+
+    // 關閉鍵盤與結算 (需還原屬性)
+    window.closeNumpad = function() {
+        if (currentActiveInput) {
+            // 1. 嘗試計算算式結果
+            try {
+                let expression = currentActiveInput.value;
+                if (expression && /[\+\-\*\/]/.test(expression)) {
+                    let result = new Function(`"use strict"; return (${expression})`)();
+                    currentActiveInput.value = Math.round(result);
+                }
+            } catch (e) {
+                console.error("計算錯誤", e);
+            }
+            
+            // 2. 觸發系統更新事件
+            currentActiveInput.classList.remove('numpad-focus');
+            currentActiveInput.dispatchEvent(new Event('input'));
+            currentActiveInput.dispatchEvent(new Event('change'));
+            
+            // 3. ★★★ 恢復原始狀態 ★★★
+            let target = currentActiveInput;
+            setTimeout(() => { 
+                if(target.dataset.oldType) target.type = target.dataset.oldType; 
+                
+                // 移除 inputmode 屬性，恢復正常行為
+                target.removeAttribute('inputmode');
+                
+                // 解除唯讀 (讓下一次點擊能再次觸發 focusin 流程)
+                target.readOnly = false; 
+            }, 100);
+        }
+
+        // 關閉介面
+        document.getElementById('custom-numpad').classList.remove('active');
+        document.body.classList.remove('numpad-active'); 
+        currentActiveInput = null;
+    };
+
+    // ==========================================
+    // [新功能] 自動關閉鍵盤邏輯 (Auto Close Numpad)
+    // ==========================================
+    function initAutoCloseNumpad() {
+        // 建立觀察者：專門盯著 class 的變化
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    const target = mutation.target;
+                    const numpad = document.getElementById('custom-numpad');
+                    
+                    // 如果鍵盤本來就沒開，就不用做事
+                    if (!numpad || !numpad.classList.contains('active')) return;
+
+                    // 狀況 1: 任何彈窗 (Modal) 被加上了 'hidden' class (代表被關閉)
+                    if (target.classList.contains('cal-modal-overlay') && target.classList.contains('hidden')) {
+                        closeNumpad();
+                    }
+                    
+                    // 狀況 2: 任何頁面 (Page) 被移除了 'active' class (代表被切換)
+                    if (target.classList.contains('page-content') && !target.classList.contains('active')) {
+                        closeNumpad();
+                    }
+                }
+            });
+        });
+
+        // 開始監聽所有的「彈窗」和「主頁面」
+        const elementsToWatch = document.querySelectorAll('.cal-modal-overlay, .page-content');
+        elementsToWatch.forEach(el => {
+            // 只監聽 class 屬性的變動
+            observer.observe(el, { attributes: true, attributeFilter: ['class'] });
+        });
     }
 
 </script>
+
+<div id="custom-numpad">
+    <button class="num-btn" onclick="numpadInput('7')">7</button>
+    <button class="num-btn" onclick="numpadInput('8')">8</button>
+    <button class="num-btn" onclick="numpadInput('9')">9</button>
+    <button class="num-btn num-op num-del" onclick="numpadInput('DEL')">⌫</button>
+    
+    <button class="num-btn" onclick="numpadInput('4')">4</button>
+    <button class="num-btn" onclick="numpadInput('5')">5</button>
+    <button class="num-btn" onclick="numpadInput('6')">6</button>
+    <button class="num-btn num-op" onclick="numpadInput('*')">×</button>
+    
+    <button class="num-btn" onclick="numpadInput('1')">1</button>
+    <button class="num-btn" onclick="numpadInput('2')">2</button>
+    <button class="num-btn" onclick="numpadInput('3')">3</button>
+    <button class="num-btn num-op" onclick="numpadInput('/')">÷</button>
+    
+    <button class="num-btn" onclick="numpadInput('0')">0</button>
+    <button class="num-btn" onclick="numpadInput('.')">.</button>
+    <button class="num-btn num-op" onclick="numpadInput('+')">+</button>
+    <button class="num-btn num-op" onclick="numpadInput('-')">-</button>
+    
+    <button class="num-btn num-op" onclick="numpadInput('%')">%</button>
+    <button class="num-btn num-op" onclick="numpadInput('AC')">AC</button>
+    <button class="num-btn num-confirm" onclick="closeNumpad()">確定結算</button>
+</div>
+
 </body>
 </html>
