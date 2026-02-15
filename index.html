@@ -2106,7 +2106,7 @@
         
         <div class="nav-header-container">
     <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-    <div id="admin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
+    <div id="booking-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
     <div class="nav-right-group">
                 <button onclick="resetToToday('booking')" class="today-btn">本月</button>
                 <button onclick="changeBookingMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
@@ -3037,12 +3037,6 @@
         });
     }
 
-    // [修改] 更新數值 (支援 duration)
-    function updateItemValue(cat, type, index, field, value) {
-        if (field === 'duration' || (field === 'price' && !isNaN(value))) value = parseInt(value) || 0;
-        serviceData[cat][type][index][field] = value;
-    }
-
     function initSortable(el, cat, type) {
         if (!el || !window.Sortable) return;
         if (el._sortable) el._sortable.destroy(); // 避免重複綁定
@@ -3250,13 +3244,6 @@
     function calculate() {
         let total = 0;
         let items = []; 
-        
-        // [修改] 解析價格時，移除所有非數字字符
-        const parsePrice = (val) => {
-            if(!val) return 0;
-            const str = String(val).replace(/[^0-9]/g, ''); // 只留數字
-            return parseInt(str) || 0;
-        };
 
         let base = parsePrice(selectedBasePrice);
         total += base;
@@ -4436,22 +4423,39 @@
         calculateDailyFinancials(); 
     };
 
-    // 3. 計算當日財務 (定金 + 服務)
+    // 3. 計算當日財務 (定金 + 服務) - [已修改：定金與服務皆包含分類統計]
     function calculateDailyFinancials() {
         const depositDetails = [];
         const serviceDetails = [];
         let depositTotal = 0;
         let serviceTotal = 0;
+        
+        // 定義對照表
+        const typeMap = {'cash':'現金', 'transfer':'匯款', 'linepay':'LinePay', 'jko':'街口', 'stored':'儲值金', 'none':'無'};
 
+        // 準備統計物件
+        let depositByType = { cash:0, transfer:0, linepay:0, jko:0, stored:0 };
+        let serviceByType = { cash:0, transfer:0, linepay:0, jko:0, stored:0 };
+
+        // ==========================================
         // A. 服務結算 (只看當天 activeDateStr 且已結帳)
+        // ==========================================
         const dayEntries = safeArray(financeStore.data[activeDateStr]);
         dayEntries.forEach(entry => {
             if (entry.status === 'checked' && entry.checkoutDetails) {
                 const d = entry.checkoutDetails;
                 // 服務結算 = 總金額 - 已付定金
                 const amount = parseInt(d.finalTotal) - parseInt(d.paidDeposit || 0);
+                
                 if (amount > 0) {
                     serviceTotal += amount;
+                    
+                    // 統計各方式金額
+                    const method = d.paymentMethod || 'cash';
+                    if (serviceByType[method] !== undefined) {
+                        serviceByType[method] += amount;
+                    }
+
                     serviceDetails.push({
                         type: d.paymentMethod, 
                         amount: amount,
@@ -4462,7 +4466,9 @@
             }
         });
 
+        // ==========================================
         // B. 定金結算 (掃描全資料庫，找出定金支付日是今天的)
+        // ==========================================
         Object.keys(financeStore.data).forEach(dateKey => {
             const entries = safeArray(financeStore.data[dateKey]);
             entries.forEach(entry => {
@@ -4470,8 +4476,15 @@
                 if ((entry.hasDeposit || (entry.depositMethod && entry.depositMethod !== 'none')) && entry.depositDate === activeDateStr) {
                     const depAmt = parseInt(entry.depositAmount || 100);
                     depositTotal += depAmt;
+
+                    // 統計定金各方式金額 (★新增部分)
+                    const method = entry.depositMethod || 'transfer';
+                    if (depositByType[method] !== undefined) {
+                        depositByType[method] += depAmt;
+                    }
+
                     depositDetails.push({
-                        type: entry.depositMethod || 'transfer',
+                        type: method,
                         amount: depAmt,
                         date: dateKey, // 這是預約日期
                         time: entry.time
@@ -4480,13 +4493,17 @@
             });
         });
 
-        // 渲染 UI
+        // ==========================================
+        // C. 渲染 UI
+        // ==========================================
+        
+        // 1. 更新標題上的總數字
         document.getElementById('settle-deposit-total').innerText = depositTotal;
         document.getElementById('settle-service-total').innerText = serviceTotal;
 
+        // 2. 共用的清單渲染函式 (列出每一筆)
         const renderList = (list) => {
             if (list.length === 0) return '<div class="text-xs text-gray-400 p-2 text-center">無資料</div>';
-            const typeMap = {'cash':'現金', 'transfer':'匯款', 'linepay':'LinePay', 'jko':'街口', 'stored':'儲值金', 'none':'無'};
             return list.map(i => `
                 <div class="settle-detail-row">
                     <span>${i.date} ${i.time} (${typeMap[i.type]||i.type})</span>
@@ -4494,8 +4511,40 @@
                 </div>`).join('');
         };
 
-        document.getElementById('settle-detail-deposit').innerHTML = renderList(depositDetails);
-        document.getElementById('settle-detail-service').innerHTML = renderList(serviceDetails);
+        // 3. 共用的統計區塊生成函式 (產生灰色方塊)
+        const generateSummaryHtml = (typeObj, total) => {
+            if (total <= 0) return '';
+            
+            let html = `<div class="bg-gray-100 p-3 rounded-lg mb-3 text-xs border border-gray-200">`;
+            
+            // 迴圈顯示各支付方式 (只顯示大於 0 的)
+            for (let [key, val] of Object.entries(typeObj)) {
+                if (val > 0) {
+                    html += `
+                        <div class="flex justify-between mb-1">
+                            <span class="text-gray-500">${typeMap[key]}</span>
+                            <span class="font-bold text-[#1a3a2e]">$${val}</span>
+                        </div>`;
+                }
+            }
+            
+            // 分隔線與總加總
+            html += `
+                <div class="border-t border-gray-300 mt-2 pt-2 flex justify-between items-center">
+                    <span class="font-bold text-[#1a3a2e]">全部加總</span>
+                    <span class="font-bold text-sm text-[var(--gold-main)]" style="color:#b59865">$${total}</span>
+                </div>
+            </div>`;
+            return html;
+        };
+
+        // 4. 渲染定金詳情 (統計區塊 + 詳細列表)
+        const depositSummaryHtml = generateSummaryHtml(depositByType, depositTotal);
+        document.getElementById('settle-detail-deposit').innerHTML = depositSummaryHtml + renderList(depositDetails);
+
+        // 5. 渲染服務詳情 (統計區塊 + 詳細列表)
+        const serviceSummaryHtml = generateSummaryHtml(serviceByType, serviceTotal);
+        document.getElementById('settle-detail-service').innerHTML = serviceSummaryHtml + renderList(serviceDetails);
     }
 
     window.toggleSettleDetail = function(type) {
@@ -4513,7 +4562,7 @@
         renderCashierInputs();
     };
 
-    // [修正版 V3] 渲染零用金輸入框 (修復數字消失問題 + 顯示差額)
+    // [修正版 V7] 渲染零用金輸入框 (修復日期排序與應有金額邏輯)
     window.renderCashierInputs = function() {
         const isReadOnly = document.getElementById('cashierModal').dataset.readonly === 'true';
         const container = document.getElementById('cashierModal');
@@ -4522,31 +4571,26 @@
         if (isReadOnly) container.classList.add('readonly-mode');
         else container.classList.remove('readonly-mode');
 
-        // --- 步驟 1: 準備資料 (如果是唯讀模式，先抓出儲存的數字) ---
+        // --- 步驟 1: 準備資料 ---
         let savedDetails = { current: {}, reserve: {} };
         let savedAllocations = [];
         let savedTotal = 0;
 
-        if (isReadOnly && settlementData[activeDateStr]) {
-            const saved = settlementData[activeDateStr];
-            savedDetails.current = saved.cashDetails || {};
-            savedDetails.reserve = saved.reserveDetails || {};
-            savedAllocations = saved.allocations || [];
-            savedTotal = saved.cashTotal || 0;
+        const currentRecord = settlementData[activeDateStr];
+        if (currentRecord) {
+            savedDetails.current = currentRecord.cashDetails || {};
+            savedDetails.reserve = currentRecord.reserveDetails || {};
+            savedAllocations = currentRecord.allocations || [];
+            savedTotal = currentRecord.cashTotal || 0;
         }
 
-        // --- 步驟 2: 生成格子 (直接把數字寫進去，不要事後填) ---
+        // --- 步驟 2: 生成面額格子 ---
         const renderGrid = (type) => {
             const gridContainer = document.getElementById(`cash-grid-${type}`);
-            
-            // 根據類型選擇對應的資料來源
-            const sourceMap = savedDetails[type];
+            const sourceMap = savedDetails[type] || {};
 
             gridContainer.innerHTML = DENOMINATIONS.map(d => {
-                // 如果是唯讀模式，嘗試從資料中抓取該面額的數量
-                // 如果是編輯模式，則預設為空 (或保留輸入，這裡簡化為空)
-                const val = (isReadOnly && sourceMap[d]) ? sourceMap[d] : '';
-                
+                const val = sourceMap[d] !== undefined ? sourceMap[d] : '';
                 return `
                 <div class="cash-grid">
                     <div class="cash-label">${d}</div>
@@ -4554,6 +4598,7 @@
                            data-type="${type}" 
                            data-denom="${d}" 
                            value="${val}" 
+                           placeholder="0"
                            oninput="calcCashTotal('${type}')">
                 </div>`;
             }).join('');
@@ -4562,19 +4607,16 @@
         renderGrid('current');
         renderGrid('reserve');
 
-        // --- 步驟 3: 處理分配金額 (備用金/永豐/中信...) ---
-        // 先清空
+        // --- 步驟 3: 處理分配金額 ---
         ['backup', 'yongfeng', 'ctbc', 'wallet'].forEach(id => {
             const el = document.getElementById(`alloc-${id}`);
-            if(el) el.value = '';
+            if(el) el.value = ''; 
         });
 
-        // 如果是唯讀，回填分配金額
-        if (isReadOnly && savedAllocations.length > 0) {
+        if (savedAllocations.length > 0) {
             savedAllocations.forEach(a => {
                 let targetId = a.targetId;
-                // 相容舊資料邏輯
-                if (!targetId) {
+                if (!targetId) { 
                     if (a.target === '備用金') targetId = 'backup';
                     else if (a.target === '永豐') targetId = 'yongfeng';
                     else if (a.target === '中信') targetId = 'ctbc';
@@ -4585,85 +4627,82 @@
             });
         }
 
-        // --- 步驟 4: 計算應有金額與差額 (核心邏輯) ---
+        // --- 步驟 4: 計算應有金額 (邏輯修正：使用 Date 物件進行日期排序) ---
         
-        // 4-1. [修正邏輯] 強制抓取「日曆上的前一天」
-        // 解析當前日期 (activeDateStr 格式為 YYYY-MM-DD)
-        const [currY, currM, currD] = activeDateStr.split('-').map(Number);
-        const dateObj = new Date(currY, currM - 1, currD);
+        // 4-1. 找出 "今天以前" 的 "最後一筆" 結算紀錄
+        const allDates = Object.keys(settlementData);
+        
+        // [關鍵修正] 將 activeDateStr (例如 "2026-02-09") 轉為 Date 物件的 timestamp 進行比較
+        // 這樣可以避免字串比對 "2026-02-2" > "2026-02-10" 的錯誤
+        const targetTs = new Date(activeDateStr).setHours(0,0,0,0);
 
-        // 往前推一天
-        dateObj.setDate(dateObj.getDate() - 1);
+        const prevDates = allDates.filter(d => {
+            const dTs = new Date(d).setHours(0,0,0,0);
+            return dTs < targetTs; // 嚴格小於今天
+        }).sort((a, b) => {
+            return new Date(a) - new Date(b); // 依照時間先後排序
+        });
 
-        // 格式化回 YYYY-MM-DD
-        const prevY = dateObj.getFullYear();
-        const prevM = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const prevD = String(dateObj.getDate()).padStart(2, '0');
-        const yesterdayStr = `${prevY}-${prevM}-${prevD}`;
+        let prevReserve = 2000; // 預設值 (若完全無過往紀錄)
 
-        let prevReserve = 2000; // 預設初始金額
-
-        // 嚴格檢查：只有當「昨天」有結算紀錄時，才使用昨天的保留額
-        // 如果昨天沒結算 (例如公休或忘記)，則回歸預設值 2000
-        if (settlementData[yesterdayStr]) {
-            prevReserve = parseInt(settlementData[yesterdayStr].pettyCash) || 0;
+        if (prevDates.length > 0) {
+            // 取陣列最後一個 (離今天最近的一筆)
+            const lastDate = prevDates[prevDates.length - 1];
+            const lastRecord = settlementData[lastDate];
+            // 抓取該日結算時的 "pettyCash" (輸入在零用金欄位的總額)
+            prevReserve = parseInt(lastRecord.pettyCash) || 0;
         }
 
-        // 4-2. 抓今日現金營收
+        // 4-2. 抓今日現金營收 (服務尾款 + 現金定金)
         let todayCashRev = 0;
         const dayEntries = safeArray(financeStore.data[activeDateStr]);
+        
+        // A. 計算今日「服務尾款」的現金收入
         dayEntries.forEach(e => {
-            if (e.status === 'checked' && e.checkoutDetails && e.checkoutDetails.paymentMethod === 'cash') {
-                todayCashRev += (parseInt(e.checkoutDetails.finalTotal) - parseInt(e.checkoutDetails.paidDeposit || 0));
+            if (e.status === 'checked' && 
+                e.checkoutDetails && 
+                e.checkoutDetails.paymentMethod === 'cash') {
+                
+                const finalTotal = parseInt(e.checkoutDetails.finalTotal) || 0;
+                const paidDeposit = parseInt(e.checkoutDetails.paidDeposit) || 0;
+                todayCashRev += (finalTotal - paidDeposit);
             }
         });
+        
+        // B. 計算今日收到的「現金定金」
+        // [關鍵修正] 使用拆解數字比對，避免 "09" 與 "9" 不相等的問題
+        const [targetY, targetM, targetD] = activeDateStr.split('-').map(Number);
+
         Object.keys(financeStore.data).forEach(k => {
             safeArray(financeStore.data[k]).forEach(e => {
-                if (e.depositDate === activeDateStr && e.depositMethod === 'cash') {
-                    todayCashRev += parseInt(e.depositAmount || 100);
+                // 檢查是否有定金資料
+                if ((e.hasDeposit || (e.depositMethod && e.depositMethod !== 'none')) && e.depositDate) {
+                    const [depY, depM, depD] = e.depositDate.split('-').map(Number);
+                    
+                    // 比對日期是否相同 且 方式為現金
+                    if (depY === targetY && depM === targetM && depD === targetD && e.depositMethod === 'cash') {
+                        todayCashRev += parseInt(e.depositAmount || 100);
+                    }
                 }
             });
         });
 
+        // 應有總額 = 上次保留 + 今日現金營收
         const expectedTotal = prevReserve + todayCashRev;
 
-        // --- 步驟 5: 渲染頂部摘要區域 (應有 vs 實收) ---
+        // --- 步驟 5: 渲染頂部摘要區域 ---
         const headerContainer = document.getElementById('current-cash-summary-container');
         
-        if (isReadOnly) {
-            // == 唯讀模式 ==
-            const diff = savedTotal - expectedTotal;
-            const diffColor = diff === 0 ? 'text-[#1a4731]' : 'text-[#ff6b6b]'; 
-            const diffSign = diff >= 0 ? (diff===0 ? '' : '+') : '';
-
-            if (headerContainer) {
-                headerContainer.innerHTML = `
-                    <div class="text-[11px] mb-1 p-2 rounded bg-gray-100 border border-gray-200 flex justify-between items-center opacity-80">
-                        <span><span class="opacity-60">應有總額:</span> <b class="text-[#1a3a2e]">$${expectedTotal}</b></span>
-                        <span class="font-bold ${diffColor}">差額: ${diffSign}${diff}</span>
-                    </div>
-                    <div class="text-right font-bold text-lg text-[#1a3a2e] mt-1 border-t pt-2">
-                        實數總計: $${savedTotal}
-                    </div>`;
-            }
-            
-            // 觸發一次總計計算，確保 UI 數字同步 (雖然上面已經手動顯示了，但為了保險)
-            calcCashTotal('current');
-            calcCashTotal('reserve');
-            updateSurplus();
-
-        } else {
-            // == 編輯模式 ==
-            if (headerContainer) {
-                headerContainer.innerHTML = `
-                    <div class="text-[11px] mb-1 p-2 rounded bg-gray-100 border border-gray-200 flex justify-between items-center">
-                        <span><span class="opacity-60">應有總額:</span> <b class="text-[#1a3a2e]">$${expectedTotal}</b></span>
-                        <span id="cash-diff-msg" class="font-bold text-[#ff6b6b]">差額: -$${expectedTotal}</span>
-                    </div>
-                    <div class="text-right font-bold text-lg text-[#1a3a2e]">實數總計: $<span id="cash-total-current" data-expected="${expectedTotal}">0</span></div>
-                `;
-            }
-            updateSurplus();
+        if (headerContainer) {
+            headerContainer.innerHTML = `
+                <div class="text-[11px] mb-1 p-2 rounded bg-gray-100 border border-gray-200 flex justify-between items-center">
+                    <span><span class="opacity-60">應有總額:</span> <b class="text-[#1a3a2e]">$${expectedTotal}</b></span>
+                    <span id="cash-diff-msg" class="font-bold text-[#ff6b6b]">差額: -$${expectedTotal}</span>
+                </div>
+                <div class="text-right font-bold text-lg text-[#1a3a2e]">
+                    實數總計: $<span id="cash-total-current" data-expected="${expectedTotal}">0</span>
+                </div>
+            `;
         }
 
         // --- 步驟 6: 更新底部按鈕 ---
@@ -4675,17 +4714,10 @@
                 footerContainer.innerHTML = `<button onclick="saveSettlement()" class="w-full py-3 bg-[#1a4731] text-white rounded-xl font-bold shadow-lg text-lg">結算完畢</button>`;
             }
         }
-    };
 
-    // [新增] 切換編輯模式 (解鎖按鈕的動作)
-    window.toggleCashierEdit = function() {
-        if(!confirm("確定要修改已結算的內容嗎？")) return;
-        
-        document.getElementById('cashierModal').dataset.readonly = 'false';
-        document.body.classList.add('editing-mode'); // 標記正在編輯
-        
-        // 重新渲染 -> 解鎖 Input，按鈕變回 "結算完畢"
-        renderCashierInputs();
+        // 立即觸發計算
+        calcCashTotal('current');
+        calcCashTotal('reserve');
     };
 
     // (原有的計算邏輯保留)
@@ -4709,13 +4741,32 @@
         updateSurplus();
     };
 
+    // [修正版] 更新盈餘與已分配金額 (完全同步輸入框)
     window.updateSurplus = function() {
+        // 1. 讀取 "當前現金" 與 "保留零用金" 的總計 (由 calcCashTotal 更新)
         const current = parseInt(document.getElementById('cash-total-current').innerText) || 0;
         const reserve = parseInt(document.getElementById('cash-total-reserve').innerText) || 0;
+        
+        // 2. 本日盈餘 = 當前現金 - 保留零用金
         const surplus = current - reserve;
         document.getElementById('cash-surplus').innerText = surplus;
-        const allocated = ['backup', 'yongfeng', 'ctbc', 'wallet'].reduce((sum, id) => sum + (parseInt(document.getElementById(`alloc-${id}`).value) || 0), 0);
+
+        // 3. 計算 "已入庫金額" (讀取 4 個分配欄位的輸入值)
+        // 使用 .value 確保讀取的是使用者看到的當下數值
+        let allocated = 0;
+        ['backup', 'yongfeng', 'ctbc', 'wallet'].forEach(id => {
+            const el = document.getElementById(`alloc-${id}`);
+            if (el) {
+                const val = parseInt(el.value); // 嘗試解析整數
+                if (!isNaN(val)) {
+                    allocated += val; // 如果是數字就加總
+                }
+            }
+        });
+
         document.getElementById('cash-stored').innerText = allocated;
+        
+        // 4. 更新待分配金額 (盈餘 - 已分配)
         document.getElementById('cash-remaining').innerText = surplus - allocated;
     };
 
@@ -6615,7 +6666,7 @@
         renderPreviewImages();  // 重新渲染(清空畫面)
     };
 
-    /* --- 智能算術鍵盤系統 (修正版) --- */
+    /* --- 智能算術鍵盤系統 (防跳動優化版 V2) --- */
     let currentActiveInput = null;
 
     // 全域監聽輸入框聚焦
@@ -6630,6 +6681,13 @@
         // 2. 裝置判斷
         if (isTargetInput && window.innerWidth < 1025) {
             
+            const numpad = document.getElementById('custom-numpad');
+            
+            // ★★★ 關鍵變數：檢查鍵盤目前是否已經是開著的 ★★★
+            const wasKeypadOpen = numpad.classList.contains('active');
+
+            // --- 步驟 A：處理焦點切換 (每次點擊都要做) ---
+
             // 阻擋原生鍵盤
             el.setAttribute('inputmode', 'none'); 
             el.readOnly = true;
@@ -6637,29 +6695,32 @@
             if (!el.dataset.oldType) el.dataset.oldType = el.type;
             el.type = 'text'; 
             
-            // 焦點樣式
+            // 切換焦點樣式
             if(currentActiveInput && currentActiveInput !== el) {
                 currentActiveInput.classList.remove('numpad-focus');
             }
-            currentActiveInput = el;
+            currentActiveInput = el; 
             el.classList.add('numpad-focus');
             
-            // 喚出智能鍵盤
-            const numpad = document.getElementById('custom-numpad');
+            // 確保鍵盤顯示 (如果沒開就打開，已開著就保持)
             numpad.classList.add('active');
-
-            // 觸發 CSS 撐開高度
             document.body.classList.add('numpad-active');
 
-            // ★★★ 捲動邏輯優化 ★★★
-            // 延遲 300ms 讓 CSS 的 padding-bottom 生效後再捲動
-            setTimeout(() => {
-                el.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center',  // 強制將輸入框置於畫面正中央
-                    inline: 'nearest' 
-                });
-            }, 300);
+            // --- 步驟 B：決定是否要捲動 (只在第一次打開時執行) ---
+            
+            if (!wasKeypadOpen) {
+                // 如果鍵盤原本是「關閉」的，代表這是第一次喚起
+                // 這時候才執行自動捲動
+                setTimeout(() => {
+                    el.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center', 
+                        inline: 'nearest' 
+                    });
+                }, 300);
+            }
+            // 如果 wasKeypadOpen 為 true (鍵盤已經開著)，
+            // 則不執行 scrollIntoView，讓畫面停留在您當前滑動的位置。
         }
     });
 
