@@ -4587,13 +4587,26 @@
 
         // --- 步驟 4: 計算應有金額與差額 (核心邏輯) ---
         
-        // 4-1. 抓上一日庫存
-        const dates = Object.keys(settlementData).sort();
-        const currentIdx = dates.indexOf(activeDateStr);
-        let prevReserve = 2000; // 預設備用金
-        if (currentIdx > 0) {
-            const prevSettle = settlementData[dates[currentIdx - 1]];
-            prevReserve = prevSettle.pettyCash || 0;
+        // 4-1. [修正邏輯] 強制抓取「日曆上的前一天」
+        // 解析當前日期 (activeDateStr 格式為 YYYY-MM-DD)
+        const [currY, currM, currD] = activeDateStr.split('-').map(Number);
+        const dateObj = new Date(currY, currM - 1, currD);
+
+        // 往前推一天
+        dateObj.setDate(dateObj.getDate() - 1);
+
+        // 格式化回 YYYY-MM-DD
+        const prevY = dateObj.getFullYear();
+        const prevM = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const prevD = String(dateObj.getDate()).padStart(2, '0');
+        const yesterdayStr = `${prevY}-${prevM}-${prevD}`;
+
+        let prevReserve = 2000; // 預設初始金額
+
+        // 嚴格檢查：只有當「昨天」有結算紀錄時，才使用昨天的保留額
+        // 如果昨天沒結算 (例如公休或忘記)，則回歸預設值 2000
+        if (settlementData[yesterdayStr]) {
+            prevReserve = parseInt(settlementData[yesterdayStr].pettyCash) || 0;
         }
 
         // 4-2. 抓今日現金營收
