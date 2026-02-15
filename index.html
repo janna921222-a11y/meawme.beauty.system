@@ -1324,7 +1324,18 @@
         .text-gold-force { color: var(--gold-main) !important; }
 
         /* [新增] 結算頁面專用樣式 */
-        .settle-btn { padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; margin-right: 10px;}
+        .settle-btn { 
+            padding: 4px 6px !important;       /* 縮小左右內距 (原本 12px -> 6px) */
+            border-radius: 6px; 
+            font-size: 11px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            border: 1px solid transparent; 
+            margin-right: 2px !important;      /* 縮小右邊間距 (原本 10px -> 2px) */
+            white-space: nowrap !important;    /* 關鍵：強制文字不換行 */
+            flex-shrink: 0 !important;         /* 關鍵：防止按鈕被壓扁 */
+        }
         .settle-btn-main { background: var(--gold-main); color: #1a3a2e; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .settle-btn-outline { border-color: var(--gold-main); color: var(--gold-main); background: transparent; }
         
@@ -1470,6 +1481,43 @@
         body.numpad-active .cal-modal-content > .overflow-y-auto,
         body.numpad-active .cal-modal-content .flex-1.overflow-y-auto {
             padding-bottom: 400px !important; 
+        }
+
+        /* [修改] 導航欄位容器：確保寬度足夠且不被擠壓 */
+        .nav-header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 auto 20px;
+            padding: 0 15px;
+            max-width: 400px;
+            position: relative;
+        }
+
+        /* [修改] 本月/今年 按鈕樣式 (取消絕對定位，改用 Flex 排列) */
+        .today-btn {
+            font-size: 10px;
+            border: 1px solid var(--gold-main);
+            color: var(--gold-main);
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            background: rgba(201, 184, 150, 0.1);
+            font-weight: 700;
+            transition: all 0.2s;
+            margin-right: 5px; /* 與箭頭保持距離 */
+            white-space: nowrap;
+            /* 移除 position: absolute */
+        }
+        .today-btn:active {
+            background: var(--gold-main);
+            color: var(--forest-bg);
+        }
+
+        /* [新增] 右側控制區群組 (讓按鈕跟箭頭排在一起) */
+        .nav-right-group {
+            display: flex;
+            align-items: center;
         }
 
     </style>
@@ -1930,10 +1978,13 @@
     <div class="max-w-4xl mx-auto px-4 pt-8">
             <h2 class="text-center text-[22px] text-[var(--gold-main)] font-bold my-6 tracking-widest">查詢可預約時段</h2>
         
-        <div class="flex justify-between items-center mb-6 px-8 max-w-sm mx-auto">
+        <div class="nav-header-container">
             <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-            <div id="booking-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
-            <button onclick="changeBookingMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+            <div id="admin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
+            <div class="nav-right-group">
+                <button onclick="resetToToday('booking')" class="today-btn">本月</button>
+                <button onclick="changeBookingMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+            </div>
         </div>
 
         <div style="position: relative; min-height: 300px;">
@@ -2053,10 +2104,13 @@
     <section id="page-budget" class="page-content pb-32">
         <h2 class="text-center text-[22px] font-bold my-6 text-[var(--gold-main)]">時段管理</h2>
         
-        <div class="flex justify-between items-center mb-6 px-8 max-w-sm mx-auto">
-            <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-            <div id="admin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
-            <button onclick="changeBookingMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+        <div class="nav-header-container">
+    <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
+    <div id="admin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
+    <div class="nav-right-group">
+                <button onclick="resetToToday('booking')" class="today-btn">本月</button>
+                <button onclick="changeBookingMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+            </div>
         </div>
 
         <div class="text-center mb-4">
@@ -2095,10 +2149,13 @@
             </div>
         </div>
 
-        <div class="flex justify-between items-center mb-4 px-8 max-w-sm mx-auto">
+        <div class="nav-header-container">
             <button onclick="changeFinMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
             <div id="fin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
-            <button onclick="changeFinMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+            <div class="nav-right-group">
+                <button onclick="resetToToday('finance')" class="today-btn">本月</button>
+                <button onclick="changeFinMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+            </div>
         </div>
 
         <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
@@ -2121,52 +2178,61 @@
     </section>
 
 <section id="page-admin-report" class="page-content pb-32">
-        <h2 style="font-size: 28px !important; text-align: center !important; margin: 30px 0 10px !important; color: var(--gold-main); font-weight: 800; letter-spacing: 3px;">財務報表</h2>
+    <h2 style="font-size: 28px !important; text-align: center !important; margin: 30px 0 10px !important; color: var(--gold-main); font-weight: 800; letter-spacing: 3px;">財務報表</h2>
 
-        <div class="report-tabs">
-            <button class="report-tab-btn active" onclick="switchReportTab('calendar', this)">日報表</button>
-            <button class="report-tab-btn" onclick="switchReportTab('month', this)">月報表</button>
-            <button class="report-tab-btn" onclick="switchReportTab('year', this)">年報表</button>
-        </div>
+    <div class="report-tabs">
+        <button class="report-tab-btn active" onclick="switchReportTab('calendar', this)">日報表</button>
+        <button class="report-tab-btn" onclick="switchReportTab('month', this)">月報表</button>
+        <button class="report-tab-btn" onclick="switchReportTab('year', this)">年報表</button>
+    </div>
 
-        <div id="report-view-calendar">
-            <div class="flex justify-between items-center mb-4 px-8 max-w-sm mx-auto">
-                <button onclick="changeReportCalendarMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div id="rep-cal-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
+    <div id="report-view-calendar">
+        <div class="nav-header-container">
+            <button onclick="changeReportCalendarMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
+            <div id="rep-cal-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
+            <div class="nav-right-group">
+                <button onclick="resetToToday('report-cal')" class="today-btn">本月</button>
                 <button onclick="changeReportCalendarMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
             </div>
-            
-            <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
-                <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
-                <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
-            </div>
-            <div id="report-calendar-grid" class="calendar-grid"></div>
-            
-            <div class="fin-footer mt-4">
-                <div class="text-center">本月營收 <span id="cal-month-rev">$0</span></div>
-                <div class="text-center text-[#ff6b6b]">本月支出 <span id="cal-month-exp">$0</span></div>
-                <div class="text-center text-[var(--gold-main)]">淨利 <span id="cal-month-net">$0</span></div>
-            </div>
         </div>
+        
+        <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
+            <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
+            <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
+        </div>
+        <div id="report-calendar-grid" class="calendar-grid"></div>
+        
+        <div class="fin-footer mt-4">
+            <div class="text-center">本月營收 <span id="cal-month-rev">$0</span></div>
+            <div class="text-center text-[#ff6b6b]">本月支出 <span id="cal-month-exp">$0</span></div>
+            <div class="text-center text-[var(--gold-main)]">淨利 <span id="cal-month-net">$0</span></div>
+        </div>
+    </div>
 
-        <div id="report-view-month" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
-            <div class="flex justify-center items-center mb-4">
-                <button onclick="changeReportDate('month', -1)" class="text-[var(--gold-main)] text-lg px-4">❮</button>
-                <span id="report-month-title" class="font-bold text-white text-lg"></span>
+    <div id="report-view-month" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
+        <div class="nav-header-container">
+            <button onclick="changeReportDate('month', -1)" class="text-[var(--gold-main)] text-lg px-4">❮</button>
+            <span id="report-month-title" class="font-bold text-[#333] text-lg"></span>
+            <div class="nav-right-group">
+                <button onclick="resetToToday('report-month')" class="today-btn !border-[#333] !text-[#333]">本月</button>
                 <button onclick="changeReportDate('month', 1)" class="text-[var(--gold-main)] text-lg px-4">❯</button>
             </div>
-            <div id="month-report-content"></div>
         </div>
+        <div id="month-report-content"></div>
+    </div>
 
-        <div id="report-view-year" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
-            <div class="flex justify-center items-center mb-4">
-                <button onclick="changeReportDate('year', -1)" class="text-[var(--gold-main)] text-lg px-4">❮</button>
-                <span id="report-year-title" class="font-bold text-white text-lg"></span>
+    <div id="report-view-year" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
+        <div class="nav-header-container">
+            <button onclick="changeReportDate('year', -1)" class="text-[var(--gold-main)] text-lg px-4">❮</button>
+            <span id="report-year-title" class="font-bold text-[#333] text-lg"></span>
+            <div class="nav-right-group">
+                <button onclick="resetToToday('report-year')" class="today-btn !border-[#333] !text-[#333]">今年</button>
                 <button onclick="changeReportDate('year', 1)" class="text-[var(--gold-main)] text-lg px-4">❯</button>
             </div>
-            <div id="year-report-content"></div>
         </div>
-    </section>
+        <div id="year-report-content"></div>
+    </div>
+</section>
 
 <section>
     <div id="dayDetailModal" class="cal-modal-overlay hidden">
@@ -2174,7 +2240,7 @@
             <div class="flex justify-between items-center mb-4">
                 <h3 id="dd-title" class="text-[var(--gold-main)] font-bold text-lg font-serif"></h3>
                 <div class="flex items-center">
-                    <button id="btn-daily-settle" onclick="openSettlement()" class="settle-btn settle-btn-outline">💰 當日結算</button>
+                    <button id="btn-daily-settle" onclick="openSettlement()" class="settle-btn settle-btn-outline">💰當日結算</button>
                     <button onclick="closeDayDetail()" class="text-2xl opacity-50 pl-2 border-l border-white/20 ml-2">×</button>
                 </div>
             </div>
@@ -2381,6 +2447,11 @@
                         <span class="text-[10px] text-gray-400 block mb-1">備註</span>
                         <span id="bd-note"></span>
                     </div>
+
+                    <div id="bd-img-area" class="mt-3 hidden">
+                        <span class="text-[10px] text-gray-400 block mb-2 font-bold">照片紀錄</span>
+                        <div id="bd-img-grid" class="grid grid-cols-3 gap-2"></div>
+                    </div>
                 </div>
             </div>
             <div class="p-4 grid grid-cols-2 gap-3 border-t border-gray-100">
@@ -2575,6 +2646,7 @@
             
             <div class="tab-button" onclick="logout()" style="color:#ff6b6b">儲存</div>
         </div>
+    </nav>
 
     <div id="admin-login-overlay">
         <form class="login-container" onsubmit="event.preventDefault(); checkAdminNew();">
@@ -2672,6 +2744,21 @@
     let editStates = { nail: false, eyelash: false, skin: false };
     let currentMode = 'regular';
     let selectedBasePrice = 0, selectedBaseName = "", currentRemovalPrice = 0;
+
+    // --- 財務系統核心 V3 (若遺失請補上) ---
+    let financeStore = {
+        viewDate: new Date(),
+        viewMode: 'item', 
+        data: {}, 
+        manualOffDays: [],
+        offDayNotes: {} // [修正] 確保備註欄位存在
+    };
+
+    let activeDateStr = "";
+    let editingEntryId = null;
+    let currentCheckoutEntry = null; // 補上這一行
+    let tempItems = [];
+    let currentCat = "nail";
     
     // 行事曆變數
     const DEFAULTS_TIMES = ["10:00", "13:00", "16:00", "19:00"];
@@ -3690,20 +3777,6 @@
         });
     }
 
-    // --- 財務系統核心 V3 (若遺失請補上) ---
-    let financeStore = {
-        viewDate: new Date(),
-        viewMode: 'item', 
-        data: {}, 
-        manualOffDays: [],
-        offDayNotes: {} // [修正] 確保備註欄位存在
-    };
-
-    let activeDateStr = "";
-    let editingEntryId = null;
-    let tempItems = [];
-    let currentCat = "nail";
-
     // [智慧修正版] 同步帳務預約 (Finance) - 自動識別資料結構
     // ★ 如果您是「新增/編輯預約」看不到，主要是靠這一段救回來
     function syncFinanceV2() {
@@ -3804,13 +3877,15 @@
         if (type === 'year') renderYearlyReport();
     };
 
-    // --- [NEW] 財務日曆渲染 ---
+    // [修正版] 財務日曆渲染 (加入防呆保護 + 今天金色邊框 + 修正錯誤)
     window.renderReportCalendar = function() {
         const y = reportState.calDate.getFullYear();
         const m = reportState.calDate.getMonth();
-        document.getElementById('rep-cal-month-display').textContent = `${y} / ${String(m+1).padStart(2,'0')}`;
+        const displayEl = document.getElementById('rep-cal-month-display');
+        if(displayEl) displayEl.textContent = `${y} / ${String(m+1).padStart(2,'0')}`;
         
         const grid = document.getElementById('report-calendar-grid');
+        if(!grid) return; // 防呆：如果找不到元件就停止
         grid.innerHTML = '';
         
         const firstDay = new Date(y, m, 1).getDay();
@@ -3818,6 +3893,10 @@
         const daysInMonth = new Date(y, m + 1, 0).getDate();
         const holidayMap = window.getTaiwanHolidays();
         
+        // 取得今天的日期字串，用於金色邊框
+        const todayObj = new Date();
+        const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth()+1).padStart(2,'0')}-${String(todayObj.getDate()).padStart(2,'0')}`;
+
         let mRev = 0, mExp = 0;
 
         for(let i=0; i<offset; i++) grid.innerHTML += `<div></div>`;
@@ -3825,13 +3904,18 @@
         for(let d=1; d<=daysInMonth; d++) {
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const dayOfWeek = new Date(y, m, d).getDay();
-            const isRedDay = (dayOfWeek === 0 || dayOfWeek === 6 || holidayMap[dateStr] || financeStore.manualOffDays.includes(dateStr));
+            
+            // [防呆修正] 確保 financeStore.manualOffDays 是一個陣列，避免 undefined 錯誤
+            const manualOffDays = financeStore.manualOffDays || [];
+            const isRedDay = (dayOfWeek === 0 || dayOfWeek === 6 || holidayMap[dateStr] || manualOffDays.includes(dateStr));
+            const isToday = (dateStr === todayStr);
             
             // 1. 計算當日營收
             let dailyRev = { cash:0, transfer:0, linepay:0, jko:0, stored:0, total:0 };
             
-            // 服務收入
-            safeArray(financeStore.data[dateStr]).forEach(e => {
+            // 服務收入 (防呆：確保 data[dateStr] 存在)
+            const dayEntries = safeArray((financeStore.data || {})[dateStr]);
+            dayEntries.forEach(e => {
                 if (e.status === 'checked' && e.checkoutDetails) {
                     const amt = parseInt(e.checkoutDetails.finalTotal) - parseInt(e.checkoutDetails.paidDeposit || 0);
                     if(amt > 0) {
@@ -3841,8 +3925,9 @@
                     }
                 }
             });
+
             // 定金收入
-            Object.keys(financeStore.data).forEach(k => {
+            Object.keys(financeStore.data || {}).forEach(k => {
                 safeArray(financeStore.data[k]).forEach(e => {
                     if ((e.hasDeposit || (e.depositMethod && e.depositMethod!=='none')) && e.depositDate === dateStr) {
                          const method = e.depositMethod || 'transfer';
@@ -3853,9 +3938,10 @@
                 });
             });
 
-            // 2. 計算當日支出
+            // 2. 計算當日支出 (防呆：確保 expenseData 存在)
             let dailyExp = 0;
-            safeArray(expenseData[dateStr]).forEach(e => dailyExp += parseInt(e.amount));
+            const dayExps = safeArray((expenseData || {})[dateStr]);
+            dayExps.forEach(e => dailyExp += parseInt(e.amount));
 
             mRev += dailyRev.total;
             mExp += dailyExp;
@@ -3865,6 +3951,13 @@
             box.className = `fin-day-box ${isRedDay ? 'is-holiday-bg' : ''}`;
             box.style.minHeight = "100px";
             box.onclick = () => openAccounting(dateStr);
+            
+            // [關鍵] 如果是今天，套用與預約管理頁面完全相同的金色邊框樣式
+            if (isToday) {
+                box.style.cssText = `border: 2px solid var(--gold-main) !important; box-shadow: inset 0 0 10px rgba(201, 184, 150, 0.3) !important; overflow: hidden; min-height: 100px;`;
+            } else {
+                box.style.overflow = "hidden";
+            }
             
             let html = `<div class="flex justify-between text-[10px] ${isRedDay?'text-[#ff6b6b] font-bold':'opacity-50'}">
                 <span>${d}</span><span>${isRedDay?'休':''}</span>
@@ -3886,9 +3979,40 @@
             grid.appendChild(box);
         }
         
-        document.getElementById('cal-month-rev').innerText = `$${mRev.toLocaleString()}`;
-        document.getElementById('cal-month-exp').innerText = `$${mExp.toLocaleString()}`;
-        document.getElementById('cal-month-net').innerText = `$${(mRev - mExp).toLocaleString()}`;
+        // 更新底部加總 (防呆：如果找不到元件就不更新)
+        const elRev = document.getElementById('cal-month-rev');
+        const elExp = document.getElementById('cal-month-exp');
+        const elNet = document.getElementById('cal-month-net');
+        
+        if(elRev) elRev.innerText = `$${mRev.toLocaleString()}`;
+        if(elExp) elExp.innerText = `$${mExp.toLocaleString()}`;
+        if(elNet) elNet.innerText = `$${(mRev - mExp).toLocaleString()}`;
+    };
+
+    // [新增] 一鍵回到當前日期功能 (放在 renderReportCalendar 下方)
+    window.resetToToday = function(type) {
+        const today = new Date(); // 產生當下時間物件
+        
+        if (type === 'booking') {
+            bookingState.viewDate = new Date(today); 
+            renderCalendar();
+        } 
+        else if (type === 'finance') {
+            financeStore.viewDate = new Date(today);
+            renderFinancePage();
+        } 
+        else if (type === 'report-cal') {
+            reportState.calDate = new Date(today);
+            renderReportCalendar();
+        }
+        else if (type === 'report-month') {
+            reportState.date = new Date(today);
+            renderMonthlyReport();
+        }
+        else if (type === 'report-year') {
+            reportState.date = new Date(today);
+            renderYearlyReport();
+        }
     };
 
     // --- [更新] 記帳彈窗邏輯 (包含轉帳與錢包) ---
@@ -4105,6 +4229,7 @@
         return data;
     }
 
+    // [更新] 月報表渲染：加入平均日收與客單價
     window.renderMonthlyReport = function() {
         const y = reportState.date.getFullYear();
         const m = reportState.date.getMonth();
@@ -4116,36 +4241,59 @@
         const attendRate = d.attendance.total > 0 ? Math.round((d.attendance.checked / d.attendance.total) * 100) : 0;
         const sortedServices = Object.entries(d.services).sort((a,b) => b[1] - a[1]).slice(0, 5);
 
+        // 新增計算公式
+        const daysInMonth = new Date(y, m + 1, 0).getDate(); // 當月總天數
+        // 平均日收 (總營收 / 當月天數)
+        const avgDaily = Math.round(d.rev.total / daysInMonth);
+        // 平均客單 (總營收 / 實際服務人數) -> 避免除以 0
+        const avgTicket = d.attendance.checked > 0 ? Math.round(d.rev.total / d.attendance.checked) : 0;
+
         let html = `
             <div class="report-card !bg-[#1a3a2e] !text-[#f5f1e8]">
                 <div class="text-center opacity-70 text-sm">本月淨利 (盈餘)</div>
                 <div class="report-big-stat text-[#c9b896]">$${profit.toLocaleString()}</div>
+                
                 <div class="flex justify-around mt-4 border-t border-white/10 pt-2">
                     <div><div class="text-xs opacity-50">總營收</div><div class="font-bold">$${d.rev.total.toLocaleString()}</div></div>
                     <div><div class="text-xs opacity-50">總支出</div><div class="font-bold text-[#ff6b6b]">$${d.exp.total.toLocaleString()}</div></div>
                     <div><div class="text-xs opacity-50">毛利率</div><div class="font-bold text-[#c9b896]">${margin}%</div></div>
+                </div>
+
+                <div class="flex justify-around mt-2 border-t border-white/10 pt-2 pb-1">
+                    <div class="text-center">
+                        <div class="text-[10px] opacity-50">平均日收</div>
+                        <div class="font-bold text-sm">$${avgDaily.toLocaleString()}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-[10px] opacity-50">平均單價</div>
+                        <div class="font-bold text-sm text-[#c9b896]">$${avgTicket.toLocaleString()}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-[10px] opacity-50">服務人次</div>
+                        <div class="font-bold text-sm">${d.attendance.checked} 人</div>
+                    </div>
                 </div>
             </div>
 
             <div class="report-card">
                 <div class="report-section-title">📊 營收來源分析</div>
                 <div class="stat-grid">
-                    <div class="stat-box"><div class="stat-label">現金</div><div class="stat-val">$${d.rev.cash}</div></div>
-                    <div class="stat-box"><div class="stat-label">匯款</div><div class="stat-val">$${d.rev.transfer}</div></div>
-                    <div class="stat-box"><div class="stat-label">Line Pay</div><div class="stat-val">$${d.rev.linepay}</div></div>
-                    <div class="stat-box"><div class="stat-label">街口</div><div class="stat-val">$${d.rev.jko}</div></div>
-                    <div class="stat-box"><div class="stat-label">儲值金扣抵</div><div class="stat-val">$${d.rev.stored}</div></div>
-                    <div class="stat-box"><div class="stat-label">信用卡</div><div class="stat-val">$${d.rev.credit}</div></div>
+                    <div class="stat-box"><div class="stat-label">現金</div><div class="stat-val">$${d.rev.cash.toLocaleString()}</div></div>
+                    <div class="stat-box"><div class="stat-label">匯款</div><div class="stat-val">$${d.rev.transfer.toLocaleString()}</div></div>
+                    <div class="stat-box"><div class="stat-label">Line Pay</div><div class="stat-val">$${d.rev.linepay.toLocaleString()}</div></div>
+                    <div class="stat-box"><div class="stat-label">街口</div><div class="stat-val">$${d.rev.jko.toLocaleString()}</div></div>
+                    <div class="stat-box"><div class="stat-label">儲值金扣抵</div><div class="stat-val">$${d.rev.stored.toLocaleString()}</div></div>
+                    <div class="stat-box"><div class="stat-label">信用卡</div><div class="stat-val">$${d.rev.credit.toLocaleString()}</div></div>
                 </div>
             </div>
 
             <div class="report-card">
                 <div class="report-section-title">💸 支出類別統計</div>
                 <div class="stat-grid">
-                    <div class="stat-box"><div class="stat-label">固定支出</div><div class="stat-val">$${d.exp.fixed}</div></div>
-                    <div class="stat-box"><div class="stat-label">耗材</div><div class="stat-val">$${d.exp.consume}</div></div>
-                    <div class="stat-box"><div class="stat-label">設備</div><div class="stat-val">$${d.exp.equip}</div></div>
-                    <div class="stat-box"><div class="stat-label">退款</div><div class="stat-val">$${d.exp.refund}</div></div>
+                    <div class="stat-box"><div class="stat-label">固定支出</div><div class="stat-val">$${d.exp.fixed.toLocaleString()}</div></div>
+                    <div class="stat-box"><div class="stat-label">耗材</div><div class="stat-val">$${d.exp.consume.toLocaleString()}</div></div>
+                    <div class="stat-box"><div class="stat-label">設備</div><div class="stat-val">$${d.exp.equip.toLocaleString()}</div></div>
+                    <div class="stat-box"><div class="stat-label">退款</div><div class="stat-val">$${d.exp.refund.toLocaleString()}</div></div>
                 </div>
             </div>
 
@@ -4168,6 +4316,7 @@
         document.getElementById('month-report-content').innerHTML = html;
     };
 
+    // [更新] 年報表渲染：同樣加入平均數據
     window.renderYearlyReport = function() {
         const y = reportState.date.getFullYear();
         document.getElementById('report-year-title').innerText = `${y} 年度報表`;
@@ -4175,6 +4324,11 @@
         const d = generateReportData(y, null);
         const profit = d.rev.total - d.exp.total;
         const margin = d.rev.total > 0 ? Math.round((profit / d.rev.total) * 100) : 0;
+
+        // 計算年度天數 (簡單算 365)
+        const daysInYear = 365;
+        const avgDaily = Math.round(d.rev.total / daysInYear);
+        const avgTicket = d.attendance.checked > 0 ? Math.round(d.rev.total / d.attendance.checked) : 0;
 
         let html = `
             <div class="report-card !bg-[#1a3a2e] !text-[#f5f1e8]">
@@ -4184,6 +4338,21 @@
                     <div><div class="text-xs opacity-50">總營收</div><div class="font-bold">$${d.rev.total.toLocaleString()}</div></div>
                     <div><div class="text-xs opacity-50">總支出</div><div class="font-bold text-[#ff6b6b]">$${d.exp.total.toLocaleString()}</div></div>
                     <div><div class="text-xs opacity-50">毛利率</div><div class="font-bold text-[#c9b896]">${margin}%</div></div>
+                </div>
+                
+                <div class="flex justify-around mt-2 border-t border-white/10 pt-2 pb-1">
+                    <div class="text-center">
+                        <div class="text-[10px] opacity-50">日均營收</div>
+                        <div class="font-bold text-sm">$${avgDaily.toLocaleString()}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-[10px] opacity-50">平均單價</div>
+                        <div class="font-bold text-sm text-[#c9b896]">$${avgTicket.toLocaleString()}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-[10px] opacity-50">總人次</div>
+                        <div class="font-bold text-sm">${d.attendance.checked}</div>
+                    </div>
                 </div>
             </div>
             
@@ -4224,10 +4393,10 @@
         // 3. 強制同步「前一頁」的按鈕 (防止跳回去時跑掉)
         if (btnDailySettle) {
             if (isSettled) {
-                btnDailySettle.innerText = "📋 結算詳情";
+                btnDailySettle.innerText = "📋結算詳情";
                 btnDailySettle.className = "settle-btn settle-btn-main"; 
             } else {
-                btnDailySettle.innerText = "💰 當日結算";
+                btnDailySettle.innerText = "💰當日結算";
                 btnDailySettle.className = "settle-btn settle-btn-outline"; 
             }
         }
@@ -4837,12 +5006,12 @@
         if (btn) {
             if (isSettled) {
                 // 狀態 A：已結算 -> 綠色實心按鈕 + 文字變更
-                btn.innerText = "📋 結算詳情";
+                btn.innerText = "📋結算詳情";
                 btn.className = "settle-btn settle-btn-main";
                 // 確保移除舊的事件，重新綁定 (雖不影響 onclick，但視覺上要確保)
             } else {
                 // 狀態 B：未結算 -> 空心按鈕 + 原始文字
-                btn.innerText = "💰 當日結算";
+                btn.innerText = "💰當日結算";
                 btn.className = "settle-btn settle-btn-outline"; 
             }
         }
@@ -5129,7 +5298,7 @@
         }
     };
 
-    // [修正版] 開啟預約詳情視窗
+    // [修正版] 開啟預約詳情視窗 (同步顯示備註與圖片)
     window.openBookingDetail = function(entry) {
         currentCheckoutEntry = entry; 
         const modal = document.getElementById('bookingDetailModal');
@@ -5183,28 +5352,51 @@
             statusContainer.appendChild(noShowBtn);
         }
 
-        // --- [修正重點] 定金顯示邏輯 (這裡修正了顯示不同步的問題) ---
+        // 定金顯示
         const depMap = { 'transfer': '匯款', 'linepay': 'Line Pay', 'none': '無', 'cash': '現金', 'stored': '儲值金' };
-        // 優先使用 depositMethod，若沒有則回退舊邏輯
         const methodKey = entry.depositMethod || (entry.hasDeposit ? 'transfer' : 'none');
         const depTxt = depMap[methodKey] || methodKey;
-
-        // 讀取金額，預設 100
         const depAmount = entry.depositAmount || 100;
         const hasDep = (methodKey !== 'none');
 
         document.getElementById('bd-deposit').innerText = `${depTxt} ${hasDep ? '$' + depAmount : ''}`;
-        // -------------------------------------------------------
 
-        // 項目與備註
+        // 項目顯示
         document.getElementById('bd-items').innerHTML = safeArray(entry.items).map(i => `<div>${i}</div>`).join('');
         
+        // --- [新增] 備註顯示 ---
         const noteArea = document.getElementById('bd-note-area');
-        if(entry.note) { 
+        if(entry.note && entry.note.trim() !== "") { 
             document.getElementById('bd-note').innerText = entry.note; 
             noteArea.classList.remove('hidden'); 
         } else { 
             noteArea.classList.add('hidden'); 
+        }
+
+        // --- [新增] 圖片顯示 ---
+        const imgArea = document.getElementById('bd-img-area');
+        const imgGrid = document.getElementById('bd-img-grid');
+        
+        // 相容舊資料(單張字串)與新資料(多張陣列)
+        let images = [];
+        if (entry.images && Array.isArray(entry.images)) {
+            images = entry.images;
+        } else if (entry.image) {
+            images = [entry.image];
+        }
+
+        if (images.length > 0) {
+            imgGrid.innerHTML = images.map(src => `
+                <div class="aspect-square relative cursor-pointer group" onclick="viewLargeImage('${src}')">
+                    <img src="${src}" class="w-full h-full object-cover rounded-lg border border-gray-200 shadow-sm hover:opacity-90 transition-opacity">
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 rounded-lg transition-opacity">
+                        <span class="text-white text-xs font-bold">🔍</span>
+                    </div>
+                </div>
+            `).join('');
+            imgArea.classList.remove('hidden');
+        } else {
+            imgArea.classList.add('hidden');
         }
 
         // 按鈕綁定
@@ -5500,28 +5692,22 @@
                 else if (entry.hasDeposit) depMethod = 'transfer';
                 setDepositMethod(depMethod);
 
-                // 2. 🔴 在它【下面】加入這段 (讀取定金金額，如果是舊資料預設 100)
-                const depAmountInput = document.getElementById('fe-dep-amount');
-                if (entryId) {
-                    const entry = currentEntries.find(e => String(e.id) === String(entryId));
-                    // 如果有儲存過金額就用儲存的，否則預設 100
-                    depAmountInput.value = (entry && entry.depositAmount) ? entry.depositAmount : 100;
-                } else {
-                    // 新增狀態預設 100
-                    depAmountInput.value = 100;
-                }
+                // 1. 先算出「今天」的日期 (格式 YYYY-MM-DD)
+                const nowObj = new Date();
+                const todayStr = `${nowObj.getFullYear()}-${String(nowObj.getMonth()+1).padStart(2,'0')}-${String(nowObj.getDate()).padStart(2,'0')}`;
 
-                // [新增] 預設日期處理：如果是新資料，預設為選取的日期(activeDateStr)
+                // 2. 設定日期欄位
                 const dateInput = document.getElementById('fe-dep-date');
+
                 if (entryId) {
                     const entry = currentEntries.find(e => String(e.id) === String(entryId));
                     if (entry) {
-                        // 如果有舊資料，讀取舊的定金日期，如果沒有，則用預約日期
-                        dateInput.value = entry.depositDate || activeDateStr; 
+                        // 編輯模式：如果有舊紀錄就用舊的，沒有就預設「今天」
+                        dateInput.value = entry.depositDate || todayStr; 
                     }
                 } else {
-                    // 新資料：預設為當前選取的日期 (補帳方便)
-                    dateInput.value = activeDateStr;
+                    // 新增模式：定金日期直接預設為「今天」
+                    dateInput.value = todayStr;
                 }
 
                 document.getElementById('fe-note').value = entry.note || "";
@@ -6227,7 +6413,6 @@
     };
 
     window.initSystem = function() {
-        initCalendarTimeSelect(); 
         renderServiceFront(); 
         renderAdminList();     
         initCalc();           
@@ -6628,6 +6813,11 @@
 </script>
 
 <div id="custom-numpad">
+    <button class="num-btn num-op" onclick="numpadInput('/')">÷</button>
+    <button class="num-btn num-op" onclick="numpadInput('*')">×</button>
+    <button class="num-btn num-op" onclick="numpadInput('-')">-</button>
+    <button class="num-btn num-op" onclick="numpadInput('+')">+</button>
+
     <button class="num-btn" onclick="numpadInput('7')">7</button>
     <button class="num-btn" onclick="numpadInput('8')">8</button>
     <button class="num-btn" onclick="numpadInput('9')">9</button>
@@ -6636,23 +6826,16 @@
     <button class="num-btn" onclick="numpadInput('4')">4</button>
     <button class="num-btn" onclick="numpadInput('5')">5</button>
     <button class="num-btn" onclick="numpadInput('6')">6</button>
-    <button class="num-btn num-op" onclick="numpadInput('*')">×</button>
+    <button class="num-btn num-op" onclick="numpadInput('AC')">AC</button>
     
     <button class="num-btn" onclick="numpadInput('1')">1</button>
     <button class="num-btn" onclick="numpadInput('2')">2</button>
     <button class="num-btn" onclick="numpadInput('3')">3</button>
-    <button class="num-btn num-op" onclick="numpadInput('/')">÷</button>
-    
-    <button class="num-btn" onclick="numpadInput('0')">0</button>
-    <button class="num-btn" onclick="numpadInput('.')">.</button>
-    <button class="num-btn num-op" onclick="numpadInput('+')">+</button>
-    <button class="num-btn num-op" onclick="numpadInput('-')">-</button>
-    
-    <button class="num-btn num-op" onclick="numpadInput('%')">%</button>
-    <button class="num-btn num-op" onclick="numpadInput('AC')">AC</button>
     <button class="num-btn num-op" onclick="numpadInput('\n')">↵</button> 
-    <button class="num-btn num-confirm" onclick="closeNumpad()">OK</button> </div>
-</div>
-
-</body>
+    
+    <button class="num-btn" onclick="numpadInput('.')">.</button>
+    <button class="num-btn" onclick="numpadInput('0')">0</button>
+    <button class="num-btn num-op" onclick="numpadInput('%')">%</button>
+    <button class="num-btn num-confirm" onclick="closeNumpad()">✓</button> 
+</div> </body>
 </html>
