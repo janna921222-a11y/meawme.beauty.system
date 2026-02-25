@@ -211,19 +211,6 @@
             margin-left: auto; /* 讓價格靠右邊 */
             white-space: nowrap;
         }
-        
-        /* 避免按鈕被壓扁 */
-        .admin-item-row button {
-            flex-shrink: 0;
-        }
-        /* 確保輸入框樣式正確 */
-        .admin-item-row .edit-input {
-            background: rgba(255, 255, 255, 0.9) !important; 
-            border: 1px solid #ccc !important; 
-            width: 100%;
-            padding: 4px 8px !important;
-            color: #333 !important;
-        }
         /* 防止按鈕被擠壓 */
         .admin-item-row button {
             flex-shrink: 0;
@@ -1566,22 +1553,6 @@
         .acc-split-label { font-size: 10px; color: #9ca3af; margin-bottom: 2px; }
         .acc-split-val { font-size: 14px; font-weight: 700; }
         
-        .history-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; border-bottom: 1px solid #eee; background: #fff; }
-        .history-row:last-child { border-bottom: none; }
-        .hist-date { font-size: 10px; color: #888; font-weight: bold; }
-        .hist-desc { font-size: 13px; font-weight: 700; color: #1a3a2e; margin: 2px 0; }
-        .hist-note { font-size: 11px; color: #aaa; }
-        .hist-amt { font-size: 16px; font-weight: 800; font-family: 'Outfit', sans-serif; }
-        .amt-pos { color: #1a4731; } /* 收入綠 */
-        .amt-neg { color: #ff6b6b; } /* 支出紅 */
-        
-        .bk-tab { flex: 1; padding: 10px; text-align: center; font-size: 12px; font-weight: 700; color: #888; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.3s; }
-        .bk-tab.active { color: var(--gold-main); border-bottom-color: var(--gold-main); }
-        .bk-form-group { margin-bottom: 15px; }
-        .bk-label { display: block; font-size: 11px; color: #555; font-weight: bold; margin-bottom: 4px; }
-        .bk-input, .bk-select { width: 100%; background: #f5f5f5; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 14px; color: #333; font-weight: bold; outline: none; }
-        .bk-input:focus, .bk-select:focus { border-color: var(--gold-main); background: #fff; }
-
         /* --- [新增] 固定頂部標題與原生月份選擇器 --- */
         .sticky-header-wrapper {
             position: sticky;
@@ -2073,7 +2044,7 @@
         <div class="sticky-header-wrapper">
             <div class="nav-header-container">
                 <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container">
+                <div class="month-picker-container" onclick="openMonthPicker(this)">
                     <div id="booking-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
                     <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'booking')">
                 </div>
@@ -2117,12 +2088,12 @@
         </div>
 
         <div id="admin-cat-content-nail-model">
-            <div class="admin-setting-container"><button class="setting-btn" onclick="toggleEditMode('nail-model')">⚙️ 設置系統 </button></div>
+            <div class="admin-setting-container"><button id="btn-set-nail-model" class="setting-btn" onclick="toggleEditMode('nail-model')">⚙️ 設置系統 </button></div>
             <div class="admin-section-label">手模專區</div><div id="list-nail-model"></div><div id="add-nail-model"></div>
         </div>
 
         <div id="admin-cat-content-eyelash-practice" class="hidden">
-            <div class="admin-setting-container"><button class="setting-btn" onclick="toggleEditMode('eyelash-practice')">⚙️ 設置系統</button></div>
+            <div class="admin-setting-container"><button id="btn-set-eyelash-practice" class="setting-btn" onclick="toggleEditMode('eyelash-practice')">⚙️ 設置系統</button></div>
             <div class="admin-section-label">睫模專區</div><div id="list-eyelash-practice"></div><div id="add-eyelash-practice"></div>
         </div>
 
@@ -2208,7 +2179,7 @@
             </div>
             <div class="nav-header-container">
                 <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container">
+                <div class="month-picker-container" onclick="openMonthPicker(this)">
                     <div id="admin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
                     <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'budget')">
                 </div>
@@ -2252,7 +2223,7 @@
         <div class="sticky-header-wrapper">
             <div class="nav-header-container">
                 <button onclick="changeFinMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container">
+                <div class="month-picker-container" onclick="openMonthPicker(this)">
                     <div id="fin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
                     <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'finance')">
                 </div>
@@ -2295,7 +2266,7 @@
         <div class="sticky-header-wrapper">
             <div class="nav-header-container">
                 <button onclick="changeReportCalendarMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container">
+                <div class="month-picker-container" onclick="openMonthPicker(this)">
                     <div id="rep-cal-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
                     <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'report-cal')">
                 </div>
@@ -3205,7 +3176,12 @@
                 if (!listContainer) return;
                 
                 const items = safeArray(serviceData[cat][type]);
-                const isEditing = editStates[cat]; 
+                
+                // 準確對應不同子標籤的編輯狀態
+                let editKey = cat;
+                if (cat === 'nail' && type === 'model') editKey = 'nail-model';
+                if (cat === 'eyelash' && type === 'practice') editKey = 'eyelash-practice';
+                const isEditing = editStates[editKey];
 
                 listContainer.innerHTML = items.map((item, index) => {
                     if (!item) return '';
@@ -3710,6 +3686,12 @@
         else if (type === 'budget') renderCalendar();
         else if (type === 'finance') renderFinancePage();
         else if (type === 'report-cal') renderReportCalendar();
+    };
+
+    // [新增] 展開原生月份選擇器
+    window.openMonthPicker = function(el) {
+        var inp = el.querySelector('input');
+        if (inp && inp.showPicker) inp.showPicker();
     };
 
     function changeBookingMonth(dir) {
@@ -5374,12 +5356,12 @@
             const entries = safeArray(financeStore.data[dateStr]);
             const isToday = (dateStr === todayStr);
 
-            // [核心修正] 應休天數：只算星期六、日與國定假日
+            // 應休天數：當月所有的國定假日、周休六日
             const isOfficialRed = isSun || isSat || holidayName;
             if (isOfficialRed) offDays++; 
             
-            // 實休天數：如果是手動排休或官方紅字，且當天真的「沒有排入任何客人」，才算實休。
-            if ((isManualOff || isOfficialRed) && entries.length === 0) realOff++; 
+            // 實休天數：手動設定休假日的日子 ＋ 每週日公休 (且確保當天真的沒有客人)
+            if ((isManualOff || isSun) && entries.length === 0) realOff++; 
 
             const box = document.createElement('div');
             const isRedDay = isOfficialRed || isManualOff;
@@ -5636,7 +5618,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3 pl-3 border-l border-gray-600">
-                        <button class="del-btn text-red-400 font-bold text-lg px-2 py-1 hover:text-red-300 transition-colors" onclick="deleteSingleEntry('${e.id}')">✕</button>
+                        <button class="del-btn text-red-400 font-bold text-lg px-2 py-1 hover:text-red-300 transition-colors" onclick="deleteSingleEntry('${e.id}', event)">✕</button>
                     </div>
                 `;
                 container.appendChild(div);
@@ -5717,7 +5699,7 @@
     }
 
     // [修正] 單筆刪除功能 (新增：自動釋出時段)
-    window.deleteSingleEntry = function(id) {
+    window.deleteSingleEntry = function(id, event) {
         // 阻止事件冒泡
         if(event) event.stopPropagation();
 
@@ -5983,6 +5965,22 @@
         }
         
         items.forEach(i => { if(!i.discount) i.discount = { type: 'none', val: 0 }; });
+
+        // 【修正重點】如果解析出來的總價與使用者在預約時手動輸入的總價不同，自動以「調整差額」補齊，讓全單折扣有基準可以扣
+        let itemsSum = items.reduce((acc, i) => acc + ((parseInt(i.price)||0) * (i.qty||1)), 0);
+        let entryPrice = parseInt(entry.price) || 0;
+        let diff = entryPrice - itemsSum;
+        if (diff !== 0) {
+            items.push({
+                name: diff > 0 ? "其他/未列出手動加價" : "其他/已扣除手動折扣",
+                price: diff,
+                duration: 0,
+                qty: 1,
+                isPercent: false,
+                discount: { type: 'none', val: 0 }
+            });
+        }
+
         const deposit = ((entry.depositMethod && entry.depositMethod !== 'none') || entry.hasDeposit) ? (parseInt(entry.depositAmount) || 100) : 0;
 
         checkoutState = { entry: entry, items: items, globalDiscount: { type: 'none', val: 0 }, deposit: deposit, payMethod: 'cash', finalTotal: 0 };
