@@ -306,9 +306,9 @@
             border-top: 1px solid var(--border-base); 
             z-index: 9999 !important; 
             /* 寫死固定高度，移除 env 動態變數，防止畫面伸縮跳動 */
-            height: 50px !important; 
-            min-height: 50px !important; 
-            max-height: 50px !important;
+            height: 60px !important; 
+            min-height: 60px !important; 
+            max-height: 60px !important;
             padding-bottom: 25px !important; /* 靜態安全區高度 */
             display: flex; 
             justify-content: center; 
@@ -321,7 +321,7 @@
         .nav-inner {
             width: 100%;
             max-width: 100%;
-            height: 50px !important; /* 鎖定內部按鈕區塊高度 */
+            height: 45px !important; /* 鎖定內部按鈕區塊高度 */
             display: flex;
         }
         
@@ -1521,6 +1521,67 @@
             align-items: center;
         }
 
+        /* --- [新增] 帳戶管理與記帳專用樣式 --- */
+        .account-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+            border: 1px solid rgba(201, 184, 150, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .account-card:active { transform: scale(0.96); }
+        .acc-card-title { font-size: 13px; color: var(--white-sec); font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; }
+        .acc-card-bal { font-size: 24px; color: var(--gold-main); font-weight: 800; font-family: 'Playfair Display', serif; }
+        
+        .history-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px; border-bottom: 1px solid #eee; background: #fff;
+        }
+        .history-row:last-child { border-bottom: none; }
+        .hist-date { font-size: 10px; color: #888; font-weight: bold; }
+        .hist-desc { font-size: 13px; font-weight: 700; color: #1a3a2e; margin: 2px 0; }
+        .hist-note { font-size: 11px; color: #aaa; }
+        .hist-amt { font-size: 16px; font-weight: 800; font-family: 'Outfit', sans-serif; }
+        .amt-pos { color: #1a4731; } /* 收入綠 */
+        .amt-neg { color: #ff6b6b; } /* 支出紅 */
+        
+        .bk-tab { flex: 1; padding: 10px; text-align: center; font-size: 12px; font-weight: 700; color: #888; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.3s; }
+        .bk-tab.active { color: var(--gold-main); border-bottom-color: var(--gold-main); }
+        .bk-form-group { margin-bottom: 15px; }
+        .bk-label { display: block; font-size: 11px; color: #555; font-weight: bold; margin-bottom: 4px; }
+        .bk-input, .bk-select { width: 100%; background: #f5f5f5; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 14px; color: #333; font-weight: bold; outline: none; }
+        .bk-input:focus, .bk-select:focus { border-color: var(--gold-main); background: #fff; }
+
+        /* --- [新增] 帳戶管理與記帳專用樣式 --- */
+        .acc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .acc-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.04); cursor: pointer; transition: transform 0.2s; position: relative; }
+        .acc-card:active { transform: scale(0.98); }
+        .acc-card-title { font-size: 13px; font-weight: 700; color: #6b7280; margin-bottom: 6px; }
+        .acc-card-val { font-size: 22px; font-weight: 800; color: #1a3a2e; font-family: 'Outfit', sans-serif; }
+        .acc-card-split { display: flex; justify-content: space-between; border-top: 1px dashed #e5e7eb; margin-top: 10px; padding-top: 10px; }
+        .acc-split-item { text-align: center; flex: 1; }
+        .acc-split-label { font-size: 10px; color: #9ca3af; margin-bottom: 2px; }
+        .acc-split-val { font-size: 14px; font-weight: 700; }
+        
+        .history-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; border-bottom: 1px solid #eee; background: #fff; }
+        .history-row:last-child { border-bottom: none; }
+        .hist-date { font-size: 10px; color: #888; font-weight: bold; }
+        .hist-desc { font-size: 13px; font-weight: 700; color: #1a3a2e; margin: 2px 0; }
+        .hist-note { font-size: 11px; color: #aaa; }
+        .hist-amt { font-size: 16px; font-weight: 800; font-family: 'Outfit', sans-serif; }
+        .amt-pos { color: #1a4731; } /* 收入綠 */
+        .amt-neg { color: #ff6b6b; } /* 支出紅 */
+        
+        .bk-tab { flex: 1; padding: 10px; text-align: center; font-size: 12px; font-weight: 700; color: #888; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.3s; }
+        .bk-tab.active { color: var(--gold-main); border-bottom-color: var(--gold-main); }
+        .bk-form-group { margin-bottom: 15px; }
+        .bk-label { display: block; font-size: 11px; color: #555; font-weight: bold; margin-bottom: 4px; }
+        .bk-input, .bk-select { width: 100%; background: #f5f5f5; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 14px; color: #333; font-weight: bold; outline: none; }
+        .bk-input:focus, .bk-select:focus { border-color: var(--gold-main); background: #fff; }
+
     </style>
 </head>
 <body>
@@ -2185,6 +2246,7 @@
         <button class="report-tab-btn active" onclick="switchReportTab('calendar', this)">日報表</button>
         <button class="report-tab-btn" onclick="switchReportTab('month', this)">月報表</button>
         <button class="report-tab-btn" onclick="switchReportTab('year', this)">年報表</button>
+        <button class="report-tab-btn" onclick="switchReportTab('account', this)">帳戶</button>
     </div>
 
     <div id="report-view-calendar">
@@ -2196,13 +2258,11 @@
                 <button onclick="changeReportCalendarMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
             </div>
         </div>
-        
         <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
             <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
             <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
         </div>
         <div id="report-calendar-grid" class="calendar-grid"></div>
-        
         <div class="fin-footer mt-4">
             <div class="text-center">本月營收 <span id="cal-month-rev">$0</span></div>
             <div class="text-center text-[#ff6b6b]">本月支出 <span id="cal-month-exp">$0</span></div>
@@ -2233,7 +2293,82 @@
         </div>
         <div id="year-report-content"></div>
     </div>
+
+    <div id="report-view-account" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
+        <div class="nav-header-container mt-2">
+            <button onclick="changeReportDate('account', -1)" class="text-[var(--gold-main)] text-lg px-4">❮</button>
+            <span id="account-month-title" class="font-bold text-[#333] text-lg"></span>
+            <div class="nav-right-group">
+                <button onclick="resetToToday('account')" class="today-btn !border-[#333] !text-[#333]">本月</button>
+                <button onclick="changeReportDate('account', 1)" class="text-[var(--gold-main)] text-lg px-4">❯</button>
+            </div>
+        </div>
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-[#1a3a2e] border-l-4 border-[var(--gold-main)] pl-2">店內金流總覽</h3>
+            <button onclick="openUnifiedBookkeeping()" class="bg-[#1a3a2e] text-[var(--gold-main)] px-4 py-2 rounded-full text-xs font-bold shadow-lg">＋ 記帳 / 調度</button>
+        </div>
+        <div class="acc-grid" id="account-cards-container"></div>
+    </div>
 </section>
+
+<div id="accountDetailModal" class="cal-modal-overlay hidden" style="z-index: 7800;">
+    <div class="cal-modal-content flex flex-col" style="max-width: 380px; height: 85vh; background: #f5f2ee; color: #333; padding: 0; border-radius: 20px; overflow: hidden;">
+        <div class="bg-[#1a3a2e] p-5 text-center relative shadow-md z-10 flex flex-col items-center">
+            <button onclick="document.getElementById('accountDetailModal').classList.add('hidden')" class="absolute top-3 right-3 text-[var(--gold-main)] text-xl font-bold p-2 leading-none">✕</button>
+            <h3 id="acc-detail-title" class="text-[var(--white-sec)] font-bold text-sm tracking-widest mb-2 mt-1">歷史明細</h3>
+            <div id="acc-detail-bal" class="text-[var(--gold-main)] text-3xl font-bold font-serif mb-4">$0</div>
+            <button onclick="openUnifiedBookkeeping()" class="bg-[var(--gold-main)] text-[#1a3a2e] px-5 py-2.5 rounded-full text-xs font-bold shadow-md w-full">＋ 新增 記帳 / 調度</button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3" id="acc-detail-list"></div>
+    </div>
+</div>
+
+<div id="unifiedBookkeepingModal" class="cal-modal-overlay hidden" style="z-index: 7900;">
+    <div class="cal-modal-content flex flex-col" style="max-width: 360px; background: #fff; padding: 0; border-radius: 20px; overflow: hidden; color: #333;">
+        <div class="flex bg-gray-100">
+            <div class="bk-tab active" data-type="expense" onclick="switchBkTab('expense')">支出</div>
+            <div class="bk-tab" data-type="income" onclick="switchBkTab('income')">收入</div>
+            <div class="bk-tab" data-type="transfer" onclick="switchBkTab('transfer')">調度</div>
+            <div class="bk-tab" data-type="adjust" onclick="switchBkTab('adjust')">調整</div>
+        </div>
+        <div class="p-5 overflow-y-auto text-left" style="max-height: 75vh;">
+            <div class="bk-form-group">
+                <label class="bk-label">日期</label>
+                <input type="date" id="bk-date" class="bk-input">
+            </div>
+            <div class="bk-form-group" id="bk-cat-group">
+                <label class="bk-label" id="bk-cat-label">分類</label>
+                <select id="bk-cat" class="bk-select"></select>
+            </div>
+            <div class="bk-form-group">
+                <label class="bk-label" id="bk-name-label">項目名稱 / 說明</label>
+                <input type="text" id="bk-name" class="bk-input" placeholder="請輸入說明">
+            </div>
+            <div class="bk-form-group">
+                <label class="bk-label" id="bk-amt-label">金額</label>
+                <input type="number" inputmode="numeric" id="bk-amount" class="bk-input text-xl text-[var(--gold-main)]" placeholder="0" onfocus="this.select()">
+            </div>
+            <div class="grid grid-cols-2 gap-3" id="bk-account-group">
+                <div class="bk-form-group" id="bk-source-group">
+                    <label class="bk-label text-red-500">轉出 / 扣款帳戶</label>
+                    <select id="bk-source" class="bk-select"></select>
+                </div>
+                <div class="bk-form-group" id="bk-target-group">
+                    <label class="bk-label text-green-600">轉入 / 收款帳戶</label>
+                    <select id="bk-target" class="bk-select"></select>
+                </div>
+            </div>
+            <div class="bk-form-group">
+                <label class="bk-label">備註 (選填)</label>
+                <input type="text" id="bk-note" class="bk-input font-normal text-sm" placeholder="輸入備註">
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-4">
+                <button onclick="document.getElementById('unifiedBookkeepingModal').classList.add('hidden')" class="py-3 border border-gray-300 text-gray-500 rounded-xl font-bold">取消</button>
+                <button onclick="submitUnifiedBookkeeping()" class="py-3 bg-[#1a3a2e] text-[var(--gold-main)] rounded-xl font-bold shadow-lg">確認送出</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <section>
     <div id="dayDetailModal" class="cal-modal-overlay hidden">
@@ -3522,40 +3657,6 @@
         renderFinancePage();
     }
 
-    // 日曆切換月份
-    window.changeReportCalendarMonth = function(dir) {
-        reportState.calDate.setMonth(reportState.calDate.getMonth() + dir);
-        syncAllAdminDates(reportState.calDate);
-        renderReportCalendar();
-    };
-
-    // 報表切換日期
-    window.changeReportDate = function(type, dir) {
-        if (type === 'month') {
-            reportState.date.setMonth(reportState.date.getMonth() + dir);
-            syncAllAdminDates(reportState.date);
-            renderMonthlyReport();
-        }
-        if (type === 'year') {
-            reportState.date.setFullYear(reportState.date.getFullYear() + dir);
-            // 年份變更不一定需要同步月份，但保持一致
-            syncAllAdminDates(reportState.date);
-            renderYearlyReport();
-        }
-    };
-
-    // 一鍵回到當前日期功能
-    window.resetToToday = function(type) {
-        const today = new Date(); 
-        syncAllAdminDates(today); // 一鍵全部同步回今天
-        
-        if (type === 'booking') renderCalendar();
-        else if (type === 'finance') renderFinancePage();
-        else if (type === 'report-cal') renderReportCalendar();
-        else if (type === 'report-month') renderMonthlyReport();
-        else if (type === 'report-year') renderYearlyReport();
-    };
-
     // [修正] 時段管理開啟邏輯 (同步排除：週日、國定假日、手動排休日)
     function toggleMonthStatus() {
         const y = bookingState.viewDate.getFullYear();
@@ -3928,17 +4029,55 @@
     window.switchReportTab = function(tab, btn) {
         reportState.tab = tab;
         document.querySelectorAll('.report-tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        if(btn) btn.classList.add('active');
         
-        document.getElementById('report-view-calendar').classList.add('hidden');
-        document.getElementById('report-view-month').classList.add('hidden');
-        document.getElementById('report-view-year').classList.add('hidden');
+        ['calendar', 'month', 'year', 'account'].forEach(t => {
+            const el = document.getElementById(`report-view-${t}`);
+            if (el) el.classList.add('hidden');
+        });
         
-        document.getElementById(`report-view-${tab}`).classList.remove('hidden');
+        const targetView = document.getElementById(`report-view-${tab}`);
+        if(targetView) targetView.classList.remove('hidden');
         
         if (tab === 'calendar') renderReportCalendar();
         if (tab === 'month') renderMonthlyReport();
         if (tab === 'year') renderYearlyReport();
+        if (tab === 'account') renderAccountView();
+    };
+
+    // 日曆切換月份
+    window.changeReportCalendarMonth = function(dir) {
+        reportState.calDate.setMonth(reportState.calDate.getMonth() + dir);
+        syncAllAdminDates(reportState.calDate);
+        renderReportCalendar();
+    };
+
+    // 報表切換日期
+    window.changeReportDate = function(type, dir) {
+        if (type === 'month' || type === 'account') {
+            reportState.date.setMonth(reportState.date.getMonth() + dir);
+            syncAllAdminDates(reportState.date);
+            if (type === 'month') renderMonthlyReport();
+            if (type === 'account') renderAccountView();
+        }
+        if (type === 'year') {
+            reportState.date.setFullYear(reportState.date.getFullYear() + dir);
+            syncAllAdminDates(reportState.date);
+            renderYearlyReport();
+        }
+    };
+
+    // 一鍵回到當前日期功能
+    window.resetToToday = function(type) {
+        const today = new Date(); 
+        syncAllAdminDates(today);
+        
+        if (type === 'booking') renderCalendar();
+        else if (type === 'finance') renderFinancePage();
+        else if (type === 'report-cal') renderReportCalendar();
+        else if (type === 'report-month') renderMonthlyReport();
+        else if (type === 'report-year') renderYearlyReport();
+        else if (type === 'account') renderAccountView();
     };
 
     // [修正版] 財務日曆渲染 (加入防呆保護 + 今天金色邊框 + 修正錯誤)
@@ -4002,11 +4141,21 @@
                 });
             });
 
-            // 2. 計算當日支出 (防呆：確保 expenseData 存在)
+            // 2. 計算當日支出與手動收入 (防呆：確保 expenseData 存在)
             let dailyExp = 0;
+            let dailyManualIncome = 0;
             const dayExps = safeArray((expenseData || {})[dateStr]);
-            dayExps.forEach(e => dailyExp += parseInt(e.amount));
+            dayExps.forEach(e => {
+                const type = e.type || (e.cat === 'transfer_out' ? 'transfer' : 'expense');
+                if (type === 'expense') {
+                    dailyExp += parseInt(e.amount);
+                } else if (type === 'income') {
+                    dailyManualIncome += parseInt(e.amount);
+                }
+            });
 
+            // 將手動收入加進當日總營收中
+            dailyRev.total += dailyManualIncome;
             mRev += dailyRev.total;
             mExp += dailyExp;
 
@@ -4016,7 +4165,6 @@
             box.style.minHeight = "100px";
             box.onclick = () => openAccounting(dateStr);
             
-            // [關鍵] 如果是今天，套用與預約管理頁面完全相同的金色邊框樣式
             if (isToday) {
                 box.style.cssText = `border: 2px solid var(--gold-main) !important; box-shadow: inset 0 0 10px rgba(201, 184, 150, 0.3) !important; overflow: hidden; min-height: 100px;`;
             } else {
@@ -4034,6 +4182,8 @@
             if (dailyRev.jko > 0) html += `<div class="fin-cal-row"><span>街</span><span>${dailyRev.jko}</span></div>`;
             if (dailyRev.stored > 0) html += `<div class="fin-cal-row"><span>儲</span><span>${dailyRev.stored}</span></div>`;
             
+            // 顯示手動收入與支出
+            if (dailyManualIncome > 0) html += `<div class="fin-cal-row text-[#c9b896]"><span>收</span><span>+${dailyManualIncome}</span></div>`;
             if (dailyExp > 0) html += `<div class="fin-cal-row text-[#ff6b6b] mt-1 border-t border-white/10 pt-1"><span>支</span><span>-${dailyExp}</span></div>`;
             
             html += `<div class="fin-cal-total">$${dailyRev.total}</div>`;
@@ -4136,23 +4286,36 @@
         const sourceMap = { 'petty': '零用金', 'backup': '備用金', 'transfer': '匯款', 'linepay': 'Line Pay', 'jko': '街口', 'wallet': '錢包', 'other': '其他' };
 
         exps.forEach((e, idx) => {
+            const type = e.type || (e.cat === 'transfer_out' ? 'transfer' : 'expense');
             let badgeColor = "bg-gray-200 text-gray-600";
             let amountColor = "text-[#ff6b6b]";
             let sign = "-";
             let sourceText = sourceMap[e.source] || e.source;
             let targetText = sourceMap[e.target] || e.target;
+            let displayCat = e.cat;
             
-            // 如果是轉帳/提領
-            if (e.cat === 'transfer_out') {
+            if (type === 'transfer') {
                 badgeColor = "bg-[#ffcc80] text-[#e65100]";
                 amountColor = "text-[#f57c00]";
                 sourceText = `${sourceText} ➔ ${targetText}`;
+                displayCat = '調度';
+            } else if (type === 'income') {
+                badgeColor = "bg-[#c8e6c9] text-[#2e7d32]";
+                amountColor = "text-[#2e7d32]";
+                sign = "+";
+                sourceText = `入帳至: ${targetText}`;
+            } else if (type === 'adjust') {
+                badgeColor = "bg-[#e1bee7] text-[#4a148c]";
+                amountColor = e.amount >= 0 ? "text-[#2e7d32]" : "text-[#ff6b6b]";
+                sign = e.amount >= 0 ? "+" : "";
+                sourceText = `調整帳戶: ${targetText}`;
+                displayCat = '調整';
             }
             
             expList.innerHTML += `
                 <div class="flex justify-between items-center bg-white p-2 rounded border border-gray-200 mb-2">
                     <div>
-                        <span class="text-[10px] px-1 rounded ${badgeColor}">${e.cat==='transfer_out'?'調度':e.cat}</span>
+                        <span class="text-[10px] px-1 rounded ${badgeColor}">${displayCat}</span>
                         <span class="font-bold ml-1">${e.name}</span>
                         <div class="text-[10px] text-gray-400 mt-1">${sourceText}</div>
                     </div>
@@ -4292,17 +4455,25 @@
             });
         });
 
-        // 3. 統計支出
+        // 3. 統計支出與手動收入
         Object.keys(expenseData).forEach(dateKey => {
             const [y, m, d] = dateKey.split('-').map(Number);
             if (y !== year) return;
             if (month !== null && m !== (month + 1)) return;
 
             safeArray(expenseData[dateKey]).forEach(e => {
-                const map = { '耗材':'consume', '設備':'equip', '固定支出':'fixed', '退款':'refund' };
-                const key = map[e.cat] || 'fixed';
-                data.exp[key] += parseInt(e.amount);
-                data.exp.total += parseInt(e.amount);
+                const type = e.type || (e.cat === 'transfer_out' ? 'transfer' : 'expense');
+                
+                if (type === 'expense') {
+                    const map = { '耗材':'consume', '設備':'equip', '固定支出':'fixed', '退款':'refund' };
+                    const key = map[e.cat] || 'fixed';
+                    data.exp[key] += parseInt(e.amount);
+                    data.exp.total += parseInt(e.amount);
+                } else if (type === 'income') {
+                    // 手動收入：加上總營收中 (預設歸類於現金，以保持報表平衡)
+                    data.rev.total += parseInt(e.amount);
+                    data.rev.cash += parseInt(e.amount);
+                }
             });
         });
 
@@ -4447,6 +4618,156 @@
             </div>
         `;
         document.getElementById('year-report-content').innerHTML = html;
+    };
+
+    // --- [NEW] 帳戶管理與總帳本引擎 ---
+    let globalLedger = {};
+
+    window.buildLedger = function() {
+        const accounts = {
+            petty: { balance: 0, name: '零用金(含未結現金)', history: [] },
+            backup: { balance: 0, name: '備用金', history: [] },
+            transfer: { balance: 0, name: '匯款/銀行', history: [] },
+            linepay: { balance: 0, name: 'Line Pay', history: [] },
+            jko: { balance: 0, name: '街口支付', history: [] },
+            wallet: { balance: 0, name: '錢包', history: [] }
+        };
+
+        const addRecord = (accId, date, time, amount, type, desc, note) => {
+            if (!accounts[accId]) return;
+            const amt = parseInt(amount) || 0;
+            if (amt === 0) return;
+            accounts[accId].balance += amt;
+            accounts[accId].history.push({ date, time, amount: amt, type, desc, note, currentBalance: accounts[accId].balance });
+        };
+
+        // 1. 服務收入 & 定金 (來自 financeStore)
+        Object.keys(financeStore.data).forEach(date => {
+            safeArray(financeStore.data[date]).forEach(e => {
+                const time = e.time || '12:00';
+                const itemsStr = safeArray(e.items).join('+');
+                // 尾款
+                if (e.status === 'checked' && e.checkoutDetails) {
+                    const d = e.checkoutDetails;
+                    const amt = parseInt(d.finalTotal) - parseInt(d.paidDeposit || 0);
+                    if (amt > 0) {
+                        let method = d.paymentMethod || 'cash';
+                        let accId = method === 'cash' ? 'petty' : (method === 'stored' ? null : method);
+                        if(accId) addRecord(accId, date, time, amt, 'income', `服務尾款 - ${itemsStr}`, '');
+                    }
+                }
+                // 定金
+                if ((e.hasDeposit || (e.depositMethod && e.depositMethod !== 'none')) && e.depositDate) {
+                    const method = e.depositMethod || 'transfer';
+                    const amt = parseInt(e.depositAmount || 100);
+                    let accId = method === 'cash' ? 'petty' : (method === 'stored' ? null : method);
+                    if(accId) addRecord(accId, e.depositDate, time, amt, 'income', `定金 - ${itemsStr}`, '');
+                }
+            });
+        });
+
+        // 2. 收支與手動帳務 (來自 expenseData)
+        Object.keys(expenseData).forEach(date => {
+            safeArray(expenseData[date]).forEach(e => {
+                const amt = parseInt(e.amount) || 0;
+                const isLegacyTransfer = e.cat === 'transfer_out';
+                const type = e.type || (isLegacyTransfer ? 'transfer' : 'expense');
+
+                if (type === 'expense') {
+                    addRecord(e.source || 'petty', date, '12:00', -amt, 'expense', `支出(${e.cat}) - ${e.name}`, e.note || '');
+                } else if (type === 'income') {
+                    addRecord(e.target || 'petty', date, '12:00', amt, 'income', `收入(${e.cat}) - ${e.name}`, e.note || '');
+                } else if (type === 'transfer') {
+                    addRecord(e.source, date, '12:00', -amt, 'transfer', `調出至 ${accounts[e.target]?.name || e.target}`, e.note || '');
+                    addRecord(e.target, date, '12:00', amt, 'transfer', `自 ${accounts[e.source]?.name || e.source} 調入`, e.note || `由 ${e.name} 產生`);
+                } else if (type === 'adjust') {
+                    addRecord(e.target, date, '12:00', amt, 'adjust', `額度調整 - ${e.name}`, e.note || '');
+                }
+            });
+        });
+
+        // 3. 結算單分配 (來自 settlementData)
+        Object.keys(settlementData).forEach(date => {
+            const s = settlementData[date];
+            if (s.status === 'settled' && s.allocations) {
+                s.allocations.forEach(a => {
+                    const amt = parseInt(a.amount) || 0;
+                    if (amt > 0) {
+                        let targetId = a.targetId;
+                        if (targetId === 'yongfeng' || targetId === 'ctbc') targetId = 'transfer';
+                        if (!targetId && a.target === '備用金') targetId = 'backup';
+                        addRecord('petty', date, '23:59', -amt, 'transfer', `結算分配至 ${accounts[targetId]?.name || a.target}`, '');
+                        addRecord(targetId, date, '23:59', amt, 'transfer', `結算自零用金分配`, '');
+                    }
+                });
+            }
+        });
+
+        // 4. 排序與重新計算當前餘額 (避免順序錯亂)
+        Object.keys(accounts).forEach(k => {
+            accounts[k].history.sort((a, b) => {
+                const timeA = new Date(`${a.date}T${a.time}`).getTime();
+                const timeB = new Date(`${b.date}T${b.time}`).getTime();
+                return timeB - timeA; // 新的在上面
+            });
+            // 重算流水帳
+            let runBal = 0;
+            const ascHist = [...accounts[k].history].reverse();
+            ascHist.forEach(h => {
+                runBal += h.amount;
+                h.currentBalance = runBal;
+            });
+            accounts[k].balance = runBal; // 最終正確餘額
+        });
+
+        globalLedger = accounts;
+        return accounts;
+    };
+
+    window.renderAccountView = function() {
+        const accs = buildLedger();
+        const container = document.getElementById('account-cards-container');
+        if(!container) return;
+        
+        container.innerHTML = Object.keys(accs).map(k => `
+            <div class="account-card" onclick="openAccountDetail('${k}')">
+                <div class="acc-card-title">${accs[k].name}</div>
+                <div class="acc-card-bal">$${accs[k].balance.toLocaleString()}</div>
+            </div>
+        `).join('');
+    };
+
+    window.openAccountDetail = function(accId) {
+        const acc = globalLedger[accId];
+        if(!acc) return;
+        
+        document.getElementById('acc-detail-title').innerText = `${acc.name} 歷史明細`;
+        document.getElementById('acc-detail-bal').innerText = `$${acc.balance.toLocaleString()}`;
+        
+        const list = document.getElementById('acc-detail-list');
+        if (acc.history.length === 0) {
+            list.innerHTML = `<div class="text-center text-gray-400 py-10">尚無交易紀錄</div>`;
+        } else {
+            list.innerHTML = acc.history.map(h => {
+                const isPos = h.amount > 0;
+                const sign = isPos ? '+' : '';
+                const colorClass = isPos ? 'amt-pos' : 'amt-neg';
+                return `
+                    <div class="history-row rounded-lg">
+                        <div class="flex-1 pr-3">
+                            <div class="hist-date">${h.date} ${h.time}</div>
+                            <div class="hist-desc">${h.desc}</div>
+                            ${h.note ? `<div class="hist-note">備註: ${h.note}</div>` : ''}
+                        </div>
+                        <div class="text-right">
+                            <div class="hist-amt ${colorClass}">${sign}$${Math.abs(h.amount).toLocaleString()}</div>
+                            <div class="text-[9px] text-gray-400 mt-1">餘 $${h.currentBalance.toLocaleString()}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        document.getElementById('accountDetailModal').classList.remove('hidden');
     };
 
     // --- [新增] 結算系統邏輯 ---
@@ -6460,15 +6781,15 @@
         if(hash === 'admin-finance') renderFinancePage();
         /* --- 找到 router 函數內部的對應位置並替換 --- */
         if (hash === 'admin-report') {
-            // 延遲 50ms 確保 DOM 已載入，並根據當前標籤刷新內容
             setTimeout(() => {
-                // 修正：統一判斷 logic
                 if (reportState.tab === 'calendar' || reportState.tab === 'day') { 
                     renderReportCalendar(); 
                 } else if (reportState.tab === 'month') { 
                     renderMonthlyReport(); 
                 } else if (reportState.tab === 'year') { 
                     renderYearlyReport(); 
+                } else if (reportState.tab === 'account') {
+                    renderAccountView();
                 }
             }, 50);
         }
@@ -7018,6 +7339,411 @@
 
     window.scrollToTop = function() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // ==========================================
+    // [全新] 帳戶引擎與綜合記帳模組
+    // ==========================================
+    let currentAccDetailId = null;
+
+    window.buildLedgerData = function() {
+        const y = reportState.date.getFullYear();
+        const m = reportState.date.getMonth();
+        
+        const accounts = {
+            petty: { currentBal: 0, mIn: 0, mOut: 0, mHistory: [], name: '零用金 (現金)' },
+            backup: { currentBal: 0, mIn: 0, mOut: 0, mHistory: [], name: '備用金' },
+            linepay: { currentBal: 0, mIn: 0, mOut: 0, mHistory: [], name: 'Line Pay' },
+            jko: { currentBal: 0, mIn: 0, mOut: 0, mHistory: [], name: '街口支付' },
+            transfer: { currentBal: 0, mIn: 0, mOut: 0, mHistory: [], name: '匯款 / 銀行' },
+            wallet: { currentBal: 0, mIn: 0, mOut: 0, mHistory: [], name: '錢包' }
+        };
+
+        let allTxs = [];
+
+        // 1. 從服務結帳與定金收集紀錄
+        Object.keys(financeStore.data).forEach(date => {
+            safeArray(financeStore.data[date]).forEach(e => {
+                if (e.status === 'checked' && e.checkoutDetails) {
+                    const amt = parseInt(e.checkoutDetails.finalTotal) - parseInt(e.checkoutDetails.paidDeposit || 0);
+                    if (amt > 0) {
+                        let method = e.checkoutDetails.paymentMethod || 'cash';
+                        let accId = method === 'cash' ? 'petty' : (method === 'stored' ? null : method);
+                        if(accId) allTxs.push({ date, time: e.time||'12:00', accId, amt, type: 'income', desc: `服務尾款`, note: safeArray(e.items).join('+'), isExp: false });
+                    }
+                }
+                if ((e.hasDeposit || (e.depositMethod && e.depositMethod !== 'none')) && e.depositDate) {
+                    const method = e.depositMethod || 'transfer';
+                    const amt = parseInt(e.depositAmount || 100);
+                    let accId = method === 'cash' ? 'petty' : (method === 'stored' ? null : method);
+                    if(accId) allTxs.push({ date: e.depositDate, time: e.time||'12:00', accId, amt, type: 'income', desc: `定金收入`, note: safeArray(e.items).join('+'), isExp: false });
+                }
+            });
+        });
+
+        // 2. 從記帳/調度模組收集紀錄
+        Object.keys(expenseData).forEach(date => {
+            safeArray(expenseData[date]).forEach(e => {
+                const amt = parseInt(e.amount) || 0;
+                const isLegacy = e.cat === 'transfer_out';
+                const type = e.type || (isLegacy ? 'transfer' : 'expense');
+                const time = '12:00'; 
+
+                if (type === 'expense') {
+                    allTxs.push({ date, time, accId: e.source||'petty', amt: -amt, type: 'expense', desc: `支出(${e.cat})`, note: e.name, refId: e.id, isExp: true });
+                } else if (type === 'income') {
+                    allTxs.push({ date, time, accId: e.target||'petty', amt: amt, type: 'income', desc: `額外收入(${e.cat})`, note: e.name, refId: e.id, isExp: true });
+                } else if (type === 'transfer') {
+                    allTxs.push({ date, time, accId: e.source, amt: -amt, type: 'transfer', desc: `轉出至 ${accounts[e.target]?.name||e.target}`, note: e.name || '', refId: e.id, isExp: true });
+                    allTxs.push({ date, time, accId: e.target, amt: amt, type: 'transfer', desc: `自 ${accounts[e.source]?.name||e.source} 轉入`, note: e.name || '', refId: e.id, isExp: true });
+                } else if (type === 'adjust') {
+                    allTxs.push({ date, time, accId: e.target, amt: amt, type: 'adjust', desc: `額度調整`, note: e.name, refId: e.id, isExp: true });
+                }
+            });
+        });
+
+        // 3. 從結算單分配收集紀錄
+        Object.keys(settlementData).forEach(date => {
+            const s = settlementData[date];
+            if (s.status === 'settled' && s.allocations) {
+                s.allocations.forEach(a => {
+                    const amt = parseInt(a.amount) || 0;
+                    if (amt > 0) {
+                        let targetId = a.targetId;
+                        if (targetId === 'yongfeng' || targetId === 'ctbc') targetId = 'transfer';
+                        if (!targetId && a.target === '備用金') targetId = 'backup';
+                        allTxs.push({ date, time: '23:59', accId: 'petty', amt: -amt, type: 'transfer', desc: `結算轉出`, note: `分配至 ${accounts[targetId]?.name||a.target}`, isExp: false });
+                        allTxs.push({ date, time: '23:59', accId: targetId, amt: amt, type: 'transfer', desc: `結算轉入`, note: `自零用金分配`, isExp: false });
+                    }
+                });
+            }
+        });
+
+        // 根據時間排序
+        allTxs.sort((a,b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime());
+
+        // ★ 核心邏輯：計算絕對餘額 與 本月流水
+        // 零用金特殊邏輯：以最後結算日為基礎 + 之後的所有現金進出
+        const settleDates = Object.keys(settlementData).filter(d => settlementData[d].status === 'settled').sort((a,b)=> new Date(b)-new Date(a));
+        const lastSettleDate = settleDates[0];
+        let pettyBal = lastSettleDate ? parseInt(settlementData[lastSettleDate].pettyCash) || 0 : 0;
+        const lastSettleTs = lastSettleDate ? new Date(lastSettleDate).setHours(0,0,0,0) : 0;
+
+        allTxs.forEach(tx => {
+            if(!accounts[tx.accId]) return;
+
+            // 一般帳戶餘額累加
+            if(tx.accId !== 'petty') accounts[tx.accId].currentBal += tx.amt;
+            
+            // 零用金餘額累加 (只計算最後結算日之後的帳務)
+            if (tx.accId === 'petty' && new Date(tx.date).setHours(0,0,0,0) > lastSettleTs) {
+                pettyBal += tx.amt;
+            }
+
+            // 分配本月報表資料
+            const dObj = new Date(tx.date);
+            if (dObj.getFullYear() === y && dObj.getMonth() === m) {
+                if (tx.amt > 0) accounts[tx.accId].mIn += tx.amt;
+                else accounts[tx.accId].mOut += Math.abs(tx.amt);
+                accounts[tx.accId].mHistory.push(tx);
+            }
+        });
+
+        accounts['petty'].currentBal = pettyBal;
+
+        // 流水帳依時間倒序
+        Object.keys(accounts).forEach(k => {
+            accounts[k].mHistory.sort((a,b) => new Date(`${b.date}T${b.time}`) - new Date(`${a.date}T${a.time}`));
+        });
+
+        return accounts;
+    };
+
+    window.renderAccountView = function() {
+        const y = reportState.date.getFullYear();
+        const m = reportState.date.getMonth();
+        document.getElementById('account-month-title').innerText = `${y} 年 ${m+1} 月`;
+
+        const accs = buildLedgerData();
+        const container = document.getElementById('account-cards-container');
+        if(!container) return;
+        
+        let html = '';
+        
+        // 1. 零用金與備用金 (滿版顯示當前餘額)
+        html += `
+        <div class="acc-card col-span-2 border-l-4 border-l-[var(--gold-main)]" onclick="openAccountDetail('petty')">
+            <div class="acc-card-title">💵 ${accs.petty.name}</div>
+            <div class="acc-card-val">$${accs.petty.currentBal.toLocaleString()}</div>
+        </div>
+        <div class="acc-card col-span-2 border-l-4 border-l-[#8b9d8a]" onclick="openAccountDetail('backup')">
+            <div class="acc-card-title">🏦 ${accs.backup.name} (總庫存)</div>
+            <div class="acc-card-val">$${accs.backup.currentBal.toLocaleString()}</div>
+        </div>`;
+        
+        // 2. Line Pay & Jko (半版顯示本月總收)
+        html += `
+        <div class="acc-card border-l-4 border-l-[#06c755]" onclick="openAccountDetail('linepay')">
+            <div class="acc-card-title">${accs.linepay.name}</div>
+            <div class="text-[10px] text-gray-400 mb-1">本月入帳總額</div>
+            <div class="acc-card-val text-[#06c755]">$${accs.linepay.mIn.toLocaleString()}</div>
+        </div>
+        <div class="acc-card border-l-4 border-l-[#e60012]" onclick="openAccountDetail('jko')">
+            <div class="acc-card-title">${accs.jko.name}</div>
+            <div class="text-[10px] text-gray-400 mb-1">本月入帳總額</div>
+            <div class="acc-card-val text-[#e60012]">$${accs.jko.mIn.toLocaleString()}</div>
+        </div>`;
+
+        // 3. 匯款與錢包 (滿版顯示本月進出)
+        ['transfer', 'wallet'].forEach(k => {
+            html += `
+            <div class="acc-card col-span-2 border-l-4 border-l-[#6b7280]" onclick="openAccountDetail('${k}')">
+                <div class="acc-card-title">${accs[k].name}</div>
+                <div class="acc-card-split">
+                    <div class="acc-split-item">
+                        <div class="acc-split-label">本月收入/轉入</div>
+                        <div class="acc-split-val text-[#1a4731]">$${accs[k].mIn.toLocaleString()}</div>
+                    </div>
+                    <div class="acc-split-item border-l border-gray-100">
+                        <div class="acc-split-label">本月支出/轉出</div>
+                        <div class="acc-split-val text-[#ff6b6b]">$${accs[k].mOut.toLocaleString()}</div>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+    };
+
+    window.openAccountDetail = function(accId) {
+        currentAccDetailId = accId;
+        const accs = buildLedgerData();
+        const acc = accs[accId];
+        
+        document.getElementById('acc-detail-title').innerText = `${reportState.date.getMonth()+1}月 ${acc.name} 明細`;
+        document.getElementById('acc-detail-bal').innerText = accId === 'petty' || accId === 'backup' 
+            ? `當前餘 $${acc.currentBal.toLocaleString()}` : `本月進帳 $${acc.mIn.toLocaleString()}`;
+        
+        const list = document.getElementById('acc-detail-list');
+        if (acc.mHistory.length === 0) {
+            list.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm">本月尚無紀錄</div>`;
+        } else {
+            list.innerHTML = acc.mHistory.map(h => {
+                const isPos = h.amt > 0;
+                const sign = isPos ? '+' : '';
+                const colorClass = isPos ? 'amt-pos' : 'amt-neg';
+                
+                // 如果是手動記帳，顯示編輯與刪除按鈕
+                let actionHtml = '';
+                if (h.isExp) {
+                    actionHtml = `
+                        <div class="flex gap-2 mt-2 pt-2 border-t border-gray-100 justify-end">
+                            <button onclick="editManualRecord('${h.date}', ${h.refId})" class="text-[10px] bg-gray-100 px-3 py-1 rounded text-gray-600 font-bold">編輯</button>
+                            <button onclick="deleteManualRecord('${h.date}', ${h.refId})" class="text-[10px] bg-red-50 text-red-500 px-3 py-1 rounded font-bold">刪除</button>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="history-row flex-col bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between w-full items-start">
+                            <div class="flex-1 pr-3">
+                                <div class="hist-date">${h.date} ${h.time}</div>
+                                <div class="hist-desc">${h.desc}</div>
+                                ${h.note ? `<div class="hist-note">備註: ${h.note}</div>` : ''}
+                            </div>
+                            <div class="hist-amt ${colorClass} text-right">${sign}$${Math.abs(h.amt).toLocaleString()}</div>
+                        </div>
+                        ${actionHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+        document.getElementById('accountDetailModal').classList.remove('hidden');
+    };
+
+    // --- 綜合記帳系統 ---
+    let currentBkType = 'expense';
+
+    window.openUnifiedBookkeeping = function() {
+        const today = new Date();
+        document.getElementById('bk-date').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        document.getElementById('bk-amount').value = '';
+        document.getElementById('bk-name').value = '';
+        document.getElementById('bk-note').value = '';
+        
+        delete document.getElementById('unifiedBookkeepingModal').dataset.editId;
+        delete document.getElementById('unifiedBookkeepingModal').dataset.editDate;
+
+        populateAccountOptions();
+        switchBkTab('expense');
+        document.getElementById('unifiedBookkeepingModal').classList.remove('hidden');
+    };
+
+    window.populateAccountOptions = function() {
+        const opts = `
+            <option value="petty">零用金</option>
+            <option value="backup">備用金</option>
+            <option value="transfer">匯款/銀行</option>
+            <option value="linepay">Line Pay</option>
+            <option value="jko">街口支付</option>
+            <option value="wallet">錢包</option>
+        `;
+        document.getElementById('bk-source').innerHTML = opts;
+        document.getElementById('bk-target').innerHTML = opts;
+    };
+
+    window.switchBkTab = function(type) {
+        currentBkType = type;
+        document.querySelectorAll('.bk-tab').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.bk-tab[data-type="${type}"]`).classList.add('active');
+
+        const catSelect = document.getElementById('bk-cat');
+        const sGroup = document.getElementById('bk-source-group');
+        const tGroup = document.getElementById('bk-target-group');
+        const catGroup = document.getElementById('bk-cat-group');
+        const nameLabel = document.getElementById('bk-name-label');
+
+        if (type === 'expense') {
+            catGroup.classList.remove('hidden');
+            catSelect.innerHTML = `<option value="固定支出">固定支出</option><option value="設備">設備</option><option value="耗材">耗材</option><option value="退款">退款</option><option value="其他">其他</option>`;
+            sGroup.classList.remove('hidden');
+            tGroup.classList.add('hidden');
+            nameLabel.innerText = '支出項目';
+            document.getElementById('bk-amount').placeholder = "0";
+        } else if (type === 'income') {
+            catGroup.classList.remove('hidden');
+            catSelect.innerHTML = `<option value="美甲">美甲</option><option value="美睫">美睫</option><option value="美容">美容</option><option value="其他">其他</option>`;
+            sGroup.classList.add('hidden');
+            tGroup.classList.remove('hidden');
+            nameLabel.innerText = '收入說明 (非預約產生)';
+            document.getElementById('bk-amount').placeholder = "0";
+        } else if (type === 'transfer') {
+            catGroup.classList.add('hidden');
+            sGroup.classList.remove('hidden');
+            tGroup.classList.remove('hidden');
+            nameLabel.innerText = '調度說明';
+            document.getElementById('bk-amount').placeholder = "0";
+        } else if (type === 'adjust') {
+            catGroup.classList.add('hidden');
+            sGroup.classList.add('hidden');
+            tGroup.classList.remove('hidden');
+            document.querySelector('#bk-target-group label').innerText = '要調整的帳戶';
+            nameLabel.innerText = '調整原因 (如：手動校正誤差)';
+            document.getElementById('bk-amount').placeholder = "正數增加，負數減少 (-500)";
+        }
+    };
+
+    window.submitUnifiedBookkeeping = function() {
+        const date = document.getElementById('bk-date').value;
+        let name = document.getElementById('bk-name').value.trim();
+        const amtStr = document.getElementById('bk-amount').value;
+        let amount = parseInt(amtStr);
+        const cat = document.getElementById('bk-cat').value;
+        const source = document.getElementById('bk-source').value;
+        const target = document.getElementById('bk-target').value;
+        const note = document.getElementById('bk-note').value.trim();
+
+        if (!date) return alert("請選擇日期");
+        
+        // 修正：如果沒有填寫名稱，自動幫忙填寫預設名稱
+        if (!name) {
+            if (currentBkType === 'transfer') name = '資金調度';
+            else if (currentBkType === 'adjust') name = '額度調整';
+            else return alert("請填寫項目名稱/說明");
+        }
+
+        if (isNaN(amount) || (currentBkType !== 'adjust' && amount <= 0)) return alert("請輸入有效金額");
+        if (currentBkType === 'transfer' && source === target) return alert("轉出與轉入不可為相同帳戶");
+
+        const modal = document.getElementById('unifiedBookkeepingModal');
+        const editId = modal.dataset.editId;
+        const editDate = modal.dataset.editDate;
+
+        // 若為編輯模式，先刪除舊資料
+        if (editId && editDate && expenseData[editDate]) {
+            expenseData[editDate] = expenseData[editDate].filter(e => String(e.id) !== String(editId));
+        }
+
+        if (!expenseData[date]) expenseData[date] = [];
+
+        const record = {
+            id: editId || Date.now(),
+            type: currentBkType,
+            name: name,
+            amount: amount,
+            note: note
+        };
+
+        if (currentBkType === 'expense') {
+            record.cat = cat; record.source = source; record.target = 'none';
+        } else if (currentBkType === 'income') {
+            record.cat = cat; record.source = 'none'; record.target = target;
+        } else if (currentBkType === 'transfer') {
+            record.cat = 'transfer_out'; record.source = source; record.target = target;
+        } else if (currentBkType === 'adjust') {
+            record.cat = 'adjust'; record.source = 'none'; record.target = target;
+        }
+
+        expenseData[date].push(record);
+
+        // 儲存至 Firebase
+        if (window.dbSet && window.dbRef) {
+            if (editDate && editDate !== date) {
+                window.dbSet(window.dbRef(window.firebaseDB, `meawMeExpenses/${editDate}`), expenseData[editDate]);
+            }
+            window.dbSet(window.dbRef(window.firebaseDB, `meawMeExpenses/${date}`), expenseData[date])
+                .then(() => {
+                    alert("✅ 記帳成功");
+                    modal.classList.add('hidden');
+                    renderAccountView();
+                    if(currentAccDetailId) openAccountDetail(currentAccDetailId);
+                });
+        }
+    };
+
+    // 編輯明細紀錄
+    window.editManualRecord = function(date, id) {
+        const record = safeArray(expenseData[date]).find(e => String(e.id) === String(id));
+        if(!record) return alert("找不到資料");
+        
+        document.getElementById('bk-date').value = date;
+        document.getElementById('bk-name').value = record.name || '';
+        document.getElementById('bk-amount').value = record.amount || '';
+        document.getElementById('bk-note').value = record.note || '';
+        
+        let type = record.type || (record.cat === 'transfer_out' ? 'transfer' : 'expense');
+        populateAccountOptions();
+        switchBkTab(type);
+        
+        setTimeout(() => {
+            if (type === 'expense' || type === 'income') document.getElementById('bk-cat').value = record.cat;
+            if (record.source && record.source !== 'none') document.getElementById('bk-source').value = record.source;
+            if (record.target && record.target !== 'none') document.getElementById('bk-target').value = record.target;
+        }, 50);
+
+        const modal = document.getElementById('unifiedBookkeepingModal');
+        modal.dataset.editId = id;
+        modal.dataset.editDate = date;
+        
+        document.getElementById('accountDetailModal').classList.add('hidden');
+        modal.classList.remove('hidden');
+    };
+
+    // 刪除明細紀錄
+    window.deleteManualRecord = function(date, id) {
+        if(!confirm("確定刪除此筆紀錄？\n將會影響帳戶餘額！")) return;
+        
+        expenseData[date] = safeArray(expenseData[date]).filter(e => String(e.id) !== String(id));
+        if(expenseData[date].length === 0) delete expenseData[date];
+        
+        if (window.dbSet && window.dbRef) {
+            window.dbSet(window.dbRef(window.firebaseDB, `meawMeExpenses/${date}`), expenseData[date] || null)
+                .then(() => {
+                    renderAccountView();
+                    if(currentAccDetailId) openAccountDetail(currentAccDetailId);
+                });
+        }
     };
 
 </script>
