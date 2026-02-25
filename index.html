@@ -1582,6 +1582,36 @@
         .bk-input, .bk-select { width: 100%; background: #f5f5f5; border: 1px solid #ddd; padding: 10px; border-radius: 8px; font-size: 14px; color: #333; font-weight: bold; outline: none; }
         .bk-input:focus, .bk-select:focus { border-color: var(--gold-main); background: #fff; }
 
+        /* --- [新增] 固定頂部標題與原生月份選擇器 --- */
+        .sticky-header-wrapper {
+            position: sticky;
+            top: 0px;
+            z-index: 50;
+            background-color: var(--forest-bg);
+            padding-top: 15px;
+            padding-bottom: 5px;
+            box-shadow: 0 6px 10px -4px rgba(0,0,0,0.15); /* 滑動時的立體陰影 */
+        }
+        body.admin-mode .sticky-header-wrapper {
+            background-color: #f5f1e8; /* 確保後台白底吸頂時不會透明 */
+        }
+        .month-picker-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 5px 15px;
+            border-radius: 8px;
+            background: rgba(201, 184, 150, 0.1);
+        }
+        .month-picker-container:active { background: rgba(201, 184, 150, 0.2); }
+        .month-picker-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; cursor: pointer; z-index: 10;
+        }
+
     </style>
 </head>
 <body>
@@ -2040,20 +2070,25 @@
     <div class="max-w-4xl mx-auto px-4 pt-8">
             <h2 class="text-center text-[22px] text-[var(--gold-main)] font-bold my-6 tracking-widest">查詢可預約時段</h2>
         
-        <div class="nav-header-container">
-            <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-            <div id="booking-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
-            <div class="nav-right-group">
-                <button onclick="resetToToday('booking')" class="today-btn">本月</button>
-                <button onclick="changeBookingMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+        <div class="sticky-header-wrapper">
+            <div class="nav-header-container">
+                <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
+                <div class="month-picker-container">
+                    <div id="booking-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
+                    <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'booking')">
+                </div>
+                <div class="nav-right-group">
+                    <button onclick="resetToToday('booking')" class="today-btn">本月</button>
+                    <button onclick="changeBookingMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+                </div>
             </div>
-        </div>
-
-        <div style="position: relative; min-height: 300px;">
             <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
                 <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
                 <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
             </div>
+        </div>
+
+        <div style="position: relative; min-height: 300px;">
             <div id="booking-calendar-grid" class="calendar-grid"></div>
             
             <div id="calendar-overlay-msg" class="overlay-message-container hidden">
@@ -2166,23 +2201,26 @@
     <section id="page-budget" class="page-content pb-32">
         <h2 class="text-center text-[22px] font-bold my-6 text-[var(--gold-main)]">時段管理</h2>
         
-        <div class="nav-header-container">
-            <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-            <div id="admin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
-            <div class="nav-right-group">
-                <button onclick="resetToToday('booking')" class="today-btn">本月</button>
-                <button onclick="changeBookingMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+        <div class="sticky-header-wrapper">
+            <div class="text-center mb-4">
+                <button onclick="toggleMonthStatus()" id="admin-month-status-btn" class="border border-[var(--gold-main)] text-[var(--gold-main)] px-4 py-2 rounded-full text-xs font-bold mr-2">狀態讀取中</button>
+                <button onclick="exportAvailableSlots()" class="bg-[var(--gold-main)] text-[#1a3a2e] px-4 py-2 rounded-full text-xs font-bold shadow-lg">匯出空檔</button>
             </div>
-        </div>
-
-        <div class="text-center mb-4">
-            <button onclick="toggleMonthStatus()" id="admin-month-status-btn" class="border border-[var(--gold-main)] text-[var(--gold-main)] px-4 py-2 rounded-full text-xs font-bold mr-2">狀態讀取中</button>
-            <button onclick="exportAvailableSlots()" class="bg-[var(--gold-main)] text-[#1a3a2e] px-4 py-2 rounded-full text-xs font-bold shadow-lg">匯出空檔</button>
-        </div>
-
-        <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
-            <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
-            <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
+            <div class="nav-header-container">
+                <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
+                <div class="month-picker-container">
+                    <div id="admin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
+                    <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'budget')">
+                </div>
+                <div class="nav-right-group">
+                    <button onclick="resetToToday('booking')" class="today-btn">本月</button>
+                    <button onclick="changeBookingMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
+                <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
+                <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
+            </div>
         </div>
         <div id="admin-calendar-grid" class="calendar-grid"></div>
     </section>
@@ -2211,18 +2249,22 @@
             </div>
         </div>
 
-        <div class="nav-header-container">
-            <button onclick="changeFinMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-            <div id="fin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
-            <div class="nav-right-group">
-                <button onclick="resetToToday('finance')" class="today-btn">本月</button>
-                <button onclick="changeFinMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+        <div class="sticky-header-wrapper">
+            <div class="nav-header-container">
+                <button onclick="changeFinMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
+                <div class="month-picker-container">
+                    <div id="fin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
+                    <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'finance')">
+                </div>
+                <div class="nav-right-group">
+                    <button onclick="resetToToday('finance')" class="today-btn">本月</button>
+                    <button onclick="changeFinMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+                </div>
             </div>
-        </div>
-
-        <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
-            <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
-            <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
+            <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
+                <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
+                <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
+            </div>
         </div>
 
         <div id="finance-calendar-grid" class="calendar-grid"></div>
@@ -2250,17 +2292,22 @@
     </div>
 
     <div id="report-view-calendar">
-        <div class="nav-header-container">
-            <button onclick="changeReportCalendarMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-            <div id="rep-cal-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
-            <div class="nav-right-group">
-                <button onclick="resetToToday('report-cal')" class="today-btn">本月</button>
-                <button onclick="changeReportCalendarMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+        <div class="sticky-header-wrapper">
+            <div class="nav-header-container">
+                <button onclick="changeReportCalendarMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
+                <div class="month-picker-container">
+                    <div id="rep-cal-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
+                    <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'report-cal')">
+                </div>
+                <div class="nav-right-group">
+                    <button onclick="resetToToday('report-cal')" class="today-btn">本月</button>
+                    <button onclick="changeReportCalendarMonth(1)" class="text-[var(--gold-main)] text-xl p-2">❯</button>
+                </div>
             </div>
-        </div>
-        <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
-            <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
-            <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
+            <div class="grid grid-cols-7 gap-[2px] mb-2 px-1 text-center text-[10px] opacity-50 font-bold max-w-[1000px] mx-auto">
+                <div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div>
+                <div class="text-[#ff6b6b]">SAT</div> <div class="text-[#ff6b6b]">SUN</div>
+            </div>
         </div>
         <div id="report-calendar-grid" class="calendar-grid"></div>
         <div class="fin-footer mt-4">
@@ -3643,7 +3690,27 @@
         financeStore.viewDate = new Date(newDate);
         reportState.calDate = new Date(newDate);
         reportState.date = new Date(newDate); // 同步給月/年報表
+
+        // 同步更新畫面上所有「隱藏的月份選擇器」的值
+        const y = newDate.getFullYear();
+        const m = String(newDate.getMonth() + 1).padStart(2, '0');
+        document.querySelectorAll('.month-picker-overlay').forEach(el => {
+            el.value = `${y}-${m}`;
+        });
     }
+
+    // --- [新增] 支援直接挑選特定年月跳轉 ---
+    window.jumpToMonth = function(val, type) {
+        if(!val) return;
+        const [y, m] = val.split('-');
+        const targetDate = new Date(parseInt(y), parseInt(m) - 1, 1);
+        syncAllAdminDates(targetDate);
+        
+        if (type === 'booking') renderCalendar();
+        else if (type === 'budget') renderCalendar();
+        else if (type === 'finance') renderFinancePage();
+        else if (type === 'report-cal') renderReportCalendar();
+    };
 
     function changeBookingMonth(dir) {
         bookingState.viewDate.setMonth(bookingState.viewDate.getMonth() + dir);
@@ -5319,9 +5386,9 @@
             
             let labelText = "";
             if (notes.length > 0) labelText = notes[0] + (notes.length > 1 ? "+" : ""); 
-            else if (isManualOff) labelText = "公休"; 
+            else if (isManualOff) labelText = "休"; 
             else if (holidayName) labelText = holidayName;
-            else if (isSun) labelText = "休";
+            else if (isSun) labelText = "公休";
 
             const isCentered = isRedDay && entries.length === 0 && notes.length === 0 && labelText !== "";
             
