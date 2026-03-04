@@ -6324,9 +6324,38 @@
 
         const deposit = ((entry.depositMethod && entry.depositMethod !== 'none') || entry.hasDeposit) ? (parseInt(entry.depositAmount) || 100) : 0;
 
+        checkoutState = {
+            entry: entry,
+            items: items,
+            globalDiscount: { type: 'none', val: 0 },
+            deposit: deposit,
+            payMethod: 'cash',
+            finalTotal: 0
+        };
+
         const bottomBtnContainer = document.querySelector('#checkoutModal .bg-white.p-4.border-t');
         if (bottomBtnContainer) {
+            // [新增] 1. 準備定金顯示文字
+            const payMap = { 'cash': '現金', 'transfer': '匯款', 'linepay': 'Line Pay', 'jko': '街口支付', 'stored': '儲值金', 'none': '無' };
+            let depMethodTxt = "無";
+            let depositInfoHtml = "";
+            
+            if (deposit > 0) {
+                const rawDep = entry.depositMethod || (entry.hasDeposit ? 'transfer' : 'cash');
+                depMethodTxt = payMap[rawDep] || rawDep;
+                
+                // [新增] 2. 建立定金顯示區塊 (灰色方塊)
+                depositInfoHtml = `
+                    <div class="bg-gray-50 p-3 rounded-lg mb-3 border border-gray-200 flex justify-between items-center text-sm">
+                        <span class="text-gray-500 font-bold">已付定金 (${depMethodTxt})</span>
+                        <span class="font-bold text-[#1a3a2e]">$${deposit.toLocaleString()}</span>
+                    </div>
+                `;
+            }
+
+            // [修改] 3. 將 depositInfoHtml 插入到 HTML 最上方
             bottomBtnContainer.innerHTML = `
+                ${depositInfoHtml}
                 <div class="flex justify-between items-end mb-2">
                     <div class="text-xs text-gray-400">總額 $<span id="co-subtotal">0</span> <span class="mx-1">|</span> 折扣 $<span id="co-discount-total">0</span></div>
                     <div class="text-2xl font-bold text-[#1a3a2e] font-serif">$<span id="co-grand-total">0</span></div>
@@ -6392,7 +6421,7 @@
         document.getElementById('discountModal').classList.add('hidden');
     };
 
-    // [修正版] 開啟支付視窗
+    // [修正版] 開啟支付視窗 (加強定金帶入邏輯)
     window.openPaymentModal = function() {
         // 1. 顯示總金額
         document.getElementById('pay-total-amount').innerText = checkoutState.finalTotal;
@@ -6400,7 +6429,7 @@
         // 2. 取得當前結帳的預約資料
         const entry = checkoutState.entry; 
 
-        // 3. 判斷定金方式 (用於顯示文字)
+        // 3. 判斷定金方式
         const depMap = { 'transfer': '匯款', 'linepay': 'Line Pay', 'none': '無', 'cash': '現金', 'stored': '儲值金' };
         const methodKey = entry.depositMethod || (entry.hasDeposit ? 'transfer' : 'none');
         const depTxt = depMap[methodKey] || methodKey;
@@ -6408,11 +6437,20 @@
         // 更新 UI 文字：已付定金 (方式)
         document.getElementById('pay-dep-method').innerText = depTxt;
 
-        // 4. [修正重點] 將定金數值填入 Input (使用 checkoutState 中的數據)
-        // 這裡會自動帶入在 initCheckout 中已經計算好的金額 (即您手動輸入的金額)
-        document.getElementById('pay-dep-input').value = checkoutState.deposit;
+        // 4. [關鍵修正] 計算定金數值
+        // 先讀取 state，如果為 0 但訂單設定其實有定金，則強制從訂單撈取原始金額
+        let currentDepAmount = checkoutState.deposit;
+        
+        if ((!currentDepAmount || currentDepAmount === 0) && methodKey !== 'none') {
+            currentDepAmount = parseInt(entry.depositAmount) || 100;
+            // 同步修正回 state，確保後續計算正確
+            checkoutState.deposit = currentDepAmount;
+        }
 
-        // 5. 預設選取現金，並觸發一次計算
+        // 將數值填入 Input
+        document.getElementById('pay-dep-input').value = currentDepAmount;
+
+        // 5. 預設選取現金，並觸發一次計算 (這會讀取剛剛填入的 input 數值)
         selectPayMethod('cash', document.querySelector('.pay-method-row')); 
         
         // 6. 顯示視窗
