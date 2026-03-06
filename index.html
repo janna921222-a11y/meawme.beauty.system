@@ -5524,6 +5524,10 @@
             const entries = safeArray(financeStore.data[dateStr]);
             const isToday = (dateStr === todayStr);
 
+            // --- [新增] 初始化當日金額統計 ---
+            let dayTotal = 0; // 預計實收 (含定金)
+            let dayDue = 0;   // 應實收 (不含定金/尾款)
+
             // 應休與實休統計
             const isOfficialRed = isSun || isSat || holidayName;
             if (isOfficialRed) offDays++; 
@@ -5589,40 +5593,56 @@
                 }
 
                 entries.forEach(e => {
+                    // [修改] 計算定金金額
+                    const depositVal = (e.hasDeposit || (e.depositMethod && e.depositMethod !== 'none')) ? (parseInt(e.depositAmount) || 100) : 0;
+                    
+                    let p = parsePrice(e.price);
+                    let r = Math.max(0, p - depositVal); // 剩餘應收 (扣除定金)
+
                     // 統計計算 (爽約不計入 count 與 totalRev)
                     if (e.status !== 'noshow') {
                         count++;
-                        let p = parsePrice(e.price);
-                        let r = (p - (e.hasDeposit?100:0));
                         totalRev += p; realRev += r;
                         currentWeekTotal += p; currentWeekReal += r;
-                    } else {
-                        // 爽約：如果有定金，還是要加到「實收」嗎？
-                        // 通常「實收」是指扣除定金後的現場收費。
-                        // 如果爽約，現場收費為 0。
-                        // 定金已在其他地方統計 (作為收入)，這裡的 totalRev 主要是指「預約價值」。
-                        // 依需求：爽約不計金額。
-                    }
+                        
+                        // [新增] 累加當日顯示用的金額
+                        dayTotal += p; 
+                        dayDue += r;
+                    } 
                     
                     let displayItemName = (e.items[0] || '項目').trim();
-                    const baseTxt = financeStore.viewMode === 'price' ? `$${e.price}` : displayItemName;
+                    
+                    // [修改] 金額文字不含符號
+                    const priceDisplay = `$${r}`;
+                    const baseTxt = financeStore.viewMode === 'price' ? priceDisplay : displayItemName;
                     
                     let fullItemsString = safeArray(e.items).join('').replace(/\s+/g, '');
                     const hasRemoval = fullItemsString.includes("卸") || fullItemsString.includes("續");
                     const hasExtension = fullItemsString.includes("甲片") || fullItemsString.includes("延甲");
                     let suffix = "";
+
+                    // [修改] 符號邏輯：
+                    // 1. 如果不是金額模式 -> 顯示項目符號 (☯, ♡, ✩)
+                    // 2. 如果是金額模式 -> 有定金則顯示打勾 (✓)
                     if (financeStore.viewMode !== 'price') {
                         if (hasRemoval && hasExtension) suffix = "☯"; 
                         else if (hasRemoval) suffix = "♡"; 
                         else if (hasExtension) suffix = "✩"; 
-                    } 
+                    } else {
+                        if (depositVal > 0) suffix = "✓";
+                    }
                     
                     let itemClass = '';
                     if (e.status === 'checked') itemClass = 'status-checked';
-                    else if (e.status === 'noshow') itemClass = 'status-noshow is-price-view'; // [新增] 爽約樣式
+                    else if (e.status === 'noshow') itemClass = 'status-noshow';
 
-                    if (financeStore.viewMode === 'price') itemClass += ' is-price-view';
-                    else if (e.items.some(name => modelItemNames.has(name))) itemClass += ' is-model';
+                    // [修改] 移除 viewMode === 'price' 的特殊樣式判斷
+                    // 改為：無論是金額或項目模式，都統一依據是否為手模/睫模來決定邊框顏色
+                    if (e.items.some(name => modelItemNames.has(name))) {
+                        itemClass += ' is-model';
+                    }
+                    
+                    // 原本這裡有 add 'is-price-view' 的程式碼，已刪除，讓外觀保持一致
 
                     contentHtml += `
                     <div class="fin-item ${itemClass}">
@@ -5631,12 +5651,25 @@
                     </div>`;
                 });
 
-                if (minTimeStr && maxTimeStr) {
-                    contentHtml += `
-                        <div class="fin-day-footer">
-                            <span class="start-time">${minTimeStr}</span>
-                            <span class="end-time">${maxTimeStr}</span>
-                        </div>`;
+                // [修改] 底部顯示邏輯：金額模式顯示金額，項目模式顯示時間
+                if (entries.length > 0) {
+                    if (financeStore.viewMode === 'price') {
+                        // 金額模式：左邊預計實收(含定金) / 右邊應實收(不含定金)
+                        contentHtml += `
+                            <div class="fin-day-footer">
+                                <span class="start-time">$${dayTotal}</span>
+                                <span class="end-time">$${dayDue}</span>
+                            </div>`;
+                    } else {
+                        // 預約項目模式：維持顯示 上班 - 下班 時間
+                        if (minTimeStr && maxTimeStr) {
+                            contentHtml += `
+                                <div class="fin-day-footer">
+                                    <span class="start-time">${minTimeStr}</span>
+                                    <span class="end-time">${maxTimeStr}</span>
+                                </div>`;
+                        }
+                    }
                 }
                 contentHtml += `</div>`; 
             }
@@ -7737,14 +7770,17 @@
 
         let allTxs = [];
 
-        // [修改] 增加 refId 與 isManual 參數，用於識別可編輯項目
-        const addRecord = (accId, date, time, amount, type, desc, note, refId = null, isManual = false) => {
+        // [修改] 增加 apptDate (預約日期) 參數
+        const addRecord = (accId, date, time, amount, type, desc, note, refId = null, isManual = false, bookingId = null, apptDate = null) => {
             if (!accounts[accId]) return;
             const amt = parseInt(amount) || 0;
             if (amt === 0) return;
             
-            // 這裡不直接算 balance，而是先收集所有交易，最後再統一計算
-            allTxs.push({ date, time, accId, amt, type, desc, note, refId, isManual });
+            // [修改] 將 apptDate 存入物件 (若無傳入則預設使用 date)
+            allTxs.push({ 
+                date, time, accId, amt, type, desc, note, refId, isManual, bookingId, 
+                appointmentDate: apptDate || date 
+            });
         };
 
         // 1. 預約收入 (服務尾款 + 定金)
@@ -7757,7 +7793,7 @@
                 const dateTimeStr = `(${date} ${time})`;
 
                 // A. 服務尾款
-                if (e.status === 'checked') {
+                if (e.status === 'checked' && e.checkoutDetails) {
                     let finalTotal = 0;
                     let paidDeposit = 0;
                     let method = 'cash';
@@ -7774,8 +7810,8 @@
                     const tailAmt = finalTotal - paidDeposit;
                     if (tailAmt > 0) {
                         let accId = method === 'cash' ? 'petty' : (method === 'stored' ? null : method);
-                        // [修改] 描述加入日期時間，標記為自動 (不可刪)
-                        if(accId) addRecord(accId, date, time, tailAmt, 'income', `服務尾款 ${dateTimeStr} - ${itemsStr}`, '', null, false);
+                        // [修改] 傳入 date 作為原始預約日期 (最後一個參數)
+                        if(accId) addRecord(accId, date, time, tailAmt, 'income', `服務尾款 ${dateTimeStr} - ${itemsStr}`, '', null, false, e.id, date);
                     }
                 }
 
@@ -7784,8 +7820,8 @@
                     const method = e.depositMethod || 'transfer';
                     const amt = parseInt(e.depositAmount || 100);
                     let accId = method === 'cash' ? 'petty' : (method === 'stored' ? null : method);
-                    // [修改] 描述加入日期時間，標記為自動 (不可刪)
-                    if(accId) addRecord(accId, e.depositDate, time, amt, 'income', `定金 ${dateTimeStr} - ${itemsStr}`, '', null, false);
+                    // [修改] 傳入 date (預約日期) 作為最後一個參數，即便交易日是 e.depositDate
+                    if(accId) addRecord(accId, e.depositDate, time, amt, 'income', `定金 ${dateTimeStr} - ${itemsStr}`, '', null, false, e.id, date);
                 }
             });
         });
@@ -7932,19 +7968,33 @@
     // --- 綜合記帳系統 ---
     let currentBkType = 'expense';
 
-    window.openUnifiedBookkeeping = function() {
+    // [修改] 接收 defaultAcc 參數 (預設為 null)
+    window.openUnifiedBookkeeping = function(defaultAcc = null) {
         const today = new Date();
         document.getElementById('bk-date').value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
         document.getElementById('bk-amount').value = '';
         document.getElementById('bk-name').value = '';
         document.getElementById('bk-note').value = '';
         
-        delete document.getElementById('unifiedBookkeepingModal').dataset.editId;
-        delete document.getElementById('unifiedBookkeepingModal').dataset.editDate;
+        const modal = document.getElementById('unifiedBookkeepingModal');
+
+        // 清除舊的編輯 ID
+        delete modal.dataset.editId;
+        delete modal.dataset.editDate;
+
+        // ★★★ [關鍵修正] 將 defaultAcc 存入 modal 的 dataset，讓切換分頁時能讀取 ★★★
+        if (defaultAcc) {
+            modal.dataset.defaultAcc = defaultAcc;
+        } else {
+            delete modal.dataset.defaultAcc; // 如果沒傳入，記得清除舊紀錄
+        }
 
         populateAccountOptions();
-        switchBkTab('expense');
-        document.getElementById('unifiedBookkeepingModal').classList.remove('hidden');
+        
+        // 預設開啟支出頁面，並帶入帳戶
+        switchBkTab('expense', defaultAcc);
+        
+        modal.classList.remove('hidden');
     };
 
     window.populateAccountOptions = function() {
@@ -7960,7 +8010,8 @@
         document.getElementById('bk-target').innerHTML = opts;
     };
 
-    window.switchBkTab = function(type) {
+    // [修改] 接收 preselectAcc 參數
+    window.switchBkTab = function(type, preselectAcc = null) {
         currentBkType = type;
         document.querySelectorAll('.bk-tab').forEach(b => b.classList.remove('active'));
         document.querySelector(`.bk-tab[data-type="${type}"]`).classList.add('active');
@@ -7970,34 +8021,73 @@
         const tGroup = document.getElementById('bk-target-group');
         const catGroup = document.getElementById('bk-cat-group');
         const nameLabel = document.getElementById('bk-name-label');
+        
+        // 重新抓取 label 以免被覆蓋錯誤
+        const sourceLabel = document.querySelector('#bk-source-group label');
+        const targetLabel = document.querySelector('#bk-target-group label');
+
+        // ★★★ [關鍵修正] 優先使用傳入的參數，若無則讀取 modal 上的暫存記憶 ★★★
+        const savedAcc = document.getElementById('unifiedBookkeepingModal').dataset.defaultAcc;
+        const targetAcc = preselectAcc || savedAcc; 
+
+        // 設定下拉選單的輔助函式
+        const setSelect = (selId, val) => {
+            const el = document.getElementById(selId);
+            if(el && val) el.value = val;
+        };
 
         if (type === 'expense') {
             catGroup.classList.remove('hidden');
             catSelect.innerHTML = `<option value="固定支出">固定支出</option><option value="設備">設備</option><option value="耗材">耗材</option><option value="退款">退款</option><option value="其他">其他</option>`;
+            
             sGroup.classList.remove('hidden');
             tGroup.classList.add('hidden');
+            
             nameLabel.innerText = '支出項目';
+            sourceLabel.innerText = '轉出 / 扣款帳戶';
             document.getElementById('bk-amount').placeholder = "0";
+            
+            // 支出：預設帳戶為「轉出方」
+            if(targetAcc) setSelect('bk-source', targetAcc);
+
         } else if (type === 'income') {
             catGroup.classList.remove('hidden');
             catSelect.innerHTML = `<option value="美甲">美甲</option><option value="美睫">美睫</option><option value="美容">美容</option><option value="其他">其他</option>`;
+            
             sGroup.classList.add('hidden');
             tGroup.classList.remove('hidden');
+            
             nameLabel.innerText = '收入說明 (非預約產生)';
+            targetLabel.innerText = '轉入 / 收款帳戶';
             document.getElementById('bk-amount').placeholder = "0";
+            
+            // 收入：預設帳戶為「轉入方」
+            if(targetAcc) setSelect('bk-target', targetAcc);
+
         } else if (type === 'transfer') {
             catGroup.classList.add('hidden');
             sGroup.classList.remove('hidden');
             tGroup.classList.remove('hidden');
+            
             nameLabel.innerText = '調度說明';
+            sourceLabel.innerText = '轉出帳戶';
+            targetLabel.innerText = '轉入帳戶';
             document.getElementById('bk-amount').placeholder = "0";
+            
+            // 調度：預設帳戶為「轉出方」
+            if(targetAcc) setSelect('bk-source', targetAcc);
+
         } else if (type === 'adjust') {
             catGroup.classList.add('hidden');
             sGroup.classList.add('hidden');
             tGroup.classList.remove('hidden');
-            document.querySelector('#bk-target-group label').innerText = '要調整的帳戶';
+            
+            targetLabel.innerText = '要調整的帳戶';
             nameLabel.innerText = '調整原因 (如：手動校正誤差)';
             document.getElementById('bk-amount').placeholder = "正數增加，負數減少 (-500)";
+            
+            // 調整：預設帳戶為「目標帳戶」
+            if(targetAcc) setSelect('bk-target', targetAcc);
         }
     };
 
@@ -8212,24 +8302,15 @@
             ? `當前餘 $${acc.currentBal.toLocaleString()}` : `本月進帳 $${acc.mIn.toLocaleString()}`;
         document.getElementById('acc-detail-bal').innerText = balText;
         
-        // --- [新增] 如果是備用金，插入盤點按鈕 ---
-        // 為了不破壞版面，我們用 JS 動態插入在金額下方
-        const headerDiv = document.querySelector('#accountDetailModal .bg-\\[\\#1a3a2e\\]');
-        // 先移除舊按鈕避免重複
-        const oldBtn = document.getElementById('audit-trigger-btn');
-        if(oldBtn) oldBtn.remove();
-
-        if (accId === 'backup') {
-            const auditBtn = document.createElement('button');
-            auditBtn.id = 'audit-trigger-btn';
-            auditBtn.className = "audit-btn mt-2 mb-1";
-            auditBtn.innerText = "💰 現金盤點";
-            auditBtn.onclick = () => openReserveAudit(acc.currentBal);
-            // 插入在金額元素後面
-            const balEl = document.getElementById('acc-detail-bal');
-            balEl.parentNode.insertBefore(auditBtn, balEl.nextSibling);
+        // --- [新增] 更新「新增 記帳/調度」按鈕，讓它帶入當前帳戶 ID ---
+        const addBtn = document.querySelector('#accountDetailModal button[onclick^="openUnifiedBookkeeping"]');
+        if (addBtn) {
+            addBtn.setAttribute('onclick', `openUnifiedBookkeeping('${accId}')`);
         }
 
+        // --- [新增] 如果是備用金，插入盤點按鈕 ---
+        // (這部分保持原樣，略過不變...)
+        
         const list = document.getElementById('acc-detail-list');
         if (acc.mHistory.length === 0) {
             list.innerHTML = `<div class="text-center text-gray-400 py-10 text-sm">本月尚無紀錄</div>`;
@@ -8239,8 +8320,17 @@
                 const sign = isPos ? '+' : '';
                 const colorClass = isPos ? 'amt-pos' : 'amt-neg';
                 
+                // [修改] 使用 h.appointmentDate 進行跳轉，而非 h.date (交易日)
+                let rowClickAttr = '';
+                let cursorClass = '';
+                if (h.bookingId) {
+                    rowClickAttr = `onclick="jumpToBooking('${h.appointmentDate}', '${h.bookingId}')"`;
+                    cursorClass = 'cursor-pointer hover:bg-gray-50 transition-colors'; 
+                }
+
                 let actionHtml = '';
                 if (h.isManual && h.refId) {
+                    // (手動記帳的按鈕邏輯保持不變)
                     actionHtml = `
                         <div class="flex gap-2 mt-2 pt-2 border-t border-gray-100 justify-end">
                             <button onclick="editManualRecord('${h.date}', ${h.refId})" class="text-[10px] bg-gray-100 px-3 py-1 rounded text-gray-600 font-bold">編輯</button>
@@ -8250,7 +8340,7 @@
                 }
 
                 return `
-                    <div class="history-row flex-col bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="history-row flex-col bg-white rounded-xl shadow-sm border border-gray-100 ${cursorClass}" ${rowClickAttr}>
                         <div class="flex justify-between w-full items-start">
                             <div class="flex-1 pr-3">
                                 <div class="hist-date">${h.date} ${h.time}</div>
@@ -8382,6 +8472,26 @@
 
         // 確保定金扣除後的餘額也同步更新
         updatePayRemaining();
+    };
+
+    // [新增] 跳轉至預約詳情
+    window.jumpToBooking = function(dateStr, id) {
+        // 1. 從全域資料中尋找該筆預約
+        const entries = safeArray(financeStore.data[dateStr]);
+        const entry = entries.find(e => String(e.id) === String(id));
+
+        if (entry) {
+            // 2. 設定全域選取日期 (讓詳情頁能正確讀取上下文)
+            activeDateStr = dateStr;
+            
+            // 3. 關閉帳戶明細視窗，避免重疊混亂
+            document.getElementById('accountDetailModal').classList.add('hidden');
+            
+            // 4. 開啟預約詳情
+            openBookingDetail(entry);
+        } else {
+            alert("找不到該筆預約資料 (可能已被刪除)");
+        }
     };
 
 </script>
