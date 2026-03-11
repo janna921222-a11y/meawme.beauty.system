@@ -1432,8 +1432,7 @@
         /* --- [修正] 財務頁面文字顏色優化 --- */
         .fin-cal-row { color: #555 !important; font-weight: 600; } 
         .fin-cal-row span:first-child { color: var(--gold-main) !important; font-weight: 800; }
-        .fin-cal-row.text-\[#ff6b6b\] { color: #ff6b6b !important; }
-        .fin-cal-row.text-\[#ff6b6b\] span:first-child { color: #ff6b6b !important; }
+        .fin-cal-row.is-expense-row, .fin-cal-row.is-expense-row span:first-child { color: #ff6b6b !important; }
         .fin-cal-total { border-top: 1px solid rgba(0,0,0,0.1) !important; color: #1a3a2e !important; }
         #acc-date-title { color: #1a3a2e !important; }
     
@@ -2159,7 +2158,7 @@
         <div class="sticky-header-wrapper">
             <div class="nav-header-container">
                 <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container">
+                <div class="month-picker-container" onclick="openMonthPicker(this)">
                     <div id="booking-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
                     <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'booking')">
                 </div>
@@ -2294,7 +2293,7 @@
             </div>
             <div class="nav-header-container">
                 <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container">
+                <div class="month-picker-container" onclick="openMonthPicker(this)">
                     <div id="admin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
                     <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'budget')">
                 </div>
@@ -2338,7 +2337,7 @@
         <div class="sticky-header-wrapper">
             <div class="nav-header-container">
                 <button onclick="changeFinMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container">
+                <div class="month-picker-container" onclick="openMonthPicker(this)">
                     <div id="fin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
                     <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'finance')">
                 </div>
@@ -2381,7 +2380,7 @@
         <div class="sticky-header-wrapper">
             <div class="nav-header-container">
                 <button onclick="changeReportCalendarMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container">
+                <div class="month-picker-container" onclick="openMonthPicker(this)">
                     <div id="rep-cal-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
                     <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'report-cal')">
                 </div>
@@ -2450,7 +2449,7 @@
             <button onclick="document.getElementById('accountDetailModal').classList.add('hidden')" class="absolute top-3 right-3 text-[var(--gold-main)] text-xl font-bold p-2 leading-none">✕</button>
             <h3 id="acc-detail-title" class="text-[var(--white-sec)] font-bold text-sm tracking-widest mb-2 mt-1">歷史明細</h3>
             <div id="acc-detail-bal" class="text-[var(--gold-main)] text-3xl font-bold font-serif mb-4">$0</div>
-            <button onclick="openUnifiedBookkeeping()" class="bg-[var(--gold-main)] text-[#1a3a2e] px-5 py-2.5 rounded-full text-xs font-bold shadow-md w-full">＋ 新增 記帳 / 調度</button>
+            <div id="acc-detail-actions" class="w-full flex gap-2"></div>
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-3" id="acc-detail-list"></div>
     </div>
@@ -2618,33 +2617,36 @@
         </div>
     </div>
 
-    <div id="reserveAuditModal" class="cal-modal-overlay hidden" style="z-index: 8000;">
+    <div id="accountAuditModal" class="cal-modal-overlay hidden" style="z-index: 8000;">
         <div class="cal-modal-content flex flex-col" style="max-width: 360px; height: 90vh; background: #fff; color: #333; padding: 0; border-radius: 20px; overflow: hidden;">
-            <div class="bg-[#e65100] p-4 text-center relative">
-                <h3 class="text-white font-bold">備用金盤點</h3>
-                <button onclick="document.getElementById('reserveAuditModal').classList.add('hidden')" class="absolute top-4 right-4 text-white text-xl font-bold p-2">✕</button>
+            <div id="audit-header" class="bg-[#1a3a2e] p-4 text-center relative shadow-sm z-10">
+                <h3 id="audit-title" class="text-[var(--gold-main)] font-bold">💰 現金盤點</h3>
+                <button onclick="document.getElementById('accountAuditModal').classList.add('hidden')" class="absolute top-3 right-3 text-[var(--gold-main)] text-xl font-bold p-2">✕</button>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-4 space-y-6">
-                <div>
-                    <h4 class="font-bold text-[#e65100] mb-2 border-l-4 border-[#e65100] pl-2">現金清點</h4>
+            <div class="flex-1 overflow-y-auto p-4 space-y-6 bg-[#f2f2f2]">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <h4 class="font-bold text-[#1a3a2e] mb-3 border-l-4 border-[var(--gold-main)] pl-2">面額清點</h4>
                     <div id="audit-cash-grid"></div>
                 </div>
 
-                <div class="bg-[#fff3e0] p-4 rounded-lg border border-[#ffe0b2] space-y-3">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
                     <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600">帳上應有餘額</span>
+                        <span class="text-gray-500 font-bold">帳上應有餘額</span>
                         <span class="font-bold text-lg text-[#1a3a2e]">$<span id="audit-expected">0</span></span>
                     </div>
-                    <div class="flex justify-between items-center text-sm border-t border-[#ffcc80] pt-2">
-                        <span class="text-gray-600">實際清點總額</span>
-                        <span class="font-bold text-lg text-[#e65100]">$<span id="audit-actual">0</span></span>
+                    <div class="flex justify-between items-center text-sm border-t border-gray-100 pt-2">
+                        <span class="text-gray-500 font-bold">實際清點總額</span>
+                        <span class="font-bold text-lg text-[#1a4731]">$<span id="audit-actual">0</span></span>
                     </div>
-                    <div class="flex justify-between items-center text-sm border-t border-[#ffcc80] pt-2">
-                        <span class="font-bold">差額</span>
+                    <div class="flex justify-between items-center text-sm border-t border-gray-100 pt-2">
+                        <span class="font-bold text-gray-700">盤點差額</span>
                         <span id="audit-diff" class="font-bold text-xl">0</span>
                     </div>
                 </div>
+            </div>
+            <div class="p-4 border-t border-gray-200 bg-white z-10 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
+                <button onclick="saveAuditData()" class="w-full py-3 bg-[#1a4731] text-[var(--gold-main)] rounded-xl font-bold shadow-lg text-sm">儲存盤點結果</button>
             </div>
         </div>
     </div>
@@ -2854,7 +2856,7 @@
                     <div class="flex items-center border-b border-gray-300">
                         <span class="font-bold text-[#1a3a2e] mr-1">$</span>
                         <input type="number" id="pay-dep-input" class="w-16 bg-transparent text-right font-bold text-[#1a3a2e] outline-none p-0" 
-                            value="0" oninput="updatePayRemaining()" onfocus="this.select()">
+                            value="0" oninput="updatePayRemaining(true)" onfocus="this.select()">
                     </div>
                 </div>
                 <div class="mt-2">
@@ -4209,7 +4211,16 @@
 
     // --- [NEW] 財務報表系統變數與同步 ---
     let expenseData = {}; 
+    let auditData = { petty: {}, backup: {} }; // 存放盤點面額記憶
     let reportState = { tab: 'calendar', date: new Date(), calDate: new Date() };
+
+    function syncAudits() {
+        if (window.dbOnValue && window.dbRef) {
+            window.dbOnValue(window.dbRef(window.firebaseDB, 'meawMeAudits'), (snapshot) => {
+                auditData = snapshot.val() || { petty: {}, backup: {} };
+            });
+        }
+    }
 
     function syncExpenses() {
         if (window.dbOnValue && window.dbRef) {
@@ -4394,7 +4405,7 @@
             if (dailyRev.jko > 0) html += `<div class="fin-cal-row"><span>街</span><span>${dailyRev.jko}</span></div>`;
             if (dailyRev.stored > 0) html += `<div class="fin-cal-row"><span>儲</span><span>${dailyRev.stored}</span></div>`;
             
-            if (dailyExp > 0) html += `<div class="fin-cal-row text-[#ff6b6b] mt-1 border-t border-white/10 pt-1"><span>支</span><span>-${dailyExp}</span></div>`;
+            if (dailyExp > 0) html += `<div class="fin-cal-row is-expense-row mt-1 border-t border-white/10 pt-1"><span>支</span><span>-${dailyExp}</span></div>`;
             
             html += `<div class="fin-cal-total">$${dailyRev.total}</div>`;
             html += `</div>`;
@@ -4544,15 +4555,21 @@
             }
             
             expList.innerHTML += `
-                <div class="flex justify-between items-center bg-white p-2 rounded border border-gray-200 mb-2">
-                    <div>
-                        <span class="text-[10px] px-1 rounded ${badgeColor}">${displayCat}</span>
-                        <span class="font-bold ml-1">${e.name}</span>
-                        <div class="text-[10px] text-gray-400 mt-1">${sourceText}</div>
+                <div class="flex-col bg-white p-2 rounded border border-gray-200 mb-2">
+                    <div class="flex justify-between items-center w-full">
+                        <div>
+                            <span class="text-[10px] px-1 rounded ${badgeColor}">${displayCat}</span>
+                            <span class="font-bold ml-1 text-[#1a3a2e]">${e.name}</span>
+                            <div class="text-[10px] text-gray-400 mt-1">${sourceText}</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold ${amountColor}">${sign}$${Math.abs(e.amount).toLocaleString()}</span>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold ${amountColor}">${sign}$${e.amount}</span>
-                        <button onclick="deleteExpense(${idx})" class="text-gray-400 p-1">✕</button>
+                    <div class="flex gap-2 mt-2 pt-2 border-t border-gray-100 justify-end">
+                        <button onclick="copyDailyExpense(${idx})" class="text-[10px] bg-blue-50 text-blue-500 px-3 py-1 rounded font-bold">複製</button>
+                        <button onclick="editDailyExpense(${idx})" class="text-[10px] bg-gray-100 text-gray-600 px-3 py-1 rounded font-bold">編輯</button>
+                        <button onclick="deleteExpense(${idx})" class="text-[10px] bg-red-50 text-red-500 px-3 py-1 rounded font-bold">刪除</button>
                     </div>
                 </div>`;
         });
@@ -4629,6 +4646,61 @@
         if (!confirm("確定刪除此筆紀錄？")) return;
         expenseData[activeDateStr].splice(idx, 1);
         saveExpenseToDB();
+    };
+
+    // [新增] 編輯每日記帳本中的紀錄
+    window.editDailyExpense = function(idx) {
+        const record = safeArray(expenseData[activeDateStr])[idx];
+        if(!record) return alert("找不到資料");
+        
+        document.getElementById('bk-date').value = activeDateStr;
+        document.getElementById('bk-name').value = record.name || '';
+        document.getElementById('bk-amount').value = Math.abs(record.amount) || '';
+        document.getElementById('bk-note').value = record.note || '';
+        
+        let type = record.type || (record.cat === 'transfer_out' ? 'transfer' : 'expense');
+        populateAccountOptions();
+        switchBkTab(type);
+        
+        setTimeout(() => {
+            if (type === 'expense' || type === 'income') document.getElementById('bk-cat').value = record.cat;
+            if (record.source && record.source !== 'none') document.getElementById('bk-source').value = record.source;
+            if (record.target && record.target !== 'none') document.getElementById('bk-target').value = record.target;
+        }, 50);
+
+        const modal = document.getElementById('unifiedBookkeepingModal');
+        modal.dataset.editId = record.id;
+        modal.dataset.editDate = activeDateStr;
+        
+        modal.classList.remove('hidden');
+    };
+
+    // [新增] 複製每日記帳本中的紀錄
+    window.copyDailyExpense = function(idx) {
+        const record = safeArray(expenseData[activeDateStr])[idx];
+        if(!record) return alert("找不到資料");
+        
+        document.getElementById('bk-date').value = activeDateStr; // 預設帶入同天，但使用者可改
+        document.getElementById('bk-name').value = record.name + ' (複製)';
+        document.getElementById('bk-amount').value = Math.abs(record.amount) || '';
+        document.getElementById('bk-note').value = record.note || '';
+        
+        let type = record.type || (record.cat === 'transfer_out' ? 'transfer' : 'expense');
+        populateAccountOptions();
+        switchBkTab(type);
+        
+        setTimeout(() => {
+            if (type === 'expense' || type === 'income') document.getElementById('bk-cat').value = record.cat;
+            if (record.source && record.source !== 'none') document.getElementById('bk-source').value = record.source;
+            if (record.target && record.target !== 'none') document.getElementById('bk-target').value = record.target;
+        }, 50);
+
+        const modal = document.getElementById('unifiedBookkeepingModal');
+        // 清除 editId 確保儲存時是新增一筆
+        delete modal.dataset.editId;
+        delete modal.dataset.editDate;
+        
+        modal.classList.remove('hidden');
     };
 
     // [修正版] 月報表與年報表生成邏輯 (確保折扣扣除)
@@ -6366,6 +6438,10 @@
             finalTotal: 0
         };
 
+        // [關鍵修復] 初始化時強制同步清空 DOM 的殘留定金，防止鬼影數據
+        const depInput = document.getElementById('pay-dep-input');
+        if (depInput) depInput.value = deposit;
+
         const bottomBtnContainer = document.querySelector('#checkoutModal .bg-white.p-4.border-t');
         if (bottomBtnContainer) {
             // [新增] 1. 準備定金顯示文字
@@ -6470,20 +6546,13 @@
         // 更新 UI 文字：已付定金 (方式)
         document.getElementById('pay-dep-method').innerText = depTxt;
 
-        // 4. [關鍵修正] 計算定金數值
-        // 先讀取 state，如果為 0 但訂單設定其實有定金，則強制從訂單撈取原始金額
+        // 4. [關鍵修正] 直接信任 checkoutState 的定金數值，不再強制覆蓋
         let currentDepAmount = checkoutState.deposit;
-        
-        if ((!currentDepAmount || currentDepAmount === 0) && methodKey !== 'none') {
-            currentDepAmount = parseInt(entry.depositAmount) || 100;
-            // 同步修正回 state，確保後續計算正確
-            checkoutState.deposit = currentDepAmount;
-        }
 
         // 將數值填入 Input
         document.getElementById('pay-dep-input').value = currentDepAmount;
 
-        // 5. 預設選取現金，並觸發一次計算 (這會讀取剛剛填入的 input 數值)
+        // 5. 預設選取現金，並觸發一次計算 (false 代表不從輸入框重新讀取，以 state 為準)
         selectPayMethod('cash', document.querySelector('.pay-method-row')); 
         
         // 6. 顯示視窗
@@ -6498,12 +6567,13 @@
         document.querySelectorAll('.pay-method-row').forEach(r => r.classList.remove('selected'));
         if (row) row.classList.add('selected');
         
-        // 呼叫剛剛寫好的計算函式 (這樣邏輯就統一了)
+        // 呼叫計算函式
         updatePayRemaining();
     };
 
     window.confirmCheckout = function() {
-        if (!confirm(`確認結帳？\n總金額: $${checkoutState.finalTotal}`)) return;
+        const remaining = Math.max(0, checkoutState.finalTotal - checkoutState.deposit);
+        if (!confirm(`確認結帳？\n\n總金額: $${checkoutState.finalTotal}\n扣除定金: -$${checkoutState.deposit}\n─────────\n現場實收: $${remaining} (${checkoutState.payMethod})`)) return;
         const currentEntries = safeArray(financeStore.data[activeDateStr]);
         const idx = currentEntries.findIndex(e => String(e.id) === String(checkoutState.entry.id));
         if (idx > -1) {
@@ -7393,6 +7463,7 @@
         syncSettlements();
 
         syncExpenses();
+        syncAudits(); // 載入盤點紀錄
         
         router();
     };
@@ -7703,18 +7774,18 @@
         });
     }
 
-    // [修正] 當修改定金時，自動重算餘額，並更新底部按鈕
-    window.updatePayRemaining = function() {
-        // 1. 取得目前輸入的定金
-        const val = parseInt(document.getElementById('pay-dep-input').value) || 0;
+    // [修正] 當修改定金時，自動重算餘額，並更新底部按鈕 (加入 isFromInput 判斷防污染)
+    window.updatePayRemaining = function(isFromInput = false) {
+        // 1. 如果是使用者手動打字，才去讀取輸入框的值並更新 state
+        if (isFromInput) {
+            const val = parseInt(document.getElementById('pay-dep-input').value) || 0;
+            checkoutState.deposit = val;
+        }
         
-        // 2. 更新全域狀態
-        checkoutState.deposit = val;
-        
-        // 3. 計算剩餘應付 (總額 - 定金)
+        // 2. 計算剩餘應付 (總額 - State中的定金)
         const remaining = Math.max(0, checkoutState.finalTotal - checkoutState.deposit);
 
-        // 4. 更新介面上所有支付方式的金額顯示
+        // 3. 更新介面上所有支付方式的金額顯示
         document.querySelectorAll('.pay-amt').forEach(el => el.innerText = "");
         
         // 只顯示在「目前被選中」的那一行
@@ -7724,7 +7795,7 @@
             targetLabel.innerText = `$${remaining}`;
         }
 
-        // 5. [補回這行] 更新最底部的結帳按鈕金額！
+        // 4. 更新最底部的結帳按鈕金額
         const btnTotal = document.getElementById('btn-pay-total');
         if (btnTotal) {
             btnTotal.innerText = remaining;
@@ -8155,6 +8226,14 @@
                     modal.classList.add('hidden');
                     renderAccountView();
                     if(currentAccDetailId) openAccountDetail(currentAccDetailId);
+                    
+                    // [新增] 如果每日記帳本開著，也要刷新它
+                    if (!document.getElementById('accountingModal').classList.contains('hidden')) {
+                        // 因為可能是編輯了日期的關係，這裡將 activeDateStr 更新為修改後的日期
+                        activeDateStr = date; 
+                        document.getElementById('acc-date-title').innerText = `${date} 記帳本`;
+                        renderAccountingModal();
+                    }
                 });
         }
     };
@@ -8220,56 +8299,34 @@
         }
     };
 
-    // [美化版] 備用金盤點功能邏輯 (深綠風格)
-    window.openReserveAudit = function(expectedBal) {
-        document.getElementById('reserveAuditModal').classList.remove('hidden');
-        
-        // 1. 修改視窗標題列顏色 (由 JS 動態生成，強制覆蓋 Class)
-        const header = document.querySelector('#reserveAuditModal > div > div:first-child');
-        if(header) {
-            // 強制改為深綠色背景
-            header.className = "bg-[#1a3a2e] p-4 text-center relative"; 
-            // 標題改為金色
-            const title = header.querySelector('h3');
-            if(title) {
-                title.className = "text-[var(--gold-main)] font-bold";
-                title.innerText = "💰 備用金盤點";
-            }
-            // 關閉按鈕改為金色
-            const btn = header.querySelector('button');
-            if(btn) btn.className = "absolute top-4 right-4 text-[var(--gold-main)] text-xl font-bold p-2 hover:text-white";
-        }
+    // [全新] 通用現金盤點功能邏輯 (支援零用金、備用金)
+    let currentAuditAccId = null;
 
+    window.openAccountAudit = function(accId, expectedBal) {
+        currentAuditAccId = accId;
+        document.getElementById('accountAuditModal').classList.remove('hidden');
+        
+        // 1. 動態修改標題
+        const accName = accId === 'petty' ? '零用金' : '備用金';
+        document.getElementById('audit-title').innerText = `💰 ${accName}盤點`;
         document.getElementById('audit-expected').innerText = expectedBal.toLocaleString();
         
-        // 2. 生成面額輸入框 (修改標題配色)
-        const grid = document.getElementById('audit-cash-grid');
-        // 修改 grid 上方的標題 "現金清點"
-        const gridTitle = grid.previousElementSibling; 
-        if(gridTitle) {
-            gridTitle.className = "font-bold text-[#1a3a2e] mb-2 border-l-4 border-[var(--gold-main)] pl-2";
-        }
+        // 2. 讀取該帳戶上次儲存的面額數量
+        const savedDetails = auditData[accId] || {};
 
-        grid.innerHTML = DENOMINATIONS.map(d => `
+        // 3. 渲染面額輸入框並帶入舊數值
+        const grid = document.getElementById('audit-cash-grid');
+        grid.innerHTML = DENOMINATIONS.map(d => {
+            const val = savedDetails[d] !== undefined ? savedDetails[d] : '';
+            return `
             <div class="cash-grid">
                 <div class="cash-label">${d}</div>
                 <input type="number" class="cash-input audit-input" 
-                    data-denom="${d}" placeholder="0" 
-                    oninput="calcAuditTotal()">
-            </div>`).join('');
+                    data-denom="${d}" placeholder="0" value="${val}"
+                    oninput="calcAuditTotal()" onfocus="this.select()">
+            </div>`;
+        }).join('');
         
-        // 3. 修改底部統計區塊顏色 (改成灰白底 + 深綠字，比較高級)
-        const summaryBox = grid.parentElement.nextElementSibling;
-        if(summaryBox) {
-            summaryBox.className = "bg-[#f9f9f9] p-4 rounded-lg border border-gray-200 space-y-3 shadow-inner";
-            
-            // 修正內部文字顏色
-            // 將原本橘色的字改為深綠色
-            summaryBox.innerHTML = summaryBox.innerHTML.replace(/text-\[\#e65100\]/g, 'text-[#1a3a2e]');
-            // 修正分隔線顏色
-            summaryBox.innerHTML = summaryBox.innerHTML.replace(/border-\[\#ffcc80\]/g, 'border-gray-200');
-        }
-
         calcAuditTotal();
     };
 
@@ -8286,7 +8343,32 @@
         
         const diffEl = document.getElementById('audit-diff');
         diffEl.innerText = (diff > 0 ? "+" : "") + diff.toLocaleString();
-        diffEl.style.color = diff === 0 ? '#1a3a2e' : (diff > 0 ? '#1a3a2e' : '#ff6b6b');
+        diffEl.style.color = diff === 0 ? '#1a3a2e' : (diff > 0 ? '#1a4731' : '#ff6b6b');
+    };
+
+    window.saveAuditData = function() {
+        if (!currentAuditAccId) return;
+
+        let details = {};
+        document.querySelectorAll('.audit-input').forEach(input => {
+            const val = parseInt(input.value);
+            // 只要有輸入數字(包含0)就存起來，方便下次直接看
+            if (!isNaN(val)) {
+                details[input.dataset.denom] = val; 
+            }
+        });
+
+        if (!auditData) auditData = {};
+        auditData[currentAuditAccId] = details;
+
+        if (window.dbSet && window.dbRef) {
+            window.dbSet(window.dbRef(window.firebaseDB, `meawMeAudits/${currentAuditAccId}`), details)
+                .then(() => {
+                    alert("✅ 盤點面額與結果已儲存！");
+                    document.getElementById('accountAuditModal').classList.add('hidden');
+                })
+                .catch(() => alert("儲存失敗，請檢查網路"));
+        }
     };
 
     // [修正] 覆寫 openAccountDetail 以加入備用金按鈕
@@ -8302,14 +8384,20 @@
             ? `當前餘 $${acc.currentBal.toLocaleString()}` : `本月進帳 $${acc.mIn.toLocaleString()}`;
         document.getElementById('acc-detail-bal').innerText = balText;
         
-        // --- [新增] 更新「新增 記帳/調度」按鈕，讓它帶入當前帳戶 ID ---
-        const addBtn = document.querySelector('#accountDetailModal button[onclick^="openUnifiedBookkeeping"]');
-        if (addBtn) {
-            addBtn.setAttribute('onclick', `openUnifiedBookkeeping('${accId}')`);
+        // --- [新增/修改] 動態渲染按鈕區塊，若是現金帳戶則加入「盤點」按鈕 ---
+        const actionContainer = document.getElementById('acc-detail-actions');
+        if (actionContainer) {
+            if (accId === 'petty' || accId === 'backup') {
+                actionContainer.innerHTML = `
+                    <button onclick="openAccountAudit('${accId}', ${acc.currentBal})" class="flex-1 bg-[var(--gold-main)] text-[#1a3a2e] px-3 py-2.5 rounded-xl text-sm font-bold shadow-md hover:brightness-105 transition-all">$ 盤點現金</button>
+                    <button onclick="openUnifiedBookkeeping('${accId}')" class="flex-1 bg-[var(--gold-main)] text-[#1a3a2e] px-3 py-2.5 rounded-xl text-sm font-bold shadow-md hover:brightness-105 transition-all">＋ 記帳 / 調度</button>
+                `;
+            } else {
+                actionContainer.innerHTML = `
+                    <button onclick="openUnifiedBookkeeping('${accId}')" class="w-full bg-[var(--gold-main)] text-[#1a3a2e] px-5 py-3 rounded-xl text-sm font-bold shadow-md hover:brightness-105 transition-all">＋ 新增 記帳 / 調度</button>
+                `;
+            }
         }
-
-        // --- [新增] 如果是備用金，插入盤點按鈕 ---
-        // (這部分保持原樣，略過不變...)
         
         const list = document.getElementById('acc-detail-list');
         if (acc.mHistory.length === 0) {
