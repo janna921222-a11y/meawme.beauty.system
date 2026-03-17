@@ -4776,7 +4776,7 @@
         if(!record) return alert("找不到資料");
         
         document.getElementById('bk-date').value = activeDateStr; // 預設帶入同天，但使用者可改
-        document.getElementById('bk-name').value = record.name + ' (複製)';
+        document.getElementById('bk-name').value = record.name + '';
         document.getElementById('bk-amount').value = Math.abs(record.amount) || '';
         document.getElementById('bk-note').value = record.note || '';
         
