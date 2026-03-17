@@ -2158,9 +2158,17 @@
         <div class="sticky-header-wrapper">
             <div class="nav-header-container">
                 <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container" onclick="openMonthPicker(this)">
-                    <div id="booking-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
-                    <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'booking')">
+                <div class="flex gap-2">
+                    <div class="month-picker-container !px-3">
+                        <select class="month-picker-overlay year-select" data-type="booking" onchange="handleSplitDateChange(this)"></select>
+                        <div id="booking-year-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)] pointer-events-none"></div>
+                        <span class="text-[var(--gold-main)] ml-1 text-[10px] pointer-events-none">▼</span>
+                    </div>
+                    <div class="month-picker-container !px-3">
+                        <select class="month-picker-overlay month-select" data-type="booking" onchange="handleSplitDateChange(this)"></select>
+                        <div id="booking-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)] pointer-events-none"></div>
+                        <span class="text-[var(--gold-main)] ml-1 text-[10px] pointer-events-none">▼</span>
+                    </div>
                 </div>
                 <div class="nav-right-group">
                     <button onclick="resetToToday('booking')" class="today-btn">本月</button>
@@ -2293,9 +2301,17 @@
             </div>
             <div class="nav-header-container">
                 <button onclick="changeBookingMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container" onclick="openMonthPicker(this)">
-                    <div id="admin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)]"></div>
-                    <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'budget')">
+                <div class="flex gap-2">
+                    <div class="month-picker-container !px-3">
+                        <select class="month-picker-overlay year-select" data-type="budget" onchange="handleSplitDateChange(this)"></select>
+                        <div id="admin-year-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)] pointer-events-none"></div>
+                        <span class="text-[var(--gold-main)] ml-1 text-[10px] pointer-events-none">▼</span>
+                    </div>
+                    <div class="month-picker-container !px-3">
+                        <select class="month-picker-overlay month-select" data-type="budget" onchange="handleSplitDateChange(this)"></select>
+                        <div id="admin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--gold-main)] pointer-events-none"></div>
+                        <span class="text-[var(--gold-main)] ml-1 text-[10px] pointer-events-none">▼</span>
+                    </div>
                 </div>
                 <div class="nav-right-group">
                     <button onclick="resetToToday('booking')" class="today-btn">本月</button>
@@ -2337,9 +2353,17 @@
         <div class="sticky-header-wrapper">
             <div class="nav-header-container">
                 <button onclick="changeFinMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container" onclick="openMonthPicker(this)">
-                    <div id="fin-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
-                    <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'finance')">
+                <div class="flex gap-2">
+                    <div class="month-picker-container !px-3">
+                        <select class="month-picker-overlay year-select" data-type="finance" onchange="handleSplitDateChange(this)"></select>
+                        <div id="finance-year-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)] pointer-events-none"></div>
+                        <span class="text-[var(--white-main)] ml-1 text-[10px] pointer-events-none">▼</span>
+                    </div>
+                    <div class="month-picker-container !px-3">
+                        <select class="month-picker-overlay month-select" data-type="finance" onchange="handleSplitDateChange(this)"></select>
+                        <div id="finance-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)] pointer-events-none"></div>
+                        <span class="text-[var(--white-main)] ml-1 text-[10px] pointer-events-none">▼</span>
+                    </div>
                 </div>
                 <div class="nav-right-group">
                     <button onclick="resetToToday('finance')" class="today-btn">本月</button>
@@ -2380,9 +2404,17 @@
         <div class="sticky-header-wrapper">
             <div class="nav-header-container">
                 <button onclick="changeReportCalendarMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
-                <div class="month-picker-container" onclick="openMonthPicker(this)">
-                    <div id="rep-cal-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)]"></div>
-                    <input type="month" class="month-picker-overlay" onchange="jumpToMonth(this.value, 'report-cal')">
+                <div class="flex gap-2">
+                    <div class="month-picker-container !px-3">
+                        <select class="month-picker-overlay year-select" data-type="report-cal" onchange="handleSplitDateChange(this)"></select>
+                        <div id="report-cal-year-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)] pointer-events-none"></div>
+                        <span class="text-[var(--white-main)] ml-1 text-[10px] pointer-events-none">▼</span>
+                    </div>
+                    <div class="month-picker-container !px-3">
+                        <select class="month-picker-overlay month-select" data-type="report-cal" onchange="handleSplitDateChange(this)"></select>
+                        <div id="report-cal-month-display" class="serif text-xl font-bold tracking-[0.1em] text-[var(--white-main)] pointer-events-none"></div>
+                        <span class="text-[var(--white-main)] ml-1 text-[10px] pointer-events-none">▼</span>
+                    </div>
                 </div>
                 <div class="nav-right-group">
                     <button onclick="resetToToday('report-cal')" class="today-btn">本月</button>
@@ -2405,7 +2437,18 @@
     <div id="report-view-month" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
         <div class="nav-header-container">
             <button onclick="changeReportDate('month', -1)" class="text-[var(--gold-main)] text-lg px-4">❮</button>
-            <span id="report-month-title" class="font-bold text-[#333] text-lg"></span>
+            <div class="flex gap-2">
+                <div class="month-picker-container flex items-center justify-center cursor-pointer relative bg-[rgba(0,0,0,0.05)] rounded-lg px-3 py-1">
+                    <select class="absolute inset-0 w-full h-full opacity-0 cursor-pointer year-select" data-type="report-month" onchange="handleSplitDateChange(this)"></select>
+                    <span id="report-month-year-display" class="font-bold text-[#333] text-lg pointer-events-none"></span>
+                    <span class="text-[#333] ml-1 text-[10px] pointer-events-none">▼</span>
+                </div>
+                <div class="month-picker-container flex items-center justify-center cursor-pointer relative bg-[rgba(0,0,0,0.05)] rounded-lg px-3 py-1">
+                    <select class="absolute inset-0 w-full h-full opacity-0 cursor-pointer month-select" data-type="report-month" onchange="handleSplitDateChange(this)"></select>
+                    <span id="report-month-month-display" class="font-bold text-[#333] text-lg pointer-events-none"></span>
+                    <span class="text-[#333] ml-1 text-[10px] pointer-events-none">▼</span>
+                </div>
+            </div>
             <div class="nav-right-group">
                 <button onclick="resetToToday('report-month')" class="today-btn !border-[#333] !text-[#333]">本月</button>
                 <button onclick="changeReportDate('month', 1)" class="text-[var(--gold-main)] text-lg px-4">❯</button>
@@ -2417,7 +2460,11 @@
     <div id="report-view-year" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
         <div class="nav-header-container">
             <button onclick="changeReportDate('year', -1)" class="text-[var(--gold-main)] text-lg px-4">❮</button>
-            <span id="report-year-title" class="font-bold text-[#333] text-lg"></span>
+            <div class="month-picker-container flex items-center justify-center cursor-pointer relative bg-[rgba(0,0,0,0.05)] rounded-lg px-4 py-1">
+                <select id="rep-year-select" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="jumpToYear(this.value, 'report-year')"></select>
+                <span id="report-year-title" class="font-bold text-[#333] text-lg pointer-events-none"></span>
+                <span class="text-[#333] ml-1 text-[10px] pointer-events-none">▼</span>
+            </div>
             <div class="nav-right-group">
                 <button onclick="resetToToday('report-year')" class="today-btn !border-[#333] !text-[#333]">今年</button>
                 <button onclick="changeReportDate('year', 1)" class="text-[var(--gold-main)] text-lg px-4">❯</button>
@@ -2429,7 +2476,18 @@
     <div id="report-view-account" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
         <div class="nav-header-container mt-2">
             <button onclick="changeReportDate('account', -1)" class="text-[var(--gold-main)] text-lg px-4">❮</button>
-            <span id="account-month-title" class="font-bold text-[#333] text-lg"></span>
+            <div class="flex gap-2">
+                <div class="month-picker-container flex items-center justify-center cursor-pointer relative bg-[rgba(0,0,0,0.05)] rounded-lg px-3 py-1">
+                    <select class="absolute inset-0 w-full h-full opacity-0 cursor-pointer year-select" data-type="account" onchange="handleSplitDateChange(this)"></select>
+                    <span id="account-year-display" class="font-bold text-[#333] text-lg pointer-events-none"></span>
+                    <span class="text-[#333] ml-1 text-[10px] pointer-events-none">▼</span>
+                </div>
+                <div class="month-picker-container flex items-center justify-center cursor-pointer relative bg-[rgba(0,0,0,0.05)] rounded-lg px-3 py-1">
+                    <select class="absolute inset-0 w-full h-full opacity-0 cursor-pointer month-select" data-type="account" onchange="handleSplitDateChange(this)"></select>
+                    <span id="account-month-display" class="font-bold text-[#333] text-lg pointer-events-none"></span>
+                    <span class="text-[#333] ml-1 text-[10px] pointer-events-none">▼</span>
+                </div>
+            </div>
             <div class="nav-right-group">
                 <button onclick="resetToToday('account')" class="today-btn !border-[#333] !text-[#333]">本月</button>
                 <button onclick="changeReportDate('account', 1)" class="text-[var(--gold-main)] text-lg px-4">❯</button>
@@ -3103,7 +3161,7 @@
     let currentCat = "nail";
     
     // 行事曆變數
-    const DEFAULTS_TIMES = ["10:00", "13:00", "16:00", "19:00"];
+    const DEFAULTS_TIMES = ["10:00", "14:00", "18:00"];
     let bookingState = {
         viewDate: new Date(),
         isAskMode: false,
@@ -3692,6 +3750,7 @@
         for(let i=9; i<=22; i++) h.innerHTML += `<option value="${String(i).padStart(2,'0')}">${i}</option>`;
     }
 
+    // --- 渲染日曆系統 (加入後台自動生成邏輯) ---
     function renderCalendar() {
         const isUserPage = document.getElementById('page-booking').classList.contains('active');
         const isAdminPage = document.getElementById('page-budget').classList.contains('active');
@@ -3702,11 +3761,44 @@
         const y = bookingState.viewDate.getFullYear();
         const m = bookingState.viewDate.getMonth();
         const mKey = `${y}-${m}`;
-        const isOpened = (bookingState.data.openMonths || []).includes(mKey);
         
+        // 防呆：確保 initializedMonths 陣列存在
+        bookingState.data.initializedMonths = bookingState.data.initializedMonths || [];
+        const lastDate = new Date(y, m + 1, 0).getDate();
         const holidayMap = window.getTaiwanHolidays(); 
 
-        document.getElementById(targetDisplayId).textContent = `${y} / ${String(m+1).padStart(2,'0')}`;
+        // ★ 後台專屬邏輯：只要該月份還沒初始化過，就會自動生成預設時段，方便妳預先編輯
+        if (isAdminPage && !bookingState.data.initializedMonths.includes(mKey)) {
+            bookingState.data.initializedMonths.push(mKey);
+            for(let d=1; d<=lastDate; d++) {
+                const day = new Date(y, m, d).getDay();
+                const key = `${y}-${m}-${d}`;
+                const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const isHoliday = !!holidayMap[dateStr];
+                const isManualOff = financeStore.manualOffDays.includes(dateStr);
+
+                if (!bookingState.data.bookings[key]) {
+                    // 非假日、非手動排休日，自動填入預設時段
+                    if (day !== 0 && !isHoliday && !isManualOff) {
+                        bookingState.data.bookings[key] = [...DEFAULTS_TIMES];
+                    } else {
+                        bookingState.data.bookings[key] = [];
+                    }
+                }
+            }
+            // 寫入雲端，不觸發重複渲染
+            if (window.dbSet && window.dbRef) {
+                window.dbSet(window.dbRef(window.firebaseDB, 'meawMeBooking'), bookingState.data);
+            }
+        }
+
+        const isOpened = (bookingState.data.openMonths || []).includes(mKey);
+
+        let prefix = isUserPage ? 'booking' : 'admin';
+        const yEl = document.getElementById(`${prefix}-year-display`);
+        const mEl = document.getElementById(`${prefix}-month-display`);
+        if(yEl) yEl.textContent = `${y}`;
+        if(mEl) mEl.textContent = `${String(m+1).padStart(2,'0')}`;
 
         if (isAdminPage) {
             const btn = document.getElementById('admin-month-status-btn');
@@ -3746,9 +3838,7 @@
         }
 
         grid.innerHTML = '';
-
         const offset = (new Date(y, m, 1).getDay() || 7) - 1;
-        const lastDate = new Date(y, m + 1, 0).getDate();
         const todayNum = new Date().setHours(0,0,0,0);
 
         for(let i=0; i<offset; i++) grid.innerHTML += `<div></div>`;
@@ -3757,25 +3847,25 @@
             const key = `${y}-${m}-${d}`;
             const dateObj = new Date(y, m, d);
             const isSun = dateObj.getDay() === 0;
-            const isSat = dateObj.getDay() === 6; // [新增] 判斷週六
+            const isSat = dateObj.getDay() === 6; 
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const isHoliday = !!holidayMap[dateStr];
             
             const isPastDay = dateObj.getTime() < todayNum;
-            const slots = bookingState.data.bookings[key] || [];
+            let slots = bookingState.data.bookings[key] || [];
 
-            // 背景邏輯：週日維持淡紅底 (若週六也要淡紅底，可在此加入 || isSat)
+            // ★ 前台保護邏輯：如果尚未開放預約，強制清空前台畫面要顯示的時段
+            if (isUserPage && !isOpened) {
+                slots = [];
+            }
+
             const div = document.createElement('div');
             div.className = `day-box ${isSun ? 'sunday-bg' : ''}`;
             if (isPastDay && isUserPage) div.classList.add('past-day');
 
-            // [修改] 紅字邏輯：週日 OR 週六 OR 國定假日
             let dateClass = "font-bold text-[12px] ";
-            if (isSun || isSat || isHoliday) {
-                dateClass += "text-[#ff6b6b]";
-            }
+            if (isSun || isSat || isHoliday) dateClass += "text-[#ff6b6b]";
 
-            // [修改處] 將日期稍微放大，文字縮小，製造層次感
             let html = `<div class="flex justify-between px-1.5 mb-1"><span class="${dateClass} !text-[13px] font-serif">${d}</span></div>`;
 
             if (isSun) {
@@ -3806,49 +3896,100 @@
         }
     }
 
-    // --- [新增] 後台月份全局同步核心 ---
+    // --- 修改：僅負責開關，不再負責生成時段 (時段改為進入月份時自動生成) ---
+    function toggleMonthStatus() {
+        const y = bookingState.viewDate.getFullYear();
+        const m = bookingState.viewDate.getMonth();
+        const mKey = `${y}-${m}`;
+        const idx = bookingState.data.openMonths.indexOf(mKey);
+
+        if (idx > -1) {
+            // 如果原本是開啟，則關閉
+            bookingState.data.openMonths.splice(idx, 1);
+        } else {
+            // 如果原本是關閉，則開啟
+            bookingState.data.openMonths.push(mKey);
+        }
+        saveBookingData();
+    }
+
+    // --- [新增] 後台月份全局同步核心 (年/月分開生成) ---
     function syncAllAdminDates(targetDate) {
-        // 將傳入的時間同步給所有後台日曆系統
         const newDate = new Date(targetDate);
         bookingState.viewDate = new Date(newDate);
         financeStore.viewDate = new Date(newDate);
         reportState.calDate = new Date(newDate);
-        reportState.date = new Date(newDate); // 同步給月/年報表
+        reportState.date = new Date(newDate);
 
-        // 同步更新畫面上所有「隱藏的月份選擇器」的值
         const y = newDate.getFullYear();
         const m = String(newDate.getMonth() + 1).padStart(2, '0');
-        document.querySelectorAll('.month-picker-overlay').forEach(el => {
-            el.value = `${y}-${m}`;
+
+        // 同步「年」下拉選單
+        document.querySelectorAll('select.year-select').forEach(sel => {
+            if (sel.options.length === 0) {
+                let html = '';
+                const baseY = new Date().getFullYear();
+                for(let i = -5; i <= 5; i++) {
+                    const ty = baseY + i;
+                    html += `<option value="${ty}">${ty} 年</option>`;
+                }
+                sel.innerHTML = html;
+            }
+            sel.value = y;
+        });
+
+        // 同步「月」下拉選單
+        document.querySelectorAll('select.month-select').forEach(sel => {
+            if (sel.options.length === 0) {
+                let html = '';
+                for(let i = 1; i <= 12; i++) {
+                    const tm = String(i).padStart(2, '0');
+                    html += `<option value="${tm}">${tm} 月</option>`;
+                }
+                sel.innerHTML = html;
+            }
+            sel.value = m;
+        });
+
+        // 同步「年報表專用」下拉選單
+        document.querySelectorAll('select#rep-year-select').forEach(sel => {
+            if (sel.options.length === 0) {
+                let html = '';
+                const baseY = new Date().getFullYear();
+                for(let i = -5; i <= 5; i++) {
+                    const ty = baseY + i;
+                    html += `<option value="${ty}">${ty} 年</option>`;
+                }
+                sel.innerHTML = html;
+            }
+            sel.value = y;
         });
     }
 
-    // --- [新增] 支援直接挑選特定年月跳轉 ---
-    window.jumpToMonth = function(val, type) {
-        if(!val) return;
-        const [y, m] = val.split('-');
-        const targetDate = new Date(parseInt(y), parseInt(m) - 1, 1);
-        syncAllAdminDates(targetDate);
+    // 分離版按鈕觸發事件
+    window.handleSplitDateChange = function(el) {
+        const type = el.dataset.type;
+        // 尋找同一組內的 年 與 月
+        const ySel = document.querySelector(`select.year-select[data-type="${type}"]`);
+        const mSel = document.querySelector(`select.month-select[data-type="${type}"]`);
         
-        if (type === 'booking') renderCalendar();
-        else if (type === 'budget') renderCalendar();
-        else if (type === 'finance') renderFinancePage();
-        else if (type === 'report-cal') renderReportCalendar();
+        if(ySel && mSel) {
+            const targetDate = new Date(parseInt(ySel.value), parseInt(mSel.value) - 1, 1);
+            syncAllAdminDates(targetDate);
+            
+            if (type === 'booking' || type === 'budget') renderCalendar();
+            else if (type === 'finance') renderFinancePage();
+            else if (type === 'report-cal') renderReportCalendar();
+            else if (type === 'report-month') renderMonthlyReport();
+            else if (type === 'account') renderAccountView();
+        }
     };
 
-    // [修正] 強制喚起原生日期選擇器 (解決電腦版點擊無效問題)
-    window.openMonthPicker = function(el) {
-        var inp = el.querySelector('input');
-        if (inp) {
-            // 使用現代瀏覽器 API 強制顯示選擇器
-            if (inp.showPicker) {
-                inp.showPicker();
-            } else {
-                // 舊版瀏覽器備案
-                inp.click();
-                inp.focus();
-            }
-        }
+    window.jumpToYear = function(val, type) {
+        if(!val) return;
+        const targetDate = new Date(parseInt(val), 0, 1);
+        syncAllAdminDates(targetDate);
+        if (type === 'report-year') renderYearlyReport();
     };
 
     function changeBookingMonth(dir) {
@@ -3861,54 +4002,6 @@
         financeStore.viewDate.setMonth(financeStore.viewDate.getMonth() + dir);
         syncAllAdminDates(financeStore.viewDate);
         renderFinancePage();
-    }
-
-    // [修正] 時段管理開啟邏輯 (同步排除：週日、國定假日、手動排休日)
-    function toggleMonthStatus() {
-        const y = bookingState.viewDate.getFullYear();
-        const m = bookingState.viewDate.getMonth();
-        const mKey = `${y}-${m}`;
-        const idx = bookingState.data.openMonths.indexOf(mKey);
-        
-        // 取得假日表
-        const holidayMap = window.getTaiwanHolidays(); 
-
-        if (idx > -1) {
-            // 如果原本是開啟，則關閉 (從清單移除)
-            bookingState.data.openMonths.splice(idx, 1);
-        } else {
-            // 如果原本是關閉，則開啟 (加入清單並生成時段)
-            bookingState.data.openMonths.push(mKey);
-            const lastDate = new Date(y, m + 1, 0).getDate();
-            
-            for(let d=1; d<=lastDate; d++) {
-                const day = new Date(y, m, d).getDay();
-                const key = `${y}-${m}-${d}`; // Booking Key (YYYY-M-D)
-                
-                // 產生 Finance Key (YYYY-MM-DD) 用來對照排休表
-                const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                
-                // 1. 檢查是否國定假日
-                const isHoliday = !!holidayMap[dateStr];
-                
-                // 2. [新增] 檢查是否在「預約管理」的手動排休名單中
-                const isManualOff = (financeStore.manualOffDays || []).includes(dateStr);
-
-                // 核心邏輯：
-                // 非週日 (day !== 0)
-                // 且 非國定假日 (!isHoliday)
-                // 且 非手動排休 (!isManualOff)
-                // 才產生預設時段
-                if (day !== 0 && !isHoliday && !isManualOff) {
-                    // 只針對「還沒有設定時段」或「時段為空」的日子填入預設值
-                    // 避免覆蓋掉原本已經手動調整過的時段
-                    if (!bookingState.data.bookings[key] || bookingState.data.bookings[key].length === 0) {
-                         bookingState.data.bookings[key] = [...DEFAULTS_TIMES];
-                    }
-                }
-            }
-        }
-        saveBookingData();
     }
 
     // [修正] 切換單日開關 (防呆：避開已存在財務中的預約)
@@ -4299,8 +4392,10 @@
     window.renderReportCalendar = function() {
         const y = reportState.calDate.getFullYear();
         const m = reportState.calDate.getMonth();
-        const displayEl = document.getElementById('rep-cal-month-display');
-        if(displayEl) displayEl.textContent = `${y} / ${String(m+1).padStart(2,'0')}`;
+        const yEl = document.getElementById('report-cal-year-display');
+        const mEl = document.getElementById('report-cal-month-display');
+        if(yEl) yEl.textContent = `${y}`;
+        if(mEl) mEl.textContent = `${String(m+1).padStart(2,'0')}`;
         
         const grid = document.getElementById('report-calendar-grid');
         if(!grid) return;
@@ -4819,7 +4914,10 @@
     window.renderMonthlyReport = function() {
         const y = reportState.date.getFullYear();
         const m = reportState.date.getMonth();
-        document.getElementById('report-month-title').innerText = `${y} 年 ${m+1} 月`;
+        const yEl = document.getElementById('report-month-year-display');
+        const mEl = document.getElementById('report-month-month-display');
+        if(yEl) yEl.textContent = `${y}`;
+        if(mEl) mEl.textContent = `${String(m+1).padStart(2,'0')}`;
         
         const d = generateReportData(y, m);
         const profit = d.rev.total - d.exp.total;
@@ -5567,7 +5665,10 @@
     window.renderFinancePage = function() {
         const y = financeStore.viewDate.getFullYear();
         const m = financeStore.viewDate.getMonth();
-        document.getElementById('fin-month-display').textContent = `${y} / ${String(m+1).padStart(2,'0')}`;
+        const yEl = document.getElementById('finance-year-display');
+        const mEl = document.getElementById('finance-month-display');
+        if(yEl) yEl.textContent = `${y}`;
+        if(mEl) mEl.textContent = `${String(m+1).padStart(2,'0')}`;
         
         const grid = document.getElementById('finance-calendar-grid');
         if(!grid) return;
@@ -7454,7 +7555,7 @@
 
     window.initSystem = function() {
         renderServiceFront(); 
-        renderAdminList();     
+        renderAdminList();    
         initCalc();           
         
         syncServiceData();    
@@ -7465,6 +7566,9 @@
         syncExpenses();
         syncAudits(); // 載入盤點紀錄
         
+        // ★ 新增這行：確保網頁載入時，下拉選單自動生成當前年月選項
+        syncAllAdminDates(new Date());
+
         router();
     };
 
@@ -7983,7 +8087,10 @@
     window.renderAccountView = function() {
         const y = reportState.date.getFullYear();
         const m = reportState.date.getMonth();
-        document.getElementById('account-month-title').innerText = `${y} 年 ${m+1} 月`;
+        const yEl = document.getElementById('account-year-display');
+        const mEl = document.getElementById('account-month-display');
+        if(yEl) yEl.textContent = `${y}`;
+        if(mEl) mEl.textContent = `${String(m+1).padStart(2,'0')}`;
 
         const accs = buildLedgerData();
         const container = document.getElementById('account-cards-container');
