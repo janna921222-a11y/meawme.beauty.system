@@ -2328,14 +2328,14 @@
 
     <section id="page-admin-finance" class="page-content pb-32">
         <div class="fin-title-container">
-            <button onclick="fixLegacyData()" class="view-toggle-btn" style="position: absolute; left: 16px; border-color: #ff6b6b; color: #ff6b6b;">系統校正</button>
+            <button onclick="fixLegacyData()" class="view-toggle-btn" style="position: absolute; left: 16px; border-color: #ff6b6b; color: #ff6b6b; padding: 4px 8px; font-size: 10px;">系統校正</button>
             
             <h2 style="margin:0 !important; font-size:20px !important;">預約管理</h2>
             
-            <div style="position: absolute; right: 16px; display: flex; gap: 8px; align-items: center;">
+            <div style="position: absolute; right: 16px; display: flex; gap: 4px; align-items: center;">
                 <input type="file" id="csv-uploader" accept=".csv" class="hidden" onchange="processCSVImport(event)">
-                <button onclick="document.getElementById('csv-uploader').click()" class="view-toggle-btn" style="border-color: #8b9d8a; color: #8b9d8a;">📥 匯入CSV</button>
-                <button id="finViewToggle" onclick="toggleFinView()" class="view-toggle-btn">顯示: 金額</button>
+                <button onclick="document.getElementById('csv-uploader').click()" class="view-toggle-btn" style="border-color: #8b9d8a; color: #8b9d8a; padding: 4px 8px; font-size: 10px;">匯入CSV</button>
+                <button id="finViewToggle" onclick="toggleFinView()" class="view-toggle-btn" style="padding: 4px 8px; font-size: 10px;">顯示:金額</button>
             </div>
         </div>
 
@@ -5843,11 +5843,11 @@
                     contentHtml += `<div class="fin-item is-note"><span>${note}</span></div>`;
                 });
 
-                const modelItemNames = new Set([
+                const modelItemNames = [
                     ...safeArray(serviceData.nail?.model).map(i => i.name), 
                     ...safeArray(serviceData.eyelash?.model).map(i => i.name),
                     ...safeArray(serviceData.eyelash?.practice).map(i => i.name)
-                ]);
+                ];
 
                 entries.sort((a,b) => a.time.localeCompare(b.time));
                 let minTimeStr = null, maxTimeStr = null;
@@ -5908,9 +5908,9 @@
                     if (e.status === 'checked') itemClass = 'status-checked';
                     else if (e.status === 'noshow') itemClass = 'status-noshow';
 
-                    // [修改] 移除 viewMode === 'price' 的特殊樣式判斷
-                    // 改為：無論是金額或項目模式，都統一依據是否為手模/睫模來決定邊框顏色
-                    if (e.items.some(name => modelItemNames.has(name))) {
+                    // [修改] 無論是金額或項目模式，都統一依據是否為手模/睫模來決定邊框顏色
+                    // 改用 includes 判斷，以便相容「帶有子項目後綴(例如: 單色 (跳色))」的字串
+                    if (e.items.some(name => modelItemNames.some(modelName => name.includes(modelName)))) {
                         itemClass += ' is-model';
                     }
                     
