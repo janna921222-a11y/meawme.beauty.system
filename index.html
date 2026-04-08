@@ -4876,10 +4876,17 @@
         
         document.getElementById('bk-date').value = activeDateStr; // 預設帶入同天，但使用者可改
         document.getElementById('bk-name').value = record.name + '';
-        document.getElementById('bk-amount').value = Math.abs(record.amount) || '';
-        document.getElementById('bk-note').value = record.note || '';
         
         let type = record.type || (record.cat === 'transfer_out' ? 'transfer' : 'expense');
+        
+        // 讓「額度調整」可以正確複製負號
+        if (type === 'adjust') {
+            document.getElementById('bk-amount').value = record.amount || '';
+        } else {
+            document.getElementById('bk-amount').value = Math.abs(record.amount) || '';
+        }
+        
+        document.getElementById('bk-note').value = record.note || '';
         populateAccountOptions();
         switchBkTab(type);
         
@@ -5394,7 +5401,38 @@
         });
 
         // ==========================================
-        // C. 渲染 UI
+        // C. 其他收入結算 (手動記帳)
+        // ==========================================
+        const dayExps = safeArray(expenseData[activeDateStr]);
+        dayExps.forEach(e => {
+            if (e.type === 'income') {
+                const amt = parseInt(e.amount) || 0;
+                if (amt > 0) {
+                    serviceTotal += amt; // 加入結帳總計
+
+                    let method = 'cash';
+                    if (e.target === 'transfer') method = 'transfer';
+                    else if (e.target === 'linepay') method = 'linepay';
+                    else if (e.target === 'jko') method = 'jko';
+                    else if (e.target === 'stored') method = 'stored';
+
+                    if (serviceByType[method] !== undefined) {
+                        serviceByType[method] += amt;
+                    }
+                    
+                    serviceDetails.push({
+                        type: method,
+                        amount: amt,
+                        date: activeDateStr,
+                        time: '手動', // 標記為手動收入
+                        name: e.name || '其他收入'
+                    });
+                }
+            }
+        });
+
+        // ==========================================
+        // D. 渲染 UI
         // ==========================================
         
         // 1. 更新標題上的總數字
@@ -5404,11 +5442,15 @@
         // 2. 共用的清單渲染函式 (列出每一筆)
         const renderList = (list) => {
             if (list.length === 0) return '<div class="text-xs text-gray-400 p-2 text-center">無資料</div>';
-            return list.map(i => `
+            return list.map(i => {
+                // 如果是手動收入，顯示項目名稱；否則顯示日期時間
+                const title = i.time === '手動' ? `${i.name} (${typeMap[i.type]||i.type})` : `${i.date} ${i.time} (${typeMap[i.type]||i.type})`;
+                return `
                 <div class="settle-detail-row">
-                    <span>${i.date} ${i.time} (${typeMap[i.type]||i.type})</span>
+                    <span>${title}</span>
                     <span class="font-bold">$${i.amount}</span>
-                </div>`).join('');
+                </div>`;
+            }).join('');
         };
 
         // 3. 共用的統計區塊生成函式 (產生灰色方塊)
@@ -5569,6 +5611,23 @@
                     }
                 }
             });
+        });
+
+        // 計算區間內的手動現金收支 (確保實體現金抽屜數字精準)
+        Object.keys(expenseData).forEach(dateKey => {
+            const dTs = new Date(dateKey).setHours(0,0,0,0);
+            if (dTs > lastDateTs && dTs <= targetTs) {
+                safeArray(expenseData[dateKey]).forEach(e => {
+                    const type = e.type || (e.cat === 'transfer_out' ? 'transfer' : 'expense');
+                    const amt = parseInt(e.amount) || 0;
+                    
+                    if (type === 'income' && e.target === 'petty') unsettledCashRev += amt;
+                    else if (type === 'expense' && e.source === 'petty') unsettledCashRev -= amt;
+                    else if (type === 'transfer' && e.target === 'petty') unsettledCashRev += amt;
+                    else if (type === 'transfer' && e.source === 'petty') unsettledCashRev -= amt;
+                    else if (type === 'adjust' && e.target === 'petty') unsettledCashRev += amt;
+                });
+            }
         });
 
         const expectedTotal = prevReserve + unsettledCashRev;
@@ -8132,17 +8191,17 @@
             <div class="acc-card-val">$${accs.backup.currentBal.toLocaleString()}</div>
         </div>`;
         
-        // 2. Line Pay & Jko (半版顯示本月總收)
+        // 2. Line Pay & Jko (改為顯示當前餘額，讓負數調整能正確反映)
         html += `
         <div class="acc-card border-l-4 border-l-[#06c755]" onclick="openAccountDetail('linepay')">
             <div class="acc-card-title">${accs.linepay.name}</div>
-            <div class="text-[10px] text-gray-400 mb-1">本月入帳總額</div>
-            <div class="acc-card-val text-[#06c755]">$${accs.linepay.mIn.toLocaleString()}</div>
+            <div class="text-[10px] text-gray-400 mb-1">當前餘額</div>
+            <div class="acc-card-val text-[#06c755]">$${accs.linepay.currentBal.toLocaleString()}</div>
         </div>
         <div class="acc-card border-l-4 border-l-[#e60012]" onclick="openAccountDetail('jko')">
             <div class="acc-card-title">${accs.jko.name}</div>
-            <div class="text-[10px] text-gray-400 mb-1">本月入帳總額</div>
-            <div class="acc-card-val text-[#e60012]">$${accs.jko.mIn.toLocaleString()}</div>
+            <div class="text-[10px] text-gray-400 mb-1">當前餘額</div>
+            <div class="acc-card-val text-[#e60012]">$${accs.jko.currentBal.toLocaleString()}</div>
         </div>`;
 
         // 3. 匯款與錢包 (滿版顯示本月進出)
@@ -8375,10 +8434,17 @@
         
         document.getElementById('bk-date').value = date;
         document.getElementById('bk-name').value = record.name || '';
-        document.getElementById('bk-amount').value = record.amount || '';
-        document.getElementById('bk-note').value = record.note || '';
         
         let type = record.type || (record.cat === 'transfer_out' ? 'transfer' : 'expense');
+        
+        // 讓「額度調整」可以正確顯示並修改負號
+        if (type === 'adjust') {
+            document.getElementById('bk-amount').value = record.amount || '';
+        } else {
+            document.getElementById('bk-amount').value = Math.abs(record.amount) || '';
+        }
+        
+        document.getElementById('bk-note').value = record.note || '';
         populateAccountOptions();
         switchBkTab(type);
         
@@ -8501,7 +8567,7 @@
         }
     };
 
-    // [修正] 覆寫 openAccountDetail 以加入備用金按鈕
+    // [修正] 覆寫 openAccountDetail 以加入備用金按鈕與修正餘額顯示
     window.openAccountDetail = function(accId) {
         currentAccDetailId = accId;
         const accs = buildLedgerData();
@@ -8509,9 +8575,10 @@
         
         document.getElementById('acc-detail-title').innerText = `${reportState.date.getMonth()+1}月 ${acc.name} 明細`;
         
-        // 標題顯示
-        const balText = accId === 'petty' || accId === 'backup' 
-            ? `當前餘 $${acc.currentBal.toLocaleString()}` : `本月進帳 $${acc.mIn.toLocaleString()}`;
+        // [修改] 標題顯示：將 Line Pay 與 街口 加入顯示「當前餘額」的行列
+        const balText = ['petty', 'backup', 'linepay', 'jko'].includes(accId)
+            ? `當前餘額 $${acc.currentBal.toLocaleString()}` 
+            : `本月進帳 $${acc.mIn.toLocaleString()}`;
         document.getElementById('acc-detail-bal').innerText = balText;
         
         // --- [新增/修改] 動態渲染按鈕區塊，若是現金帳戶則加入「盤點」按鈕 ---
