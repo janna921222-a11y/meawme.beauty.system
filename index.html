@@ -2292,9 +2292,8 @@
         </section>
 
     <section id="page-budget" class="page-content pb-32">
-        <h2 class="text-center text-[22px] font-bold my-6 text-[var(--gold-main)]">時段管理</h2>
-        
         <div class="sticky-header-wrapper">
+            <h2 class="text-center text-[22px] font-bold mb-4 text-[var(--gold-main)]">時段管理</h2>
             <div class="text-center mb-4">
                 <button onclick="toggleMonthStatus()" id="admin-month-status-btn" class="border border-[var(--gold-main)] text-[var(--gold-main)] px-4 py-2 rounded-full text-xs font-bold mr-2">狀態讀取中</button>
                 <button onclick="exportAvailableSlots()" class="bg-[var(--gold-main)] text-[#1a3a2e] px-4 py-2 rounded-full text-xs font-bold shadow-lg">匯出空檔</button>
@@ -2327,34 +2326,34 @@
     </section>
 
     <section id="page-admin-finance" class="page-content pb-32">
-        <div class="fin-title-container">
-            <button onclick="fixLegacyData()" class="view-toggle-btn" style="position: absolute; left: 16px; border-color: #ff6b6b; color: #ff6b6b; padding: 4px 8px; font-size: 10px;">系統校正</button>
-            
-            <h2 style="margin:0 !important; font-size:20px !important;">預約管理</h2>
-            
-            <div style="position: absolute; right: 16px; display: flex; gap: 4px; align-items: center;">
-                <input type="file" id="csv-uploader" accept=".csv" class="hidden" onchange="processCSVImport(event)">
-                <button onclick="document.getElementById('csv-uploader').click()" class="view-toggle-btn" style="border-color: #8b9d8a; color: #8b9d8a; padding: 4px 8px; font-size: 10px;">匯入CSV</button>
-                <button id="finViewToggle" onclick="toggleFinView()" class="view-toggle-btn" style="padding: 4px 8px; font-size: 10px;">顯示:金額</button>
-            </div>
-        </div>
-
-        <div class="fin-stat-header">
-            <div>
-                <div class="fin-stat-label">應休 / 實休</div>
-                <div class="fin-stat-val"><span id="stat-target-off">0</span> / <span id="stat-real-off" class="text-[#ff6b6b]">0</span></div>
-            </div>
-            <div class="text-center">
-                <div class="fin-stat-label">服務人數</div>
-                <div class="fin-stat-val" id="stat-count">0</div>
-            </div>
-            <div class="fin-stat-group">
-                <div class="fin-stat-label">平均單價</div>
-                <div class="fin-stat-val">$<span id="stat-avg">0</span></div>
-            </div>
-        </div>
-
         <div class="sticky-header-wrapper">
+            <div class="fin-title-container">
+                <button onclick="fixLegacyData()" class="view-toggle-btn" style="position: absolute; left: 16px; border-color: #ff6b6b; color: #ff6b6b; padding: 4px 8px; font-size: 10px;">系統校正</button>
+                
+                <h2 style="margin:0 !important; font-size:20px !important;">預約管理</h2>
+                
+                <div style="position: absolute; right: 16px; display: flex; gap: 4px; align-items: center;">
+                    <input type="file" id="csv-uploader" accept=".csv" class="hidden" onchange="processCSVImport(event)">
+                    <button onclick="document.getElementById('csv-uploader').click()" class="view-toggle-btn" style="border-color: #8b9d8a; color: #8b9d8a; padding: 4px 8px; font-size: 10px;">匯入CSV</button>
+                    <button id="finViewToggle" onclick="toggleFinView()" class="view-toggle-btn" style="padding: 4px 8px; font-size: 10px;">顯示:金額</button>
+                </div>
+            </div>
+
+            <div class="fin-stat-header">
+                <div>
+                    <div class="fin-stat-label">應休 / 實休</div>
+                    <div class="fin-stat-val"><span id="stat-target-off">0</span> / <span id="stat-real-off" class="text-[#ff6b6b]">0</span></div>
+                </div>
+                <div class="text-center">
+                    <div class="fin-stat-label">服務人數</div>
+                    <div class="fin-stat-val" id="stat-count">0</div>
+                </div>
+                <div class="fin-stat-group">
+                    <div class="fin-stat-label">平均單價</div>
+                    <div class="fin-stat-val">$<span id="stat-avg">0</span></div>
+                </div>
+            </div>
+
             <div class="nav-header-container">
                 <button onclick="changeFinMonth(-1)" class="text-[var(--gold-main)] text-xl p-2">❮</button>
                 <div class="flex gap-2">
@@ -3869,6 +3868,7 @@
         // ★ 後台專屬邏輯：只要該月份還沒初始化過，就會自動生成預設時段，方便妳預先編輯
         if (isAdminPage && !bookingState.data.initializedMonths.includes(mKey)) {
             bookingState.data.initializedMonths.push(mKey);
+            let hasChanges = false;
             for(let d=1; d<=lastDate; d++) {
                 const day = new Date(y, m, d).getDay();
                 const key = `${y}-${m}-${d}`;
@@ -3876,17 +3876,21 @@
                 const isHoliday = !!holidayMap[dateStr];
                 const isManualOff = financeStore.manualOffDays.includes(dateStr);
 
-                if (!bookingState.data.bookings[key]) {
-                    // 非假日、非手動排休日，自動填入預設時段
-                    if (day !== 0 && !isHoliday && !isManualOff) {
-                        bookingState.data.bookings[key] = [...DEFAULTS_TIMES];
-                    } else {
+                // 修正：乾淨的自動釋出時段邏輯 (移除了錯誤混入導致卡頓的程式碼)
+                if (!isHoliday && day !== 0 && !isManualOff) {
+                    if (!bookingState.data.bookings[key]) {
+                        bookingState.data.bookings[key] = day === 6 ? ["10:00", "14:00"] : ["10:00", "14:00", "18:00"];
+                        hasChanges = true;
+                    }
+                } else {
+                    if (!bookingState.data.bookings[key]) {
                         bookingState.data.bookings[key] = [];
+                        hasChanges = true;
                     }
                 }
             }
             // 寫入雲端，不觸發重複渲染
-            if (window.dbSet && window.dbRef) {
+            if (hasChanges && window.dbSet && window.dbRef) {
                 window.dbSet(window.dbRef(window.firebaseDB, 'meawMeBooking'), bookingState.data);
             }
         }
@@ -4117,22 +4121,25 @@
             const finKey = `${y}-${String(parseInt(m)+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const finEntries = safeArray(financeStore.data[finKey]);
 
-            // 2. 過濾預設時段
-            const safeDefaults = DEFAULTS_TIMES.filter(defaultTime => {
-                // 檢查這個 defaultTime 是否跟任何一個 finEntry 衝突
-                const [dH, dM] = defaultTime.split(':').map(Number);
-                const dMins = dH * 60 + dM;
+            // 判斷是否為週六，給予對應的預設時段
+            const dayOfWeek = new Date(y, m, d).getDay();
+            const targetDefaults = dayOfWeek === 6 ? ["10:00", "14:00"] : DEFAULTS_TIMES;
 
-                // 檢查是否落在任何一個預約區間內
+            // 2. 過濾預設時段
+            const safeDefaults = targetDefaults.filter(defaultTime => {
+                const [dH, dM] = defaultTime.split(':').map(Number);
+                const dStart = dH * 60 + dM;
+                const dEnd = dStart + 120; // 假設預設時段區塊為 2 小時
+
                 const isOccupied = finEntries.some(e => {
                      const [eH, eM] = e.time.split(':').map(Number);
                      const eStart = eH * 60 + eM;
                      const eDur = parseInt(e.duration || 60, 10);
                      const eEnd = eStart + eDur;
-                     // 如果預設時間 落在 預約開始與結束之間，就是被佔用了
-                     return (dMins >= eStart && dMins < eEnd);
+                     // 區間重疊嚴格判斷：新開始 < 舊結束 且 新結束 > 舊開始
+                     return (dStart < eEnd && dEnd > eStart);
                 });
-                return !isOccupied; // 沒被佔用才保留
+                return !isOccupied;
             });
 
             bookingState.data.bookings[key] = safeDefaults;
@@ -4151,7 +4158,13 @@
         const container = document.getElementById('timeChips');
         container.innerHTML = '';
         const currentSlots = bookingState.data.bookings[bookingState.editingKey] || [];
-        const allTimes = [...new Set([...DEFAULTS_TIMES, ...currentSlots])].sort();
+        
+        // 修正：編輯時段也要區分週六
+        const [y, m, d] = bookingState.editingKey.split('-');
+        const dayOfWeek = new Date(y, m, d).getDay();
+        const targetDefaults = dayOfWeek === 6 ? ["10:00", "14:00"] : DEFAULTS_TIMES;
+
+        const allTimes = [...new Set([...targetDefaults, ...currentSlots])].sort();
 
         allTimes.forEach(t => {
             const isActive = currentSlots.includes(t);
@@ -6321,7 +6334,11 @@
                 financeStore.manualOffDays.splice(idx, 1);
             }
             const finEntries = safeArray(financeStore.data[activeDateStr]);
-            const safeDefaults = DEFAULTS_TIMES.filter(defaultTime => {
+            
+            // 判斷是否為週六
+            const targetDefaults = dayOfWeek === 6 ? ["10:00", "14:00"] : DEFAULTS_TIMES;
+            
+            const safeDefaults = targetDefaults.filter(defaultTime => {
                 const [dH, dM] = defaultTime.split(':').map(Number);
                 const dMins = dH * 60 + dM;
                 const isOccupied = finEntries.some(e => {
@@ -6976,9 +6993,11 @@
             // 轉換 current date 為 bookingKey 格式 (YYYY-M-D，月份 0-base)
             const [yStr, mmStr, ddStr] = activeDateStr.split('-');
             const bKey = `${parseInt(yStr)}-${parseInt(mmStr)-1}-${parseInt(ddStr)}`;
+            const dayOfWeek = new Date(activeDateStr).getDay();
             
-            // 取得該日有開放的時段，若無設定則以預設 DEFAULTS_TIMES 為底
-            const daySlots = bookingState.data.bookings[bKey] || DEFAULTS_TIMES;
+            // 取得該日有開放的時段，若無設定則以預設為底 (嚴格區分週六)
+            const targetDefaults = dayOfWeek === 6 ? ["10:00", "14:00"] : DEFAULTS_TIMES;
+            const daySlots = bookingState.data.bookings[bKey] || targetDefaults;
             
             // 依照時間先後排序
             const sortedSlots = [...daySlots].sort();
@@ -7149,14 +7168,22 @@
         if (editingEntryId) {
              const oldEntry = sourceEntries.find(e => String(e.id) === String(editingEntryId));
              if (oldEntry && (oldEntry.time !== timeStr || activeDateStr !== newDateStr)) {
-                const [yStr, mmStr, ddStr] = activeDateStr.split('-');
-                const bookingKey = `${parseInt(yStr)}-${parseInt(mmStr)-1}-${parseInt(ddStr)}`;
-                if (!bookingState.data.bookings[bookingKey]) bookingState.data.bookings[bookingKey] = [];
-                const slots = bookingState.data.bookings[bookingKey];
-                if (!slots.includes(oldEntry.time)) {
-                    slots.push(oldEntry.time);
-                    slots.sort();
-                    saveBookingData(); 
+                // 檢查舊日期是否為休假
+                const holidayMap = window.getTaiwanHolidays();
+                const isHoliday = !!holidayMap[activeDateStr];
+                const isSun = new Date(activeDateStr).getDay() === 0;
+                const isManualOff = financeStore.manualOffDays.includes(activeDateStr);
+
+                if (!isHoliday && !isSun && !isManualOff) {
+                    const [yStr, mmStr, ddStr] = activeDateStr.split('-');
+                    const bookingKey = `${parseInt(yStr)}-${parseInt(mmStr)-1}-${parseInt(ddStr)}`;
+                    if (!bookingState.data.bookings[bookingKey]) bookingState.data.bookings[bookingKey] = [];
+                    const slots = bookingState.data.bookings[bookingKey];
+                    if (!slots.includes(oldEntry.time)) {
+                        slots.push(oldEntry.time);
+                        slots.sort();
+                        saveBookingData(); 
+                    }
                 }
              }
         }
@@ -7591,8 +7618,12 @@
                 // 上班日 (或假日但有接客)：開啟 (預設時段 - 衝突時段)
                 const finEntries = entries || [];
                 
+                // 判斷是否為週六
+                const dayOfWeek = new Date(dateStr).getDay();
+                const targetDefaults = dayOfWeek === 6 ? ["10:00", "14:00"] : DEFAULTS_TIMES;
+                
                 // 取得原本已有的時段，如果是假日有接客，保留原狀或補滿，這裡選擇補滿邏輯
-                calculatedSlots = DEFAULTS_TIMES.filter(defaultTime => {
+                calculatedSlots = targetDefaults.filter(defaultTime => {
                     const [dH, dM] = defaultTime.split(':').map(Number);
                     const dMins = dH * 60 + dM;
 
