@@ -1308,12 +1308,22 @@
             font-weight: 700 !important;
         }
         
-        /* 修正：讓原本的金/綠邊框邏輯只在「非結帳」狀態下生效 */
-        .fin-item:not(.status-checked):not(.is-model):not(.is-note):not(.is-price-view) {
+        /* [一般客人] 的邊條顏色 - 金色 */
+        .fin-item:not(.status-checked):not(.is-model):not(.is-note):not(.is-price-view):not(.is-friend) {
             border-left-color: var(--cal-gold) !important;
         }
+
+        /* [手模] 的邊條顏色 - 深綠色 */
         .fin-item:not(.status-checked).is-model {
             border-left-color: #184629 !important;
+        }
+
+        /* [親友] 透紅底，無邊條，紅字 */
+        .fin-item.is-friend {
+            background: rgba(255, 107, 107, 0.15) !important;
+            color: #ff6b6b !important;
+            font-weight: 700 !important;
+            border-left-color: transparent !important;
         }
 
         /* 2. 當日行程列表卡片：已結帳變「淺綠底」 */
@@ -2946,8 +2956,9 @@
                 <div class="p-3 pb-0 space-y-2">
                     <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-200">
                         <label class="text-xs text-gray-500 font-bold whitespace-nowrap w-14 text-right">預約日期</label>
-                        <div class="flex-1 flex justify-center">
-                            <input type="date" id="fe-date" class="bg-transparent text-[#1a3a2e] font-bold text-lg outline-none text-center border-b border-gray-400 p-0 w-[140px]">
+                        <div class="flex-1 flex justify-center relative">
+                            <div id="fe-date-display" class="text-[#1a3a2e] font-bold text-lg border-b border-gray-400 w-[140px] text-center pb-0.5"></div>
+                            <input type="date" id="fe-date" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="document.getElementById('fe-date-display').innerText = this.value.replace(/-/g, '/')">
                         </div>
                     </div>
                     <div class="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-200">
@@ -3004,6 +3015,10 @@
                         <input type="hidden" id="fe-dep-method" value="none">
                     </div>
 
+                    <div class="flex items-center justify-between mb-3 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                        <label class="text-xs text-[#1a3a2e] font-bold">親友</label>
+                        <div class="check-toggle" id="fe-is-friend" onclick="this.classList.toggle('active')">✔</div>
+                    </div>
                     <div class="flex gap-2 items-center">
                         <div class="flex-1"><label class="text-[10px] block text-gray-400 mb-1">總金額</label><input type="number" inputmode="numeric" id="fe-price" class="edit-input w-full font-bold text-[#2d4639] text-lg bg-gray-50 border border-gray-200 rounded px-2 py-2"></div>
                         <div class="flex-1"><label class="text-[10px] block text-gray-400 mb-1">總時長(分)</label><input type="number" inputmode="numeric" id="fe-duration" class="edit-input w-full text-center bg-gray-50 border border-gray-200 rounded px-2 py-2 font-bold text-gray-600"></div>
@@ -3478,7 +3493,7 @@
         });
     }
 
-    // [修改] 1. 切換類別：支援子項目動態生成
+    // [修改] 1. 切換類別：完全以「分頁」來決定是否為模特
     window.switchFinCat = function(catKey, btn) {
         if (catKey.includes('nail')) currentCat = 'nail';
         else if (catKey.includes('eyelash')) currentCat = 'eyelash';
@@ -3491,6 +3506,10 @@
         if(!grid) return;
         grid.innerHTML = '';
 
+        // 【核心邏輯】以「當前所在的分頁」決定是否為模特
+        // 只要是在「手模(nail_model)」或「睫模(eyelash_practice)」分頁，一律為 true
+        const isTabModel = (catKey === 'nail_model' || catKey === 'eyelash_practice');
+
         // 高階函式：帶入 cat 和 type 以便後續抓取 subItems
         const createBtn = (cat, type) => (i, idx) => {
             const p1Disp = String(i.price).includes('%') ? i.price : `$${i.price}`;
@@ -3498,16 +3517,16 @@
             const p2Str = hasP2 ? i.price2 : "";
             const dur = i.duration || 0;
             const hasSub = i.subItems && i.subItems.length > 0;
-
+            
             if (hasSub) {
-                // 如果有子項目，點擊開啟選擇視窗
-                return `<button class="item-option-btn" onclick="openSubItemSelector('${cat}', '${type}', ${idx})">${i.name} <span class="opacity-60 text-[10px] ml-1">選</span></button>`;
+                // 傳遞 isTabModel
+                return `<button class="item-option-btn" onclick="openSubItemSelector('${cat}', '${type}', ${idx}, ${isTabModel})">${i.name} <span class="opacity-60 text-[10px] ml-1">選</span></button>`;
             } else if (hasP2) {
-                // 價格選擇器 (方案 A/B)
-                return `<button class="item-option-btn" onclick="openPriceSelector('${currentCat}', '${i.name}', '${i.price}', '${p2Str}', ${dur})">${i.name} <span class="opacity-60 text-[10px] ml-1">選</span></button>`;
+                // 傳遞 isTabModel
+                return `<button class="item-option-btn" onclick="openPriceSelector('${currentCat}', '${i.name}', '${i.price}', '${p2Str}', ${dur}, ${isTabModel})">${i.name} <span class="opacity-60 text-[10px] ml-1">選</span></button>`;
             } else {
-                // 一般直接加入
-                return `<button class="item-option-btn" onclick="addItemToTemp('${i.name}', '${i.price}', ${dur})">${i.name} <span class="opacity-60 text-[10px]">(${p1Disp})</span></button>`;
+                // 傳遞 isTabModel
+                return `<button class="item-option-btn" onclick="addItemToTemp('${i.name}', '${i.price}', ${dur}, ${isTabModel})">${i.name} <span class="opacity-60 text-[10px]">(${p1Disp})</span></button>`;
             }
         };
 
@@ -3954,12 +3973,15 @@
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const isHoliday = !!holidayMap[dateStr];
             
-            const isPastDay = dateObj.getTime() < todayNum;
+            // 將「今天」也納入過去日期的判定 (改為 <=)
+            const isPastDay = dateObj.getTime() <= todayNum;
             let slots = bookingState.data.bookings[key] || [];
 
-            // ★ 前台保護邏輯：如果尚未開放預約，強制清空前台畫面要顯示的時段
-            if (isUserPage && !isOpened) {
-                slots = [];
+            // ★ 前台保護邏輯：如果尚未開放預約，或是「過去日期/當天」，強制清空前台顯示
+            if (isUserPage) {
+                if (!isOpened || isPastDay) {
+                    slots = [];
+                }
             }
 
             const div = document.createElement('div');
@@ -3973,6 +3995,8 @@
 
             if (isSun) {
                 html += `<div class="text-[#ff6b6b] text-[9px] text-center opacity-80 mt-1">公休</div>`;
+            } else if (isPastDay && isUserPage) {
+                // 過去的日期與當天：不顯示時段，也不顯示約滿，直接留白保持畫面乾淨
             } else {
                 if (slots.length === 0) {
                      html += `<div class="text-[9px] text-center opacity-30 mt-1">約滿</div>`;
@@ -4934,6 +4958,8 @@
 
             const entries = safeArray(financeStore.data[dateKey]);
             entries.forEach(e => {
+                if (e.isFriend) return; // 略過親友預約
+
                 data.attendance.total++;
                 if (e.status === 'checked') data.attendance.checked++;
                 if (e.status === 'noshow') data.attendance.noshow++;
@@ -4976,6 +5002,7 @@
         // 2. 統計定金 (來自預約系統 - 獨立計算)
         Object.keys(financeStore.data).forEach(dateKey => {
             safeArray(financeStore.data[dateKey]).forEach(e => {
+                if (e.isFriend) return; // 略過親友預約
                 if (e.depositDate) {
                     const [dy, dm, dd] = e.depositDate.split('-').map(Number);
                     if (dy !== year) return;
@@ -5362,6 +5389,7 @@
         // ==========================================
         const dayEntries = safeArray(financeStore.data[activeDateStr]);
         dayEntries.forEach(entry => {
+            if (entry.isFriend) return; // 略過親友預約
             if (entry.status === 'checked' && entry.checkoutDetails) {
                 const d = entry.checkoutDetails;
                 // 服務結算 = 總金額 - 已付定金
@@ -5392,6 +5420,7 @@
         Object.keys(financeStore.data).forEach(dateKey => {
             const entries = safeArray(financeStore.data[dateKey]);
             entries.forEach(entry => {
+                if (entry.isFriend) return; // 略過親友預約
                 // 條件：有定金 且 定金日期 = 今天
                 if ((entry.hasDeposit || (entry.depositMethod && entry.depositMethod !== 'none')) && entry.depositDate === activeDateStr) {
                     const depAmt = parseInt(entry.depositAmount || 100);
@@ -5915,12 +5944,6 @@
                     contentHtml += `<div class="fin-item is-note"><span>${note}</span></div>`;
                 });
 
-                const modelItemNames = [
-                    ...safeArray(serviceData.nail?.model).map(i => i.name), 
-                    ...safeArray(serviceData.eyelash?.model).map(i => i.name),
-                    ...safeArray(serviceData.eyelash?.practice).map(i => i.name)
-                ];
-
                 entries.sort((a,b) => a.time.localeCompare(b.time));
                 let minTimeStr = null, maxTimeStr = null;
 
@@ -5943,8 +5966,8 @@
                     let p = parsePrice(e.price);
                     let r = Math.max(0, p - depositVal); // 剩餘應收 (扣除定金)
 
-                    // 統計計算 (爽約不計入 count 與 totalRev)
-                    if (e.status !== 'noshow') {
+                    // 統計計算 (爽約與親友預約皆不計入 count 與總額)
+                    if (e.status !== 'noshow' && !e.isFriend) {
                         count++;
                         totalRev += p; realRev += r;
                         currentWeekTotal += p; currentWeekReal += r;
@@ -5955,6 +5978,7 @@
                     } 
                     
                     let displayItemName = (e.items[0] || '項目').trim();
+                    // 已經移除 👥 圖標
                     
                     // [修改] 金額文字不含符號
                     const priceDisplay = `$${r}`;
@@ -5965,9 +5989,6 @@
                     const hasExtension = fullItemsString.includes("甲片") || fullItemsString.includes("延甲");
                     let suffix = "";
 
-                    // [修改] 符號邏輯：
-                    // 1. 如果不是金額模式 -> 顯示項目符號 (☯, ♡, ✩)
-                    // 2. 如果是金額模式 -> 有定金則顯示打勾 (✓)
                     if (financeStore.viewMode !== 'price') {
                         if (hasRemoval && hasExtension) suffix = "☯"; 
                         else if (hasRemoval) suffix = "♡"; 
@@ -5980,9 +6001,10 @@
                     if (e.status === 'checked') itemClass = 'status-checked';
                     else if (e.status === 'noshow') itemClass = 'status-noshow';
 
-                    // [修改] 無論是金額或項目模式，都統一依據是否為手模/睫模來決定邊框顏色
-                    // 改用 includes 判斷，以便相容「帶有子項目後綴(例如: 單色 (跳色))」的字串
-                    if (e.items.some(name => modelItemNames.some(modelName => name.includes(modelName)))) {
+                    // 優先判斷是否為親友，如果是親友就直接套用親友樣式
+                    if (e.isFriend) {
+                        itemClass += ' is-friend';
+                    } else if (e.isModel) { // [改為直接判斷我們剛剛存入資料的標記]
                         itemClass += ' is-model';
                     }
                     
@@ -6148,14 +6170,18 @@
                     openBookingDetail(e); 
                 };
 
-                // 若是爽約，價格顯示方式可微調 (例如加上 (爽約))
-                let priceDisplay = `$${e.price}`;
-                if (e.status === 'noshow') priceDisplay += " (爽約)";
+                // 價格與標籤顯示方式 (親友價格顯示為 $0，不顯示灰色字)
+                let priceDisplay = e.isFriend ? `$0` : `$${e.price}`;
+                if (e.status === 'noshow') {
+                    priceDisplay += " (爽約)";
+                }
+                
+                let friendBadge = e.isFriend ? `<span class="text-[10px] bg-[#8b9d8a] text-white px-1.5 py-0.5 rounded ml-2 align-middle font-normal tracking-normal">親友</span>` : '';
 
                 div.innerHTML = `
                     <div class="flex-1">
                         <div class="flex items-baseline gap-2">
-                            <span class="text-[#c9b896] font-extrabold text-lg font-serif">${e.time} - ${endTimeStr}</span>
+                            <span class="text-[#c9b896] font-extrabold text-lg font-serif">${e.time} - ${endTimeStr}</span> ${friendBadge}
                             <span class="text-gray-400 text-xs font-bold tracking-wider">${priceDisplay}</span>
                         </div>
                         <div class="text-[15px] text-[#4b3621] font-bold mt-1 tracking-wide" 
@@ -6163,8 +6189,11 @@
                             ${safeArray(e.items).join(' + ')}
                         </div>
                     </div>
-                    <div class="flex items-center gap-3 pl-3 border-l border-gray-600">
-                        <button class="del-btn text-red-400 font-bold text-lg px-2 py-1 hover:text-red-300 transition-colors" onclick="deleteSingleEntry('${e.id}', event)">✕</button>
+                    <div class="flex flex-col items-center justify-center gap-2 pl-3 border-l border-gray-300">
+                        <button class="text-[11px] font-bold px-2 py-1 rounded transition-colors ${e.isModel ? 'border border-[#8b9d8a] text-[#8b9d8a] hover:bg-gray-100' : 'bg-[#184629] text-[var(--gold-main)] hover:brightness-110'}" onclick="toggleModelStatus('${e.id}', event)">
+                            ${e.isModel ? '轉一般' : '設為模特'}
+                        </button>
+                        <button class="del-btn text-red-400 font-bold text-lg px-2 py-0 hover:text-red-300 transition-colors" onclick="deleteSingleEntry('${e.id}', event)">✕</button>
                     </div>
                 `;
                 container.appendChild(div);
@@ -6243,6 +6272,28 @@
             btn.style.background = 'transparent';
         }
     }
+
+    // [新增] 一鍵快速切換模特狀態 (修復歷史資料用)
+        window.toggleModelStatus = function(id, event) {
+            if(event) event.stopPropagation();
+            let currentEntries = safeArray(financeStore.data[activeDateStr]);
+            const idx = currentEntries.findIndex(e => String(e.id) === String(id));
+            if (idx > -1) {
+                // 切換狀態
+                currentEntries[idx].isModel = !currentEntries[idx].isModel;
+                
+                // 同步更新子項目裡的狀態
+                if (currentEntries[idx].itemsDetail) {
+                    currentEntries[idx].itemsDetail.forEach(d => d.isModel = currentEntries[idx].isModel);
+                }
+
+                // 儲存並立即刷新畫面
+                financeStore.data[activeDateStr] = currentEntries;
+                saveFinanceV2();
+                renderDayDetailList(); // 刷新列表按鈕
+                renderFinancePage();   // 刷新月曆邊條
+            }
+        };
 
     // [修正] 單筆刪除功能 (新增：自動釋出時段)
     window.deleteSingleEntry = function(id, event) {
@@ -6436,7 +6487,7 @@
         if(eH >= 24) eH -= 24;
         
         const elTime = document.getElementById('bd-time');
-        elTime.innerText = `${entry.time} - ${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
+        elTime.innerHTML = `${entry.time} - ${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')} ${entry.isFriend ? '<span class="text-xs bg-[#8b9d8a] text-white px-2 py-1 rounded ml-2 align-middle tracking-normal font-normal">親友</span>' : ''}`;
         elTime.className = "text-gold-force text-2xl font-bold mt-2 font-serif";
 
         // 狀態標籤與按鈕區塊
@@ -6922,7 +6973,13 @@
 
         // 設定預約日期
         const dateInput = document.getElementById('fe-date');
-        if (dateInput) dateInput.value = activeDateStr;
+        if (dateInput) {
+            dateInput.value = activeDateStr;
+            document.getElementById('fe-date-display').innerText = activeDateStr.replace(/-/g, '/');
+        }
+
+        const friendToggle = document.getElementById('fe-is-friend');
+        if(friendToggle) friendToggle.classList.remove('active');
 
         const currentEntries = safeArray(financeStore.data[activeDateStr]);
         const busyHours = new Set();
@@ -6954,6 +7011,7 @@
         if (entryId) {
             const entry = currentEntries.find(e => String(e.id) === String(entryId));
             if (entry) {
+                if (entry.isFriend && friendToggle) friendToggle.classList.add('active');
                 const parts = (entry.time || "10:00").split(':');
                 if(parts.length === 2) { defH = parts[0]; defM = parts[1]; }
                 
@@ -6975,10 +7033,12 @@
 
                 if (entry.itemsDetail) {
                     tempItems = JSON.parse(JSON.stringify(entry.itemsDetail));
+                    // [新增] 確保舊資料也能正確抓到模特標記
+                    tempItems.forEach(i => i.isModel = i.isModel || entry.isModel || false);
                 } else {
                     tempItems = safeArray(entry.items).map(n => {
                         const data = findItemData(n); 
-                        return { name: n, price: data.price, duration: data.duration, isPercent: n.includes('%'), qty: 1 };
+                        return { name: n, price: data.price, duration: data.duration, isPercent: n.includes('%'), qty: 1, isModel: entry.isModel || false };
                     });
                 }
             }
@@ -7197,9 +7257,15 @@
             depositDate = manualDepDate || newDateStr;
         }
 
+        const isFriend = document.getElementById('fe-is-friend').classList.contains('active');
+        // [新增] 只要目前清單裡有任何一個項目標記為模特，整單就視為模特單 (邊條變綠)
+        const isModel = tempItems.some(i => i.isModel);
+
         const newData = {
             id: editingEntryId || Date.now(),
             time: timeStr,
+            isFriend: isFriend,
+            isModel: isModel, // [新增儲存屬性]
             items: tempItems.length > 0 ? tempItems.map(i => i.qty > 1 ? `${i.name} x${i.qty}` : i.name) : ['自訂項目'],
             itemsDetail: tempItems,
             price: rawPrice, 
@@ -7274,8 +7340,8 @@
         }
     }
 
-    // 2. [修改] 開啟價格選擇視窗 (客製化文字：自然/濃密, 原價/體驗)
-    window.openPriceSelector = function(cat, name, p1, p2, dur) {
+    // 2. [修改] 開啟價格選擇視窗 (新增 isModel 參數)
+    window.openPriceSelector = function(cat, name, p1, p2, dur, isModel = false) {
         const modal = document.getElementById('priceSelectorModal');
         const container = document.getElementById('price-options-container');
         if(!modal) return alert("錯誤：找不到選擇視窗 HTML，請確認第一步是否已執行");
@@ -7298,25 +7364,25 @@
         }
 
         container.innerHTML = `
-            <button class="p-select-btn" onclick="confirmPriceSelection('${name} (${label1})', '${p1}', ${dur})">
+            <button class="p-select-btn" onclick="confirmPriceSelection('${name} (${label1})', '${p1}', ${dur}, ${isModel})">
                 <span>${label1}</span>
                 <span>${p1Label}</span>
             </button>
-            <button class="p-select-btn" onclick="confirmPriceSelection('${name} (${label2})', '${p2}', ${dur})">
+            <button class="p-select-btn" onclick="confirmPriceSelection('${name} (${label2})', '${p2}', ${dur}, ${isModel})">
                 <span>${label2}</span>
                 <span>${p2Label}</span>
             </button>
         `;
     };
 
-    // 3. 確認選擇後加入
-    window.confirmPriceSelection = function(name, price, dur) {
+    // 3. 確認選擇後加入 (新增 isModel 參數)
+    window.confirmPriceSelection = function(name, price, dur, isModel = false) {
         document.getElementById('priceSelectorModal').classList.add('hidden');
-        addItemToTemp(name, price, dur);
+        addItemToTemp(name, price, dur, isModel);
     };
 
-    // 4. [修改] 加入項目 (偵測是否為百分比)
-    window.addItemToTemp = function(name, priceStr, dur) {
+    // 4. [修改] 加入項目 (新增 isModel 屬性到 tempItems)
+    window.addItemToTemp = function(name, priceStr, dur, isModel = false) {
         const pStr = String(priceStr);
         const isPercent = pStr.includes('%');
         const priceVal = parseInt(pStr.replace(/[^0-9]/g, '')) || 0;
@@ -7327,7 +7393,8 @@
             price: priceVal, 
             duration: durVal,
             isPercent: isPercent,
-            qty: 1 // [新增] 預設數量為 1
+            qty: 1,
+            isModel: isModel // [新增] 紀錄是否為模特專區項目
         });
 
         // 預設先加一次時長，稍後 recalcTotal 會再精準計算
@@ -7559,25 +7626,32 @@
         };
     };
 
-    // [修正] 舊資料校正工具 (增強版：自動修復假日狀態)
+    // [修正] 舊資料校正工具 (增強版：自動修復假日狀態 + 一鍵洗掉歷史錯誤顏色標記)
     window.fixLegacyData = function() {
-        if(!confirm("⚠️ 系統校正 (進階版)：\n\n1. 自動補齊舊帳務的「時長」\n2. 重置行事曆狀態：\n   - 休假/國定假日：若無真實預約，強制清空時段 (讓狀態變回休假)\n   - 上班日：自動開啟預設時段\n\n確定執行嗎？")) return;
+        if(!confirm("⚠️ 系統校正 (進階版)：\n\n1. 自動修復歷史預約的「深綠色標記」誤判\n2. 自動補齊舊帳務的「時長」\n3. 重置行事曆狀態：\n   - 休假/國定假日：若無真實預約，強制清空時段\n   - 上班日：自動開啟預設時段\n\n確定執行嗎？")) return;
 
         let updatedDays = 0;
         const allDates = Object.keys(financeStore.data);
-        const holidayMap = window.getTaiwanHolidays(); // 取得假日表
+        const holidayMap = window.getTaiwanHolidays(); 
 
-        // 為了確保所有日期都被掃描到（包含沒有帳務但有開時段的假日），我們掃描 bookingState 裡的開放月份
-        // 這裡簡化：針對目前 financeStore 有資料的日期 + 手動掃描當前檢視月份
         const y = bookingState.viewDate.getFullYear();
         const m = bookingState.viewDate.getMonth();
         const lastDate = new Date(y, m + 1, 0).getDate();
         
-        // 建立當月所有日期的清單
+        // 建立包含歷史所有日期 + 當月所有日期的清單
         let targetDates = [...allDates];
         for(let d=1; d<=lastDate; d++) {
             const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             if(!targetDates.includes(dateStr)) targetDates.push(dateStr);
+        }
+
+        // ★ 抓取目前價目表裡「真正的」手模與睫模項目名稱，用來當作對照組
+        const realModelItemNames = [];
+        if (serviceData.nail && serviceData.nail.model) {
+            serviceData.nail.model.forEach(i => realModelItemNames.push(i.name));
+        }
+        if (serviceData.eyelash && serviceData.eyelash.practice) {
+            serviceData.eyelash.practice.forEach(i => realModelItemNames.push(i.name));
         }
 
         targetDates.forEach(dateStr => {
@@ -7585,9 +7659,9 @@
             const hasRealBooking = (entries && entries.length > 0);
             let dataModified = false;
 
-            // 1. 修正財務資料：補上 duration (這部分維持原樣)
             if (hasRealBooking) {
                 entries.forEach(entry => {
+                    // 1. 修正財務資料：補上 duration
                     if (!entry.duration || parseInt(entry.duration) === 0) {
                         let newDur = 0;
                         safeArray(entry.items).forEach(itemName => {
@@ -7597,10 +7671,34 @@
                         entry.duration = newDur || 60; 
                         dataModified = true;
                     }
+                    
+                    // ★ 2. 洗掉錯誤的深綠色標記
+                    // 如果這筆訂單被標了 isModel，但裡面的項目根本不在「手模/睫模」名單內
+                    if (entry.isModel) {
+                        let isReallyModel = false;
+                        // 取出項目名稱並去背數量 (例: "單色凝膠 x1" -> "單色凝膠")
+                        const itemNames = safeArray(entry.items).map(i => i.split(' x')[0].trim());
+                        
+                        itemNames.forEach(name => {
+                            // 只要名單裡有包含這個字眼，才算是真的模特
+                            if (realModelItemNames.some(rm => name.includes(rm) || rm.includes(name))) {
+                                isReallyModel = true;
+                            }
+                        });
+
+                        // 發現是誤判，強制拔除深綠色標籤
+                        if (!isReallyModel) {
+                            entry.isModel = false;
+                            if (entry.itemsDetail) {
+                                entry.itemsDetail.forEach(detail => detail.isModel = false);
+                            }
+                            dataModified = true;
+                        }
+                    }
                 });
             }
 
-            // 2. 同步行事曆 (假日邏輯修正)
+            // 3. 同步行事曆 (假日邏輯修正)
             const [yStr, mStr, dStr] = dateStr.split('-');
             const bookingKey = `${parseInt(yStr)}-${parseInt(mStr)-1}-${parseInt(dStr)}`;
             
@@ -7610,38 +7708,27 @@
 
             let calculatedSlots = [];
 
-            // ★ 關鍵修正：如果是 (手動休假) 或 (國定假日) 或 (週日)
-            // 且「沒有真實帳務預約」，則強制清空時段
             if ((isManualOff || isHoliday || isSun) && !hasRealBooking) {
                 calculatedSlots = []; 
             } else {
-                // 上班日 (或假日但有接客)：開啟 (預設時段 - 衝突時段)
                 const finEntries = entries || [];
-                
-                // 判斷是否為週六
                 const dayOfWeek = new Date(dateStr).getDay();
                 const targetDefaults = dayOfWeek === 6 ? ["10:00", "14:00"] : DEFAULTS_TIMES;
                 
-                // 取得原本已有的時段，如果是假日有接客，保留原狀或補滿，這裡選擇補滿邏輯
                 calculatedSlots = targetDefaults.filter(defaultTime => {
                     const [dH, dM] = defaultTime.split(':').map(Number);
                     const dMins = dH * 60 + dM;
 
-                    // 檢查是否被佔用
                     const isOccupied = finEntries.some(e => {
                          const [eH, eM] = e.time.split(':').map(Number);
                          const eStart = eH * 60 + eM;
                          const eDur = parseInt(e.duration || 60, 10);
                          return (dMins >= eStart && dMins < (eStart + eDur));
                     });
-                    return !isOccupied; // 沒被佔用就開啟
+                    return !isOccupied; 
                 });
-                
-                // 特例：如果該日原本就有時段(且不是空的)，且目前計算出來是空的(代表全滿?)
-                // 這裡保持簡單：覆蓋為計算後的結果
             }
 
-            // 3. 比對與更新
             const currentSlots = bookingState.data.bookings[bookingKey] || [];
             const calcStr = JSON.stringify(calculatedSlots.sort());
             const currStr = JSON.stringify(currentSlots.sort());
@@ -7657,8 +7744,8 @@
         if (updatedDays > 0) {
             saveFinanceV2();
             saveBookingData();
-            alert(`✅ 校正完成！\n已修復 ${updatedDays} 天的資料狀態。\n(國定假日時段已關閉、舊帳務已補齊)`);
-            renderFinancePage(); // 刷新畫面
+            alert(`✅ 校正完成！\n已修復 ${updatedDays} 天的資料狀態。\n(歷史錯誤的深綠色標記已全數洗掉)`);
+            renderFinancePage(); 
         } else {
             alert("🎉 資料已是最新狀態，無需更新。");
         }
@@ -8074,6 +8161,7 @@
         // 1. 預約收入 (服務尾款 + 定金)
         Object.keys(financeStore.data).forEach(date => {
             safeArray(financeStore.data[date]).forEach(e => {
+                if (e.isFriend) return; // 略過親友預約
                 const time = e.time || '12:00';
                 const itemsStr = safeArray(e.items).join('+');
                 
@@ -9102,7 +9190,7 @@
     // 預約視窗：選擇子項目
     // ------------------------------------------
 
-    window.openSubItemSelector = function(cat, type, idx) {
+    window.openSubItemSelector = function(cat, type, idx, isModel = false) {
         const item = serviceData[cat][type][idx];
         document.getElementById('subItemSelectTitle').innerText = item.name;
         
@@ -9111,7 +9199,7 @@
         
         // 預設選項：純主項目 (不加任何子項目)
         let html = `
-            <button class="p-select-btn !border-gray-500 !mb-2" onclick="confirmSubItemSelection('${item.name}', '${item.price}', ${mainDur}, '', 0, 0)">
+            <button class="p-select-btn !border-gray-500 !mb-2" onclick="confirmSubItemSelection('${item.name}', '${item.price}', ${mainDur}, '', 0, 0, ${isModel})">
                 <span class="text-gray-300">純項目 (不加子選項)</span>
                 <span class="text-gray-300">$${item.price}</span>
             </button>
@@ -9124,7 +9212,7 @@
             const durTag = sub.duration > 0 ? `<span class="text-[10px] bg-[#2d5a47] text-white px-1 rounded ml-1">+${sub.duration}分</span>` : '';
             
             html += `
-            <button class="p-select-btn" onclick="confirmSubItemSelection('${item.name}', '${item.price}', ${mainDur}, '${sub.name}', ${sub.price}, ${sub.duration})">
+            <button class="p-select-btn" onclick="confirmSubItemSelection('${item.name}', '${item.price}', ${mainDur}, '${sub.name}', ${sub.price}, ${sub.duration}, ${isModel})">
                 <div class="flex flex-col items-start">
                     <span class="font-bold">${sub.name}</span>
                     <span class="text-[10px] text-gray-400 mt-1">總計 ${combinedDur} 分鐘 ${durTag}</span>
@@ -9141,7 +9229,7 @@
         document.getElementById('subItemSelectModal').classList.remove('hidden');
     };
 
-    window.confirmSubItemSelection = function(mainName, mainPrice, mainDur, subName, subPrice, subDur) {
+    window.confirmSubItemSelection = function(mainName, mainPrice, mainDur, subName, subPrice, subDur, isModel = false) {
         document.getElementById('subItemSelectModal').classList.add('hidden');
         
         // 將名稱合併 (例如: 單色/跳色 (跳色))，這樣列表才乾淨
@@ -9150,7 +9238,7 @@
         const finalDur = parseInt(mainDur) + (parseInt(subDur) || 0);
         
         // 直接將算好的合併項目丟進原本的陣列裡
-        addItemToTemp(finalName, finalPrice, finalDur);
+        addItemToTemp(finalName, finalPrice, finalDur, isModel);
     };
 
 </script>
@@ -9182,3 +9270,5 @@
     <button class="num-btn num-confirm" onclick="closeNumpad()">✓</button> 
 </div> </body>
 </html>
+
+這是原代碼
