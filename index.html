@@ -3207,7 +3207,7 @@
     let currentCat = "nail";
     
     // 行事曆變數
-    const DEFAULTS_TIMES = ["10:00", "14:00", "18:00"];
+    const DEFAULTS_TIMES = ["10:00", "13:00", "16:00", "19:00"];
     let bookingState = {
         viewDate: new Date(),
         isAskMode: false,
@@ -3898,7 +3898,7 @@
                 // 修正：乾淨的自動釋出時段邏輯 (移除了錯誤混入導致卡頓的程式碼)
                 if (!isHoliday && day !== 0 && !isManualOff) {
                     if (!bookingState.data.bookings[key]) {
-                        bookingState.data.bookings[key] = day === 6 ? ["10:00", "14:00"] : ["10:00", "14:00", "18:00"];
+                        bookingState.data.bookings[key] = day === 6 ? ["10:00", "13:00"] : ["10:00", "13:00", "16:00", "19:00"];
                         hasChanges = true;
                     }
                 } else {
@@ -4147,7 +4147,7 @@
 
             // 判斷是否為週六，給予對應的預設時段
             const dayOfWeek = new Date(y, m, d).getDay();
-            const targetDefaults = dayOfWeek === 6 ? ["10:00", "14:00"] : DEFAULTS_TIMES;
+            const targetDefaults = dayOfWeek === 6 ? ["10:00", "13:00"] : DEFAULTS_TIMES;
 
             // 2. 過濾預設時段
             const safeDefaults = targetDefaults.filter(defaultTime => {
@@ -4186,7 +4186,7 @@
         // 修正：編輯時段也要區分週六
         const [y, m, d] = bookingState.editingKey.split('-');
         const dayOfWeek = new Date(y, m, d).getDay();
-        const targetDefaults = dayOfWeek === 6 ? ["10:00", "14:00"] : DEFAULTS_TIMES;
+        const targetDefaults = dayOfWeek === 6 ? ["10:00", "13:00"] : DEFAULTS_TIMES;
 
         const allTimes = [...new Set([...targetDefaults, ...currentSlots])].sort();
 
@@ -6387,7 +6387,7 @@
             const finEntries = safeArray(financeStore.data[activeDateStr]);
             
             // 判斷是否為週六
-            const targetDefaults = dayOfWeek === 6 ? ["10:00", "14:00"] : DEFAULTS_TIMES;
+            const targetDefaults = dayOfWeek === 6 ? ["10:00", "13:00"] : DEFAULTS_TIMES;
             
             const safeDefaults = targetDefaults.filter(defaultTime => {
                 const [dH, dM] = defaultTime.split(':').map(Number);
@@ -7056,7 +7056,7 @@
             const dayOfWeek = new Date(activeDateStr).getDay();
             
             // 取得該日有開放的時段，若無設定則以預設為底 (嚴格區分週六)
-            const targetDefaults = dayOfWeek === 6 ? ["10:00", "14:00"] : DEFAULTS_TIMES;
+            const targetDefaults = dayOfWeek === 6 ? ["10:00", "13:00"] : DEFAULTS_TIMES;
             const daySlots = bookingState.data.bookings[bKey] || targetDefaults;
             
             // 依照時間先後排序
@@ -7713,7 +7713,7 @@
             } else {
                 const finEntries = entries || [];
                 const dayOfWeek = new Date(dateStr).getDay();
-                const targetDefaults = dayOfWeek === 6 ? ["10:00", "14:00"] : DEFAULTS_TIMES;
+                const targetDefaults = dayOfWeek === 6 ? ["10:00", "13:00"] : DEFAULTS_TIMES;
                 
                 calculatedSlots = targetDefaults.filter(defaultTime => {
                     const [dH, dM] = defaultTime.split(':').map(Number);
