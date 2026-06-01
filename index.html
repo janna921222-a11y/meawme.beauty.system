@@ -2410,6 +2410,7 @@
         <button class="report-tab-btn active" onclick="switchReportTab('calendar', this)">日報表</button>
         <button class="report-tab-btn" onclick="switchReportTab('month', this)">月報表</button>
         <button class="report-tab-btn" onclick="switchReportTab('year', this)">年報表</button>
+        <button class="report-tab-btn" onclick="switchReportTab('vip', this)">儲值金</button>
         <button class="report-tab-btn" onclick="switchReportTab('account', this)">帳戶</button>
     </div>
 
@@ -2484,6 +2485,13 @@
             </div>
         </div>
         <div id="year-report-content"></div>
+    </div>
+
+    <div id="report-view-vip" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
+        <div class="flex justify-between items-center mt-4 mb-4">
+            <h3 class="text-lg font-bold text-[#1a3a2e] border-l-4 border-[var(--gold-main)] pl-2">所有儲值客管理與分析</h3>
+        </div>
+        <div id="vip-report-content"></div>
     </div>
 
     <div id="report-view-account" class="hidden px-4 max-w-2xl mx-auto text-[#333]">
@@ -2574,6 +2582,51 @@
 </div>
 
 <section>
+    <div id="topUpModal" class="cal-modal-overlay hidden" style="z-index: 8000;">
+        <div class="cal-modal-content" style="max-width: 320px; background: #fff; padding: 20px; text-align: left;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="tu-modal-title" class="font-bold text-lg text-[#1a3a2e]">新增儲值紀錄</h3>
+                <button onclick="document.getElementById('topUpModal').classList.add('hidden')" class="text-gray-400 text-xl">✕</button>
+            </div>
+            <div class="space-y-3">
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="text-xs text-gray-500 font-bold block mb-1">客人姓名</label>
+                        <input type="text" id="tu-name" class="exp-input w-full !text-base" placeholder="王小姐">
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-xs text-gray-500 font-bold block mb-1">手機號碼</label>
+                        <input type="tel" id="tu-phone" class="exp-input w-full !text-base" placeholder="0912345678" inputmode="numeric">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold block mb-1">儲值金額(實收)</label>
+                        <input type="number" id="tu-pay" class="exp-input w-full font-bold text-[#1a4731] !text-lg" placeholder="5000">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold block mb-1">入帳儲值金</label>
+                        <input type="number" id="tu-stored" class="exp-input w-full font-bold text-[var(--gold-main)] !text-lg" placeholder="5500">
+                    </div>
+                </div>
+                <div>
+                            <label class="text-xs text-gray-500 font-bold block mb-1">支付方式</label>
+                            <select id="tu-method" class="exp-select w-full !text-base">
+                                <option value="cash">現金</option>
+                                <option value="transfer">匯款</option>
+                                <option value="linepay">Line Pay</option>
+                                <option value="jko">街口支付</option>
+                            </select>
+                        </div>
+                        <div id="tu-action-btns" class="grid grid-cols-2 gap-2 mt-4 pt-2 border-t border-gray-100">
+                            <button id="tu-delete-btn" type="button" onclick="deleteTopUpEntry()" class="hidden py-3 border border-red-400 text-red-500 rounded-lg font-bold text-sm shadow hover:bg-red-50">🗑️ 刪除</button>
+                            <button id="tu-edit-btn" type="button" onclick="enableTopUpEdit()" class="hidden py-3 border border-[var(--gold-main)] text-[var(--gold-main)] rounded-lg font-bold text-sm shadow hover:bg-gray-50">📝 修改</button>
+                            <button id="tu-save-btn" type="button" onclick="saveTopUpData()" class="col-span-2 py-3 bg-[var(--gold-main)] text-[#1a3a2e] rounded-lg font-bold text-sm shadow">確認新增儲值</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
     <div id="dayDetailModal" class="cal-modal-overlay hidden">
         <div class="cal-modal-content" style="max-width: 340px; text-align: left; padding: 20px;">
             <div class="flex justify-between items-center mb-4">
@@ -2584,9 +2637,10 @@
                 </div>
             </div>
             <div id="dd-list" class="day-detail-list"></div>
-            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-white/10">
+            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-white/10">
                 <button onclick="toggleDayOff()" id="btn-day-off" class="py-3 rounded-lg border border-[#ff6b6b] text-[#ff6b6b] font-bold text-sm transition-all">休假</button>
-                <button onclick="openEditForm()" class="py-3 rounded-lg bg-[var(--gold-main)] text-[#1a3a2e] font-bold text-sm shadow-lg">＋ 新增預約</button>
+                <button onclick="openTopUpModal()" class="py-3 rounded-lg bg-[#8b9d8a] text-white font-bold text-sm shadow-lg">💰 儲值</button>
+                <button onclick="openEditForm()" class="py-3 rounded-lg bg-[var(--gold-main)] text-[#1a3a2e] font-bold text-sm shadow-lg">＋ 預約</button>
             </div>
         </div>
     </div>
@@ -2946,6 +3000,44 @@
         </div>
     </div>
 
+    <div id="vipSelectModal" class="cal-modal-overlay hidden" style="z-index: 6800;">
+        <div class="cal-modal-content flex flex-col" style="max-width: 320px; max-height: 70vh; background: #fff; padding: 0; border-radius: 20px; overflow: hidden;">
+            <div class="bg-[var(--forest-bg)] p-4 text-center relative">
+                <h3 class="text-[var(--gold-main)] font-bold text-lg">選擇儲值客</h3>
+                <button onclick="document.getElementById('vipSelectModal').classList.add('hidden')" class="absolute top-4 right-4 text-[var(--gold-main)] text-xl font-bold hover:text-white p-2 leading-none">✕</button>
+            </div>
+            <div class="p-3 bg-gray-50 border-b border-gray-200">
+                <input type="text" id="vip-search" class="w-full p-2 border border-gray-300 rounded text-sm outline-none" placeholder="輸入姓名或電話搜尋..." oninput="renderVipList()">
+            </div>
+            <div id="vip-list-container" class="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50"></div>
+        </div>
+    </div>
+
+    <div id="vipEditModal" class="cal-modal-overlay hidden" style="z-index: 8000;">
+        <div class="cal-modal-content" style="max-width: 320px; background: #fff; padding: 20px; text-align: left;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg text-[#1a3a2e]">編輯儲值客</h3>
+                <button onclick="document.getElementById('vipEditModal').classList.add('hidden')" class="text-gray-400 text-xl">✕</button>
+            </div>
+            <div class="space-y-3 mb-4">
+                <div>
+                    <label class="text-xs text-gray-500 font-bold block mb-1">客人姓名</label>
+                    <input type="text" id="vip-edit-name" class="exp-input w-full !text-base font-bold">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 font-bold block mb-1">手機號碼</label>
+                    <input type="tel" id="vip-edit-phone" class="exp-input w-full !text-base font-bold text-[#1a4731]" inputmode="numeric">
+                </div>
+                <input type="hidden" id="vip-edit-old-phone">
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-4 pt-4 border-t border-gray-100">
+                <button onclick="saveVipProfile()" class="w-full py-3 bg-[#1a3a2e] text-[var(--gold-main)] rounded-lg font-bold text-sm shadow">儲存修改</button>
+                <button onclick="directTopUpFromModal()" class="w-full py-3 bg-[#1a4731] text-[#f5f1e8] rounded-lg font-bold text-sm shadow border border-[#2d5a47] hover:brightness-110">💰 儲值</button>
+            </div>
+            <button onclick="deleteVipFromModal()" class="w-full py-2 border border-red-400 text-red-500 rounded-lg font-bold text-xs hover:bg-red-50">刪除此顧客紀錄</button>
+        </div>
+    </div>
+
     <div id="finEditModal" class="cal-modal-overlay hidden">
         <div class="cal-modal-content flex flex-col" style="max-width: 360px; height: 85vh; padding: 0; overflow: hidden; border-radius: 20px; position: relative; background: #f2f2f2;">
             <div class="flex-shrink-0 bg-white z-20 shadow-md">
@@ -3018,6 +3110,17 @@
                     <div class="flex items-center justify-between mb-3 bg-gray-50 p-2 rounded-lg border border-gray-200">
                         <label class="text-xs text-[#1a3a2e] font-bold">親友</label>
                         <div class="check-toggle" id="fe-is-friend" onclick="this.classList.toggle('active')">✔</div>
+                    </div>
+                    <div class="flex flex-col mb-3 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs text-[#1a3a2e] font-bold">VIP儲值客</label>
+                            <div class="check-toggle" id="fe-is-vip" onclick="toggleVipSelect(this)">✔</div>
+                        </div>
+                        <div id="fe-vip-info" class="hidden mt-2 pt-2 border-t border-gray-200 text-xs text-gray-600">
+                            已選擇：<span id="fe-vip-name" class="font-bold text-[#1a3a2e]"></span> (<span id="fe-vip-balance" class="text-[var(--gold-main)] font-bold"></span>)
+                            <button onclick="clearVipSelect()" class="ml-2 text-red-400 font-bold hover:opacity-70">✕ 取消套用</button>
+                        </div>
+                        <input type="hidden" id="fe-vip-phone" value="">
                     </div>
                     <div class="flex gap-2 items-center">
                         <div class="flex-1"><label class="text-[10px] block text-gray-400 mb-1">總金額</label><input type="number" inputmode="numeric" id="fe-price" class="edit-input w-full font-bold text-[#2d4639] text-lg bg-gray-50 border border-gray-200 rounded px-2 py-2"></div>
@@ -3120,6 +3223,19 @@
         </div>
     </div>
 
+    <!-- 新增：前台顧客專用時段彈跳對話框 -->
+    <div id="guestTimeModal" class="cal-modal-overlay hidden" style="z-index: 6600;">
+        <div class="cal-modal-content" style="max-width: 320px;">
+            <h3 id="gtModalTitle" class="mb-2 font-bold text-lg text-[var(--gold-main)] font-serif text-center">開放時段</h3>
+            <p class="text-[11px] opacity-60 mb-5 text-center">請點選加入想詢問的時段（最多三個）</p>
+            
+            <!-- 時段按鈕容器 -->
+            <div id="gtModalChips" class="grid grid-cols-3 gap-2 mb-6 max-h-[35vh] overflow-y-auto p-1"></div>
+            
+            <button onclick="document.getElementById('guestTimeModal').classList.add('hidden')" class="w-full py-3 bg-[var(--gold-main)] text-[#1c3328] font-black rounded-xl shadow-lg tracking-widest text-sm">確定並返回</button>
+        </div>
+    </div>
+
     <div id="editTimeModal" class="cal-modal-overlay hidden">
         <div class="cal-modal-content">
             <h3 id="editTitle" class="mb-6 font-bold text-lg">編輯時段</h3>
@@ -3128,6 +3244,14 @@
                 <select id="hSel" class="bg-gray-100 text-black p-2 rounded w-1/2"></select>
                 <select id="mSel" class="bg-gray-100 text-black p-2 rounded w-1/2"><option value="00">00</option><option value="30">30</option></select>
                 <button onclick="addCustomTime()" class="bg-[var(--gold-main)] text-white px-4 rounded">+</button>
+            </div>
+            <!-- 新增：批量智能時段產生器 -->
+            <div class="border-t border-dashed border-white/20 pt-4 mb-6 text-left">
+                <label class="text-xs opacity-60 block mb-1">⚡ 快捷設定當日啟始時間（每小時自動延伸，最晚不超19:30）</label>
+                <div class="flex gap-2">
+                    <input type="time" id="batchStartTime" class="bg-gray-100 text-black p-2 rounded flex-1 text-sm outline-none" value="10:00">
+                    <button type="button" onclick="generateHourlySlotsFromStart()" class="bg-[#1a4731] text-[var(--gold-main)] border border-[var(--gold-main)] px-4 rounded text-xs font-bold">批量生成</button>
+                </div>
             </div>
             <button onclick="closeEditModal()" class="w-full py-3 border border-[var(--gold-main)] text-[var(--gold-main)] font-bold rounded-lg">完成</button>
         </div>
@@ -3197,7 +3321,8 @@
         viewMode: 'item', 
         data: {}, 
         manualOffDays: [],
-        offDayNotes: {} // [修正] 確保備註欄位存在
+        offDayNotes: {}, // [修正] 確保備註欄位存在
+        vips: {} // 新增：VIP 儲值客資料庫
     };
 
     let activeDateStr = "";
@@ -3206,8 +3331,8 @@
     let tempItems = [];
     let currentCat = "nail";
     
-    // 行事曆變數
-    const DEFAULTS_TIMES = ["10:00", "13:00", "16:00", "19:00"];
+    // 行事曆變數（改為10點到19點每小時預設顯示）
+    const DEFAULTS_TIMES = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
     let bookingState = {
         viewDate: new Date(),
         isAskMode: false,
@@ -3629,7 +3754,7 @@
         if (window.dbSet && window.dbRef) {
             let cleanData = JSON.parse(JSON.stringify(serviceData));
             ['nail', 'eyelash', 'skin'].forEach(cat => {
-                ['main', 'addon', 'model'].forEach(type => {
+                ['main', 'addon', 'model', 'practice'].forEach(type => {
                     cleanData[cat][type] = safeArray(cleanData[cat][type]);
                 });
             });
@@ -3895,17 +4020,19 @@
                 const isHoliday = !!holidayMap[dateStr];
                 const isManualOff = financeStore.manualOffDays.includes(dateStr);
 
-                // 修正：乾淨的自動釋出時段邏輯 (移除了錯誤混入導致卡頓的程式碼)
-                if (!isHoliday && day !== 0 && !isManualOff) {
-                    if (!bookingState.data.bookings[key]) {
-                        bookingState.data.bookings[key] = day === 6 ? ["10:00", "13:00"] : ["10:00", "13:00", "16:00", "19:00"];
-                        hasChanges = true;
-                    }
-                } else {
-                    if (!bookingState.data.bookings[key]) {
+                // 修正：依據六日、國定假日動態劃分初始預設時段
+                if (!bookingState.data.bookings[key]) {
+                    if (day === 0 || isHoliday || isManualOff) {
+                        // 週日公休、國定假日、手動排休：預設為空 (休假)
                         bookingState.data.bookings[key] = [];
-                        hasChanges = true;
+                    } else if (day === 6) {
+                        // 週六：最晚到 14:00
+                        bookingState.data.bookings[key] = ["10:00", "11:00", "12:00", "13:00", "14:00"];
+                    } else {
+                        // 平日：10:00 到 19:00 每小時
+                        bookingState.data.bookings[key] = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
                     }
+                    hasChanges = true;
                 }
             }
             // 寫入雲端，不觸發重複渲染
@@ -3993,20 +4120,42 @@
 
             let html = `<div class="flex justify-between px-1.5 mb-1"><span class="${dateClass} !text-[13px] font-serif">${d}</span></div>`;
 
-            if (isSun) {
-                html += `<div class="text-[#ff6b6b] text-[9px] text-center opacity-80 mt-1">公休</div>`;
-            } else if (isPastDay && isUserPage) {
-                // 過去的日期與當天：不顯示時段，也不顯示約滿，直接留白保持畫面乾淨
-            } else {
-                if (slots.length === 0) {
-                     html += `<div class="text-[9px] text-center opacity-30 mt-1">約滿</div>`;
+            if (isUserPage) {
+                // 前台網格優化：不直接鋪出時間，只呈現優雅狀態標籤
+                if (isSun) {
+                    html += `<div class="text-[#ff6b6b] text-[10px] text-center opacity-80 mt-2 font-bold tracking-widest">公休</div>`;
+                } else if (isPastDay) {
+                    // 過去直接留白
                 } else {
-                    slots.sort().forEach(t => {
-                        const labelId = `${m+1}/${d} ${t}`;
-                        const isSelected = bookingState.selectedTimes.includes(labelId);
-                        const clickAttr = isUserPage ? `onclick="toggleTimeSelection('${labelId}')"` : '';
-                        html += `<div class="time-label ${isSelected ? 'selected' : ''}" ${clickAttr}>${t}</div>`;
-                    });
+                    if (slots.length === 0) {
+                        html += `<div class="text-[10px] text-center opacity-40 mt-2 font-medium">約滿</div>`;
+                    } else {
+                        // 計算該天已被客人挑選的數量
+                        let selectedInDay = 0;
+                        slots.forEach(t => {
+                            if (bookingState.selectedTimes.includes(`${m+1}/${d} ${t}`)) selectedInDay++;
+                        });
+                        
+                        const badgeStyle = selectedInDay > 0 ? 'bg-[#800020] text-white' : 'bg-[var(--gold-main)]/10 text-[var(--gold-main)]';
+                        html += `<div class="text-[9px] text-center font-bold mt-2 py-1 px-0.5 rounded transition-all ${badgeStyle}">${slots.length}個時段${selectedInDay > 0 ? ` (${selectedInDay})` : ''}</div>`;
+                        
+                        // 讓整個格子具備點擊彈窗能力
+                        div.setAttribute('onclick', `openGuestTimeModal('${m+1}', '${d}', '${key}')`);
+                        div.style.cursor = 'pointer';
+                    }
+                }
+            } else {
+                // 後台管理頁面面貌維持，便於管理員一眼直擊檢視所有開課情況
+                if (isSun) {
+                    html += `<div class="text-[#ff6b6b] text-[9px] text-center opacity-80 mt-1">公休</div>`;
+                } else {
+                    if (slots.length === 0) {
+                         html += `<div class="text-[9px] text-center opacity-30 mt-1">約滿</div>`;
+                    } else {
+                        slots.sort().forEach(t => {
+                            html += `<div class="time-label">${t}</div>`;
+                        });
+                    }
                 }
             }
 
@@ -4081,7 +4230,7 @@
         // 同步「年報表專用」下拉選單
         document.querySelectorAll('select#rep-year-select').forEach(sel => {
             if (sel.options.length === 0) {
-                let html = '';
+                let html = '<option value="all">歷年總計 (自2024/11)</option>';
                 const baseY = new Date().getFullYear();
                 for(let i = -5; i <= 5; i++) {
                     const ty = baseY + i;
@@ -4089,7 +4238,7 @@
                 }
                 sel.innerHTML = html;
             }
-            sel.value = y;
+            sel.value = reportState.yearMode;
         });
     }
 
@@ -4114,8 +4263,14 @@
 
     window.jumpToYear = function(val, type) {
         if(!val) return;
-        const targetDate = new Date(parseInt(val), 0, 1);
-        syncAllAdminDates(targetDate);
+        if (val === 'all') {
+            reportState.yearMode = 'all';
+        } else {
+            reportState.yearMode = parseInt(val);
+            const targetDate = new Date(parseInt(val), 0, 1);
+            syncAllAdminDates(targetDate);
+            reportState.yearMode = parseInt(val); // 避免被 syncAllAdminDates 覆蓋
+        }
         if (type === 'report-year') renderYearlyReport();
     };
 
@@ -4145,9 +4300,11 @@
             const finKey = `${y}-${String(parseInt(m)+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const finEntries = safeArray(financeStore.data[finKey]);
 
-            // 判斷是否為週六，給予對應的預設時段
+            // 判斷是否為週六，給予對應的智能預設時段
             const dayOfWeek = new Date(y, m, d).getDay();
-            const targetDefaults = dayOfWeek === 6 ? ["10:00", "13:00"] : DEFAULTS_TIMES;
+            const targetDefaults = dayOfWeek === 6 
+                ? ["10:00", "11:00", "12:00", "13:00", "14:00"] 
+                : ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
 
             // 2. 過濾預設時段
             const safeDefaults = targetDefaults.filter(defaultTime => {
@@ -4158,10 +4315,10 @@
                 const isOccupied = finEntries.some(e => {
                      const [eH, eM] = e.time.split(':').map(Number);
                      const eStart = eH * 60 + eM;
-                     const eDur = parseInt(e.duration || 60, 10);
+                     const eDur = parseInt(e.duration || 60, 10) + 30;
                      const eEnd = eStart + eDur;
                      // 區間重疊嚴格判斷：新開始 < 舊結束 且 新結束 > 舊開始
-                     return (dStart < eEnd && dEnd > eStart);
+                     return (dStart < eEnd + 60 && dStart + 60 > eStart)
                 });
                 return !isOccupied;
             });
@@ -4239,27 +4396,41 @@
             
             // 檢查是否有任何預約覆蓋了這個時間點
             // 邏輯：如果 新增時間 >= 預約開始 AND 新增時間 < 預約結束，就是衝突
-            const conflictEntry = finEntries.find(e => {
+            let conflictType = 0;
+            let conflictEntry = null;
+
+            for (let e of finEntries) {
                 const [eH, eM] = e.time.split(':').map(Number);
                 const startMins = eH * 60 + eM;
                 const dur = parseInt(e.duration || 60);
                 const endMins = startMins + dur;
                 
-                return (newMins >= startMins && newMins < endMins);
-            });
+                // 這裡假設新增時段為預設 60 分鐘作檢查
+                if (newMins < endMins && newMins + 60 > startMins) {
+                    conflictType = 2; // 施作碰施作
+                    conflictEntry = e;
+                    break; 
+                } else if (newMins < endMins + 30 && newMins + 60 + 30 > startMins) {
+                    if (conflictType < 2) {
+                        conflictType = 1; // 緩衝碰施作
+                        conflictEntry = e;
+                    }
+                }
+            }
 
-            if (conflictEntry) {
-                // 算出結束時間方便顯示
+            if (conflictType > 0 && conflictEntry) {
                 const [cH, cM] = conflictEntry.time.split(':').map(Number);
                 const cDur = parseInt(conflictEntry.duration || 60);
                 const cEndMins = cH * 60 + cM + cDur;
-                const cEndH = Math.floor(cEndMins / 60);
-                const cEndM = cEndMins % 60;
-                const cEndStr = `${String(cEndH).padStart(2,'0')}:${String(cEndM).padStart(2,'0')}`;
+                const cEndStr = `${String(Math.floor(cEndMins / 60) % 24).padStart(2,'0')}:${String(cEndMins % 60).padStart(2,'0')}`;
 
-                const msg = `⚠️ 警告：時段衝突！\n\n您想開啟的 ${t} 與現有預約重疊：\n預約：${conflictEntry.time} - ${cEndStr} (${conflictEntry.items[0]})\n\n確定要強制開啟嗎？(可能導致重複預約)`;
-                
-                if (!confirm(msg)) return; // 使用者按取消，則不新增
+                let msg = "";
+                if (conflictType === 2) {
+                    msg = `❌ 警告：施作時間嚴重衝突！\n\n您想開啟的 ${t} 與現有預約重疊：\n預約：${conflictEntry.time} - ${cEndStr} (${conflictEntry.items[0]})\n\n確定要強制開啟嗎？`;
+                } else {
+                    msg = `⚠️ 提醒：緩衝時間與施作時間重疊！\n\n您想開啟的 ${t} 緩衝時間會碰到現有預約：\n預約：${conflictEntry.time} - ${cEndStr} (${conflictEntry.items[0]})\n\n確定要開啟嗎？`;
+                }
+                if (!confirm(msg)) return; 
             }
         }
 
@@ -4407,16 +4578,22 @@
                         financeStore.data = val.data || {};
                         financeStore.manualOffDays = safeArray(val.manualOffDays);
                         financeStore.offDayNotes = val.offDayNotes || {};
+                        financeStore.vips = val.vips || {};
                     } else {
                         // 結構 B：資料直接散落在根目錄 (這是最常見造成「看得到卻讀不到」的原因)
                         financeStore.data = val;
                         financeStore.manualOffDays = [];
                         financeStore.offDayNotes = {};
+                        financeStore.vips = {};
                     }
                 }
                 renderFinancePage();
                 if (!document.getElementById('dayDetailModal').classList.contains('hidden')) {
                     renderDayDetailList();
+                }
+                // ★ 新增：若正在瀏覽儲值金報表，自動刷新列表，保持資料同步
+                if (document.getElementById('page-admin-report').classList.contains('active') && reportState.tab === 'vip') {
+                    if (typeof renderVipReport === 'function') renderVipReport();
                 }
             });
         }
@@ -4441,7 +4618,7 @@
     // --- [NEW] 財務報表系統變數與同步 ---
     let expenseData = {}; 
     let auditData = { petty: {}, backup: {} }; // 存放盤點面額記憶
-    let reportState = { tab: 'calendar', date: new Date(), calDate: new Date() };
+    let reportState = { tab: 'calendar', date: new Date(), calDate: new Date(), yearMode: 'all' };
 
     function syncAudits() {
         if (window.dbOnValue && window.dbRef) {
@@ -4475,7 +4652,7 @@
         document.querySelectorAll('.report-tab-btn').forEach(b => b.classList.remove('active'));
         if(btn) btn.classList.add('active');
         
-        ['calendar', 'month', 'year', 'account'].forEach(t => {
+        ['calendar', 'month', 'year', 'vip', 'account'].forEach(t => {
             const el = document.getElementById(`report-view-${t}`);
             if (el) el.classList.add('hidden');
         });
@@ -4486,6 +4663,7 @@
         if (tab === 'calendar') renderReportCalendar();
         if (tab === 'month') renderMonthlyReport();
         if (tab === 'year') renderYearlyReport();
+        if (tab === 'vip') renderVipReport();
         if (tab === 'account') renderAccountView();
     };
 
@@ -4505,7 +4683,13 @@
             if (type === 'account') renderAccountView();
         }
         if (type === 'year') {
-            reportState.date.setFullYear(reportState.date.getFullYear() + dir);
+            if (reportState.yearMode === 'all') {
+                reportState.yearMode = new Date().getFullYear() + dir;
+                reportState.date.setFullYear(reportState.yearMode);
+            } else {
+                reportState.yearMode = parseInt(reportState.yearMode) + dir;
+                reportState.date.setFullYear(reportState.yearMode);
+            }
             syncAllAdminDates(reportState.date);
             renderYearlyReport();
         }
@@ -4520,7 +4704,13 @@
         else if (type === 'finance') renderFinancePage();
         else if (type === 'report-cal') renderReportCalendar();
         else if (type === 'report-month') renderMonthlyReport();
-        else if (type === 'report-year') renderYearlyReport();
+        else if (type === 'report-year') {
+            const currentYear = new Date().getFullYear();
+            reportState.yearMode = currentYear; // ★ 點擊時確實跳回「今年」的真實年份
+            const sel = document.getElementById('rep-year-select');
+            if(sel) sel.value = currentYear;
+            renderYearlyReport();
+        }
         else if (type === 'account') renderAccountView();
     };
 
@@ -4947,31 +5137,42 @@
             rev: { cash:0, credit:0, transfer:0, linepay:0, jko:0, stored:0, total:0 },
             exp: { fixed:0, equip:0, consume:0, refund:0, total:0 },
             services: {},
-            attendance: { total:0, checked:0, noshow:0 }
+            attendance: { total:0, checked:0, noshow:0 },
+            vipStats: { originalTotal: 0, actualTotal: 0, topUpPay: 0, topUpBonus: 0 } // 新增：儲值與消費分析
         };
+
+        const minDateTs = new Date(2024, 10, 1).getTime(); // 2024-11-01
 
         // 1. 統計營收 (預約)
         Object.keys(financeStore.data).forEach(dateKey => {
             const [y, m, d] = dateKey.split('-').map(Number);
-            if (y !== year) return;
-            if (month !== null && m !== (month + 1)) return;
+            
+            if (year !== 'all') {
+                if (y !== year) return;
+                if (month !== null && m !== (month + 1)) return;
+            } else {
+                // 總計模式：過濾掉 2024/11/01 以前的資料
+                if (new Date(y, m-1, d).getTime() < minDateTs) return;
+            }
 
             const entries = safeArray(financeStore.data[dateKey]);
             entries.forEach(e => {
                 if (e.isFriend) return; // 略過親友預約
 
-                data.attendance.total++;
-                if (e.status === 'checked') data.attendance.checked++;
-                if (e.status === 'noshow') data.attendance.noshow++;
+                // 如果是儲值金，不計入到店客數與一般服務項目中
+                if (!e.isTopUp) {
+                    data.attendance.total++;
+                    if (e.status === 'checked') data.attendance.checked++;
+                    if (e.status === 'noshow') data.attendance.noshow++;
 
-                safeArray(e.items).forEach(item => {
-                    const n = item.split(' x')[0];
-                    data.services[n] = (data.services[n] || 0) + 1;
-                });
+                    safeArray(e.items).forEach(item => {
+                        const n = item.split(' x')[0];
+                        data.services[n] = (data.services[n] || 0) + 1;
+                    });
+                }
                 
                 // [核心修正] 計算實際營收 (優先取用結帳後的 Final Total)
                 if (e.status === 'checked') {
-                    // 1. 取得最終應付金額 (已扣除折扣)
                     let finalTotal = 0;
                     let paidDeposit = 0;
                     let paymentMethod = 'cash';
@@ -4981,9 +5182,55 @@
                         paidDeposit = parseInt(e.checkoutDetails.paidDeposit) || 0;
                         paymentMethod = e.checkoutDetails.paymentMethod || 'cash';
                     } else {
-                        // 防呆：如果是舊資料或手動改狀態，直接用 price 當作最終金額
                         finalTotal = parseInt(e.price) || 0;
                         paidDeposit = (e.hasDeposit || (e.depositMethod && e.depositMethod!=='none')) ? (parseInt(e.depositAmount)||100) : 0;
+                        paymentMethod = e.depositMethod || 'cash';
+                    }
+
+                    // 加總 VIP 數據分析
+                    if (e.isVip) {
+                        if (e.isTopUp) {
+                            // 若為儲值單，只統計實收金額與贈金
+                            const pay = parseInt(e.checkoutDetails.finalTotal) || 0;
+                            const storedMatch = String(e.note || '').match(/總得儲值金[^\d]*(\d+)/);
+                            const stored = storedMatch ? parseInt(storedMatch[1]) : pay;
+                            const bonus = Math.max(0, stored - pay);
+                            
+                            data.vipStats.topUpPay += pay;
+                            data.vipStats.topUpBonus += bonus;
+                        } else if (paymentMethod === 'stored') {
+                            // 回推計算折前原價 (若有明細則精準計算)
+                            let originalBeforeVipDisc = 0;
+                            if (e.checkoutDetails && e.checkoutDetails.items) {
+                                let itemSum = 0;
+                                e.checkoutDetails.items.forEach(item => {
+                                    let t = (parseInt(item.price) || 0) * (parseInt(item.qty) || 1);
+                                    if (item.discount && item.discount.type === 'cash') t -= (parseInt(item.discount.val) || 0);
+                                    else if (item.discount && item.discount.type === 'percent') t = Math.round(t * ((parseInt(item.discount.val) || 100) / 100));
+                                itemSum += t;
+                                });
+                                if (e.checkoutDetails.globalDiscount) {
+                                    if (e.checkoutDetails.globalDiscount.type === 'cash') itemSum -= (parseInt(e.checkoutDetails.globalDiscount.val) || 0);
+                                    else if (e.checkoutDetails.globalDiscount.type === 'percent') itemSum = Math.round(itemSum * ((parseInt(e.checkoutDetails.globalDiscount.val) || 100) / 100));
+                                }
+                                originalBeforeVipDisc = itemSum;
+                            } else {
+                                originalBeforeVipDisc = Math.round(finalTotal / 0.95);
+                            }
+                            data.vipStats.originalTotal += originalBeforeVipDisc;
+                            data.vipStats.actualTotal += finalTotal;
+                        }
+                    } else {
+                        // ★ 處理非 VIP 客人，但使用了「儲值金」結帳尾款的狀況
+                        if (paymentMethod === 'stored') {
+                            const tail = finalTotal - paidDeposit;
+                            if (tail > 0) {
+                                // 自動轉為系統贈與，確保儲值金總負債平衡
+                                data.vipStats.topUpBonus += tail;
+                                data.vipStats.actualTotal += tail;
+                                data.vipStats.originalTotal += tail;
+                            }
+                        }
                     }
 
                     // 2. 計算尾款 (Final - Deposit)
@@ -5005,8 +5252,12 @@
                 if (e.isFriend) return; // 略過親友預約
                 if (e.depositDate) {
                     const [dy, dm, dd] = e.depositDate.split('-').map(Number);
-                    if (dy !== year) return;
-                    if (month !== null && dm !== (month + 1)) return;
+                    if (year !== 'all') {
+                        if (dy !== year) return;
+                        if (month !== null && dm !== (month + 1)) return;
+                    } else {
+                        if (new Date(dy, dm-1, dd).getTime() < minDateTs) return;
+                    }
 
                     // 只要有設定定金，就計入營收
                     if (e.hasDeposit || (e.depositMethod && e.depositMethod !== 'none')) {
@@ -5017,6 +5268,14 @@
                          else data.rev.transfer += amt;
                          
                          data.rev.total += amt;
+
+                         // ★ 處理非 VIP 客人，但定金使用了「儲值金」
+                         if (!e.isVip && method === 'stored') {
+                             // 自動轉為系統贈與，確保儲值金總負債平衡
+                             data.vipStats.topUpBonus += amt;
+                             data.vipStats.actualTotal += amt;
+                             data.vipStats.originalTotal += amt;
+                         }
                     }
                 }
             });
@@ -5025,8 +5284,12 @@
         // 3. 統計支出與手動收入
         Object.keys(expenseData).forEach(dateKey => {
             const [y, m, d] = dateKey.split('-').map(Number);
-            if (y !== year) return;
-            if (month !== null && m !== (month + 1)) return;
+            if (year !== 'all') {
+                if (y !== year) return;
+                if (month !== null && m !== (month + 1)) return;
+            } else {
+                if (new Date(y, m-1, d).getTime() < minDateTs) return;
+            }
 
             safeArray(expenseData[dateKey]).forEach(e => {
                 const type = e.type || (e.cat === 'transfer_out' ? 'transfer' : 'expense');
@@ -5127,6 +5390,31 @@
                 </div>
             </div>
 
+            <!-- 新增：VIP 儲值客月度消費分析看板 -->
+            <div class="report-card">
+                <div class="report-section-title">💎 儲值金分析</div>
+                <div class="grid grid-cols-2 gap-4 text-center py-2 bg-gray-50 rounded-xl border border-gray-100 mb-3">
+                    <div>
+                        <div class="text-[11px] text-gray-400 font-bold mb-1">儲值金額 (實收)</div>
+                        <div class="text-base font-extrabold text-[#1a4731]">$${d.vipStats.topUpPay.toLocaleString()}</div>
+                    </div>
+                    <div class="border-l border-gray-200">
+                        <div class="text-[11px] text-gray-400 font-bold mb-1">贈送儲值金</div>
+                        <div class="text-base font-extrabold text-[#ffb74d]">$${d.vipStats.topUpBonus.toLocaleString()}</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-center py-2 bg-gray-50 rounded-xl border border-gray-100">
+                    <div>
+                        <div class="text-[11px] text-gray-400 font-bold mb-1">消費扣抵 (原價)</div>
+                        <div class="text-base font-extrabold text-gray-700">$${d.vipStats.originalTotal.toLocaleString()}</div>
+                    </div>
+                    <div class="border-l border-gray-200">
+                        <div class="text-[11px] text-gray-400 font-bold mb-1">實際扣抵 (95折)</div>
+                        <div class="text-base font-extrabold text-[#1a4731]">$${d.vipStats.actualTotal.toLocaleString()}</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="report-card">
                 <div class="report-section-title">🔥 熱門項目 & 出席</div>
                 <div class="flex justify-between mb-4 text-xs font-bold text-center bg-gray-50 p-2 rounded">
@@ -5146,18 +5434,36 @@
         document.getElementById('month-report-content').innerHTML = html;
     };
 
-    // [更新] 年報表渲染：同樣加入平均數據
+    // [更新] 年報表渲染：支援「歷年總計」
     window.renderYearlyReport = function() {
-        const y = reportState.date.getFullYear();
-        document.getElementById('report-year-title').innerText = `${y} 年度報表`;
+        // 防呆：如果初次載入未定義，強制預設為歷年
+        if (reportState.yearMode === undefined) {
+            reportState.yearMode = 'all';
+        }
+        
+        const y = reportState.yearMode;
+        
+        let titleStr = `${y} 年度報表`;
+        let daysInPeriod = 365;
+
+        if (y === 'all') {
+            titleStr = `歷年總計`;
+            // 計算 2024-11-01 到今天的總天數
+            const startDt = new Date(2024, 10, 1);
+            const nowDt = new Date();
+            daysInPeriod = Math.max(1, Math.floor((nowDt - startDt) / (1000 * 60 * 60 * 24)));
+        } else {
+            // 判斷是否為閏年
+            daysInPeriod = (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0) ? 366 : 365;
+        }
+
+        document.getElementById('report-year-title').innerText = titleStr;
         
         const d = generateReportData(y, null);
         const profit = d.rev.total - d.exp.total;
         const margin = d.rev.total > 0 ? Math.round((profit / d.rev.total) * 100) : 0;
 
-        // 計算年度天數 (簡單算 365)
-        const daysInYear = 365;
-        const avgDaily = Math.round(d.rev.total / daysInYear);
+        const avgDaily = Math.round(d.rev.total / daysInPeriod);
         const avgTicket = d.attendance.checked > 0 ? Math.round(d.rev.total / d.attendance.checked) : 0;
 
         let html = `
@@ -5195,8 +5501,309 @@
                  <div class="list-row"><span>街口</span><span>$${d.rev.jko.toLocaleString()}</span></div>
                  <div class="list-row"><span>儲值金</span><span>$${d.rev.stored.toLocaleString()}</span></div>
             </div>
+
+            <!-- 新增：VIP 儲值客年度消費分析看板 -->
+            <div class="report-card">
+                <div class="report-section-title">💎 年度儲值金分析</div>
+                <div class="grid grid-cols-2 gap-4 text-center py-2 bg-gray-50 rounded-xl border border-gray-100 mb-3">
+                    <div>
+                        <div class="text-[11px] text-gray-400 font-bold mb-1">年度儲值金額 (實收)</div>
+                        <div class="text-base font-extrabold text-[#1a4731]">$${d.vipStats.topUpPay.toLocaleString()}</div>
+                    </div>
+                    <div class="border-l border-gray-200">
+                        <div class="text-[11px] text-gray-400 font-bold mb-1">年度贈送儲值金</div>
+                        <div class="text-base font-extrabold text-[#ffb74d]">$${d.vipStats.topUpBonus.toLocaleString()}</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-center py-2 bg-gray-50 rounded-xl border border-gray-100">
+                    <div>
+                        <div class="text-[11px] text-gray-400 font-bold mb-1">年度消費扣抵 (原價)</div>
+                        <div class="text-base font-extrabold text-gray-700">$${d.vipStats.originalTotal.toLocaleString()}</div>
+                    </div>
+                    <div class="border-l border-gray-200">
+                        <div class="text-[11px] text-gray-400 font-bold mb-1">年度實際扣抵 (95折)</div>
+                        <div class="text-base font-extrabold text-[#1a4731]">$${d.vipStats.actualTotal.toLocaleString()}</div>
+                    </div>
+                </div>
+            </div>
         `;
         document.getElementById('year-report-content').innerHTML = html;
+    };
+
+    // --- [NEW] 儲值金報表與管理 (支援搜尋與連動歷史) ---
+    window.renderVipReport = function() {
+        const container = document.getElementById('vip-report-content');
+        if (!container) return;
+
+        // 初次載入時建立結構，保護搜尋框避免每次輸入都失去焦點
+        if (!document.getElementById('vip-rep-search')) {
+            container.innerHTML = `
+                <div id="vip-stats-top"></div>
+                <div class="mb-4">
+                    <input type="text" id="vip-rep-search" class="w-full p-3 border border-gray-300 rounded-lg text-sm outline-none shadow-sm" placeholder="🔍 輸入姓名或電話搜尋專屬紀錄..." oninput="updateVipLists()">
+                </div>
+                <div class="report-card bg-gray-50">
+                    <div class="report-section-title flex justify-between items-center border-none mb-2 pb-0">
+                        <span class="border-l-4 border-[var(--gold-main)] pl-2">👑 VIP 儲值客名單</span>
+                        <button onclick="directTopUp()" class="bg-[#1a4731] text-[#f5f1e8] px-3 py-1.5 rounded-full text-xs font-bold shadow-sm hover:brightness-110 transition-colors border border-[#2d5a47]">＋ 新增</button>
+                    </div>
+                    <div id="vip-list-display" class="max-h-60 overflow-y-auto pr-1 border-t border-gray-200 pt-2"></div>
+                </div>
+                <div class="report-card">
+                    <div class="report-section-title">🧾 交易紀錄</div>
+                    <div id="vip-history-display" class="max-h-64 overflow-y-auto border border-gray-100 rounded-lg"></div>
+                </div>
+            `;
+        }
+        
+        updateVipLists();
+    };
+
+    window.updateVipLists = function() {
+        const searchInput = document.getElementById('vip-rep-search');
+        if (!searchInput) return;
+
+        const keyword = searchInput.value.toLowerCase();
+        
+        let totalPay = 0, totalBonus = 0, currentRemaining = 0;
+        let sourceStats = { cash: 0, transfer: 0, linepay: 0, jko: 0 };
+        let allTxHistory = [];
+        let vipListHtml = '';
+
+        // 計算數據與提取歷史紀錄 (如果有 VIP 資料的話)
+        if (financeStore.vips && Object.keys(financeStore.vips).length > 0) {
+            Object.keys(financeStore.vips).forEach(phone => {
+                const vip = financeStore.vips[phone];
+                currentRemaining += vip.balance;
+
+                // 計算全域的數據 (不隨搜尋改變)，加上防呆保護
+                (vip.history || []).forEach(tx => {
+                    if (tx.type === 'topup') {
+                        const pay = parseInt(tx.payAmount) || 0;
+                        const stored = parseInt(tx.amount) || 0;
+                        const bonus = Math.max(0, stored - pay);
+                        totalPay += pay;
+                        totalBonus += bonus;
+
+                        let methodFound = 'cash';
+                        const dayData = safeArray(financeStore.data[tx.date]);
+                        if (dayData.length > 0) {
+                            const originalEntry = dayData.find(e => e.isTopUp && String(e.price) === String(pay) && (e.note || '').includes(stored));
+                            if (originalEntry && originalEntry.checkoutDetails) {
+                                methodFound = originalEntry.checkoutDetails.paymentMethod;
+                            }
+                        }
+                        if (sourceStats[methodFound] !== undefined) sourceStats[methodFound] += pay;
+                        else sourceStats.cash += pay;
+                    }
+                });
+
+                // 過濾名單與歷史 (受到搜尋字眼影響)
+                const isMatch = !keyword || vip.name.toLowerCase().includes(keyword) || vip.phone.includes(keyword);
+                if (isMatch) {
+                    vipListHtml += `
+                        <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex flex-col mb-2">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold text-[#1a3a2e]">${vip.name}</div>
+                                    <div class="text-xs text-gray-500">${vip.phone}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[10px] text-gray-400">目前餘額</div>
+                                    <div class="font-extrabold text-[var(--gold-main)] text-lg">$${(vip.balance || 0).toLocaleString()}</div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end border-t border-gray-50 pt-2 mt-2">
+                                <button onclick="openVipEditModal('${vip.phone}')" class="text-[11px] bg-[#1a4731] text-[#f5f1e8] px-5 py-1.5 rounded-full font-bold shadow-sm hover:brightness-110 transition-colors border border-[#2d5a47]">✐ 編輯</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    (vip.history || []).forEach(tx => {
+                        allTxHistory.push({
+                            phone: vip.phone, 
+                            name: vip.name, 
+                            date: tx.date, 
+                            type: tx.type, 
+                            amount: tx.amount, 
+                            payAmount: tx.payAmount, 
+                            note: tx.note,
+                            bookingId: tx.bookingId
+                        });
+                    });
+                }
+            });
+        }
+
+        // ★ 新增：掃描全域訂單，將「非VIP」卻使用「儲值金」的金額，計入系統贈與 (TopUpBonus)
+        Object.keys(financeStore.data).forEach(dateKey => {
+            safeArray(financeStore.data[dateKey]).forEach(e => {
+                if (e.isFriend) return;
+                if (!e.isVip) {
+                    // 1. 檢查尾款是否使用儲值金
+                    if (e.status === 'checked' && e.checkoutDetails && e.checkoutDetails.paymentMethod === 'stored') {
+                        const tail = parseInt(e.checkoutDetails.finalTotal) - parseInt(e.checkoutDetails.paidDeposit || 0);
+                        if (tail > 0) totalBonus += tail;
+                    }
+                    // 2. 檢查定金是否使用儲值金
+                    if ((e.hasDeposit || (e.depositMethod && e.depositMethod !== 'none')) && e.depositMethod === 'stored') {
+                        const depAmt = parseInt(e.depositAmount || 100);
+                        if (depAmt > 0) totalBonus += depAmt;
+                    }
+                }
+            });
+        });
+
+        // 排序並渲染歷史
+        allTxHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        let historyHtml = allTxHistory.slice(0, 50).map(tx => {
+            const isTopUp = tx.type === 'topup';
+            let color = 'text-[#ff6b6b]'; let sign = '-'; let title = `消費扣抵 (${tx.name})`;
+            if (isTopUp) { color = 'text-[#1a4731]'; sign = '+'; title = `儲值入帳 (${tx.name})`; }
+
+            let onClickAttr = '';
+            let cursorClass = '';
+            if (tx.bookingId) {
+                onClickAttr = `onclick="openVipTxDetail('${tx.type}', '${tx.date}', '${tx.bookingId}')"`;
+                cursorClass = 'cursor-pointer hover:bg-gray-200 transition-colors';
+            }
+
+            return `
+                <div class="flex justify-between items-center bg-gray-50 p-2 border-b border-gray-100 text-sm ${cursorClass}" ${onClickAttr}>
+                    <div>
+                        <div class="font-bold text-gray-700">${title}</div>
+                        <div class="text-[10px] text-gray-400">${tx.date} ${tx.note && tx.note !== '儲值入帳' && tx.note !== '預約消費扣抵' ? '| ' + tx.note : ''}</div>
+                    </div>
+                    <div class="font-bold ${color}">${sign}$${(tx.amount || 0).toLocaleString()}</div>
+                </div>
+            `;
+        }).join('');
+
+        if(allTxHistory.length > 50) historyHtml += `<div class="text-center text-xs text-gray-400 py-2">僅顯示最近50筆</div>`;
+        if(allTxHistory.length === 0) historyHtml = `<div class="text-center text-xs text-gray-400 py-3">無交易紀錄</div>`;
+
+        // 確保全域看板隨時存在，即便是 0 也會渲染
+        if (!keyword && document.getElementById('vip-stats-top')) {
+            document.getElementById('vip-stats-top').innerHTML = `
+                <div class="report-card !bg-[#1a3a2e] !text-[#f5f1e8]">
+                    <div class="flex justify-between items-center border-b border-white/10 pb-3 mb-3">
+                        <div class="text-center flex-1">
+                            <div class="text-xs opacity-60 mb-1">歷史實收總額</div>
+                            <div class="font-bold text-lg">$${totalPay.toLocaleString()}</div>
+                        </div>
+                        <div class="w-px h-8 bg-white/10"></div>
+                        <div class="text-center flex-1">
+                            <div class="text-xs opacity-60 mb-1">歷史總儲值金 (含贈)</div>
+                            <div class="font-bold text-lg text-[#c9b896]">$${(totalPay + totalBonus).toLocaleString()}</div>
+                        </div>
+                    </div>
+                    <div class="text-center pt-2">
+                        <div class="text-sm opacity-80 mb-1">未消耗儲值金 (負債)</div>
+                        <div class="font-extrabold text-3xl text-[#ffb74d]">$${currentRemaining.toLocaleString()}</div>
+                    </div>
+                </div>
+                <div class="report-card">
+                    <div class="report-section-title">📊 儲值來源分析</div>
+                    <div class="stat-grid">
+                        <div class="stat-box"><div class="stat-label">現金</div><div class="stat-val">$${sourceStats.cash.toLocaleString()}</div></div>
+                        <div class="stat-box"><div class="stat-label">匯款</div><div class="stat-val">$${sourceStats.transfer.toLocaleString()}</div></div>
+                        <div class="stat-box"><div class="stat-label">Line Pay</div><div class="stat-val">$${sourceStats.linepay.toLocaleString()}</div></div>
+                        <div class="stat-box"><div class="stat-label">街口</div><div class="stat-val">$${sourceStats.jko.toLocaleString()}</div></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('vip-list-display').innerHTML = vipListHtml || '<div class="text-center text-xs text-gray-400 py-3">找不到符合的儲值客</div>';
+        document.getElementById('vip-history-display').innerHTML = historyHtml;
+    };
+
+    // --- [新增] 儲值客管理功能 (新增儲值、編輯、刪除) ---
+    window.directTopUp = function(phone = null) {
+        // 確保將儲值單歸檔在今天
+        const today = new Date();
+        activeDateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        
+        openTopUpModal();
+        
+        if (phone && financeStore.vips[phone]) {
+            const vip = financeStore.vips[phone];
+            document.getElementById('tu-name').value = vip.name;
+            document.getElementById('tu-phone').value = vip.phone;
+        }
+    };
+
+    window.openVipEditModal = function(phone) {
+        const vip = financeStore.vips[phone];
+        if (!vip) return;
+        document.getElementById('vip-edit-old-phone').value = phone;
+        document.getElementById('vip-edit-name').value = vip.name;
+        document.getElementById('vip-edit-phone').value = vip.phone;
+        document.getElementById('vipEditModal').classList.remove('hidden');
+    };
+
+    window.saveVipProfile = function() {
+        const oldPhone = document.getElementById('vip-edit-old-phone').value;
+        const newName = document.getElementById('vip-edit-name').value.trim() || '未具名';
+        const newPhone = document.getElementById('vip-edit-phone').value.trim();
+        
+        if (!newPhone) return alert("電話號碼不可為空！");
+        
+        const vip = financeStore.vips[oldPhone];
+        if (!vip) return;
+
+        if (newPhone !== oldPhone) {
+            if (financeStore.vips[newPhone]) {
+                return alert("該電話號碼已被其他顧客使用，請重新輸入！");
+            }
+            // 轉移 Key
+            financeStore.vips[newPhone] = { ...vip, name: newName, phone: newPhone };
+            delete financeStore.vips[oldPhone];
+            
+            // 同步修改歷史預約單的 vipPhone 綁定
+            Object.keys(financeStore.data).forEach(dateKey => {
+                safeArray(financeStore.data[dateKey]).forEach(e => {
+                    if (e.vipPhone === oldPhone) e.vipPhone = newPhone;
+                });
+            });
+        } else {
+            financeStore.vips[oldPhone].name = newName;
+        }
+        
+        saveFinanceV2();
+        updateVipLists();
+        document.getElementById('vipEditModal').classList.add('hidden');
+    };
+
+    window.deleteVipFromModal = function() {
+        const phone = document.getElementById('vip-edit-old-phone').value;
+        const vip = financeStore.vips[phone];
+        if (!vip) return;
+        
+        if (!confirm(`確定要刪除顧客「${vip.name}」的所有資料嗎？\n\n⚠️ 警告：\n此動作將清空餘額與專屬歷史紀錄 (但會保留原本的預約單)，且無法復原！`)) return;
+        
+        delete financeStore.vips[phone];
+        
+        // 解除舊有預約單的 VIP 綁定
+        Object.keys(financeStore.data).forEach(dateKey => {
+            safeArray(financeStore.data[dateKey]).forEach(e => {
+                if (e.vipPhone === phone) {
+                    e.isVip = false;
+                    e.vipPhone = null;
+                }
+            });
+        });
+        
+        saveFinanceV2();
+        updateVipLists();
+        document.getElementById('vipEditModal').classList.add('hidden');
+    };
+
+    window.directTopUpFromModal = function() {
+        const phone = document.getElementById('vip-edit-old-phone').value;
+        document.getElementById('vipEditModal').classList.add('hidden');
+        directTopUp(phone);
     };
 
     // --- [NEW] 帳戶管理與總帳本引擎 ---
@@ -5847,7 +6454,8 @@
             window.dbSet(window.dbRef(window.firebaseDB, 'meawMeFinanceV2'), {
                 data: financeStore.data,
                 manualOffDays: financeStore.manualOffDays,
-                offDayNotes: financeStore.offDayNotes || {}
+                offDayNotes: financeStore.offDayNotes || {},
+                vips: financeStore.vips || {}
             }).then(() => {
                 // console.log("儲存成功");
             }).catch(e => {
@@ -5904,7 +6512,7 @@
             // 應休與實休統計
             const isOfficialRed = isSun || isSat || holidayName;
             if (isOfficialRed) offDays++; 
-            if ((isManualOff || isSun) && entries.length === 0) realOff++; 
+            if ((isManualOff || isSun || holidayName) && entries.length === 0) realOff++; 
 
             const box = document.createElement('div');
             const isRedDay = isOfficialRed || isManualOff;
@@ -5952,7 +6560,7 @@
                     const lastEntry = entries[entries.length - 1];
                     const [lastH, lastM] = lastEntry.time.split(':').map(Number);
                     let lastDur = parseInt(lastEntry.duration, 10) || 60;
-                    let endMins = (lastH * 60) + lastM + lastDur;
+                    let endMins = (lastH * 60) + lastM + lastDur + 30;
                     let endH = Math.floor(endMins / 60);
                     let endM = endMins % 60;
                     if (endH >= 24) endH -= 24;
@@ -5969,10 +6577,16 @@
                     // 統計計算 (爽約與親友預約皆不計入 count 與總額)
                     if (e.status !== 'noshow' && !e.isFriend) {
                         count++;
-                        totalRev += p; realRev += r;
-                        currentWeekTotal += p; currentWeekReal += r;
-                        
-                        // [新增] 累加當日顯示用的金額
+                        totalRev += p; 
+                        currentWeekTotal += p;
+                        dayTotal += p; 
+
+                        // 核心卡控：如果是 VIP 儲值客，就不計入當日、當週、當月的「實收應收現金流」
+                        if (!e.isVip) {
+                            realRev += r;
+                            currentWeekReal += r;
+                            dayDue += r;
+                        }
                         dayTotal += p; 
                         dayDue += r;
                     } 
@@ -6146,13 +6760,30 @@
             entries.forEach(e => {
                 const [sH, sM] = e.time.split(':').map(Number);
                 const dur = parseInt(e.duration || 60, 10);
-                const endMins = sH * 60 + sM + dur;
+                const endMins = sH * 60 + sM + dur + 30; // 結束時間加上 30 分鐘緩衝
                 let eH = Math.floor(endMins / 60);
                 const eM = endMins % 60;
                 if(eH >= 24) eH -= 24;
                 const endTimeStr = `${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
 
                 const div = document.createElement('div');
+
+                // 若為儲值單，獨立渲染成金色專屬卡片，點擊可查看/編輯
+                if (e.isTopUp) {
+                    div.className = 'flex justify-between items-center bg-[rgba(201,184,150,0.1)] border border-[var(--gold-main)] p-3 rounded-lg mb-2 cursor-pointer hover:bg-[rgba(201,184,150,0.2)] transition-colors';
+                    div.onclick = (event) => { viewTopUpDetail(e.id, event); };
+                    div.innerHTML = `
+                        <div class="flex-1">
+                            <div class="text-[var(--gold-main)] font-extrabold text-sm mb-1">${e.items[0]}</div>
+                            <div class="text-xs text-gray-500 font-bold">${e.note}</div>
+                        </div>
+                        <div class="flex flex-col items-center justify-center pl-3 border-l border-[var(--gold-main)]">
+                            <button class="text-red-400 font-bold text-lg px-2 hover:text-red-300 transition-colors" onclick="deleteSingleEntry('${e.id}', event)">✕</button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                    return; // 提早結束，跳過下方的一般預約渲染
+                }
                 
                 // 預設樣式
                 let itemClass = 'day-detail-item flex justify-between items-center bg-gray-50 border border-gray-200 p-3 rounded-lg mb-2 cursor-pointer hover:bg-gray-100 transition-all';
@@ -6295,17 +6926,47 @@
             }
         };
 
-    // [修正] 單筆刪除功能 (新增：自動釋出時段)
+    // [修正] 單筆刪除功能 (新增：自動釋出時段與儲值金退回，並隱藏歷史)
     window.deleteSingleEntry = function(id, event) {
         // 阻止事件冒泡
         if(event) event.stopPropagation();
 
-        if(!confirm("確定刪除此筆預約？\n(對應的時段將會嘗試自動釋出)")) return;
+        if(!confirm("確定刪除此筆資料？\n(若為預約單將嘗試自動釋出，若為儲值單將會扣除客人餘額)")) return;
         
         // 1. 找出要刪除的那筆資料，為了拿到它的時間
         let currentEntries = safeArray(financeStore.data[activeDateStr]);
         const targetEntry = currentEntries.find(e => String(e.id) === String(id));
         
+        if (targetEntry) {
+            if (targetEntry.isTopUp) {
+                // 處理儲值單的刪除，退回客人餘額，並把歷史紀錄抽掉 (不再顯示)
+                const oldVipKey = targetEntry.vipPhone || ((targetEntry.items[0] || '').match(/儲值入帳：(.*)/)?.[1] || '未具名');
+                const oldStoredMatch = (targetEntry.note || '').match(/總得儲值金[^\d]*(\d+)/);
+                const oldStored = oldStoredMatch ? parseInt(oldStoredMatch[1]) : targetEntry.price;
+                if (financeStore.vips && financeStore.vips[oldVipKey]) {
+                    financeStore.vips[oldVipKey].balance -= oldStored;
+                    if (financeStore.vips[oldVipKey].history) {
+                        const targetIdx = financeStore.vips[oldVipKey].history.findIndex(h => h.date === activeDateStr && h.type === 'topup' && h.amount === oldStored && h.payAmount === targetEntry.price);
+                        if (targetIdx > -1) {
+                            financeStore.vips[oldVipKey].history.splice(targetIdx, 1);
+                        }
+                    }
+                }
+            } else if (targetEntry.status === 'checked') {
+                // 退回餘額 (只要有扣款紀錄就退回，涵蓋定金與尾款)
+                if (targetEntry.isVip && targetEntry.vipPhone && financeStore.vips && financeStore.vips[targetEntry.vipPhone]) {
+                    if (financeStore.vips[targetEntry.vipPhone].history) {
+                        const targetIdx = financeStore.vips[targetEntry.vipPhone].history.findIndex(h => h.bookingId === targetEntry.id && h.type === 'deduct');
+                        if (targetIdx > -1) {
+                            const deductedAmt = financeStore.vips[targetEntry.vipPhone].history[targetIdx].amount;
+                            financeStore.vips[targetEntry.vipPhone].balance += deductedAmt;
+                            financeStore.vips[targetEntry.vipPhone].history.splice(targetIdx, 1);
+                        }
+                    }
+                }
+            }
+        }
+
         // 2. 刪除財務資料
         financeStore.data[activeDateStr] = currentEntries.filter(e => String(e.id) !== String(id));
         saveFinanceV2(); 
@@ -6313,6 +6974,10 @@
         renderFinancePage();
 
         // 3. [新增] 自動釋出時段邏輯
+        if (typeof updateVipLists === 'function') {
+            updateVipLists();
+        }
+
         if (targetEntry && targetEntry.time) {
             // 修正 Booking Key 格式
             const [yStr, mmStr, ddStr] = activeDateStr.split('-');
@@ -6396,7 +7061,8 @@
                      const [eH, eM] = e.time.split(':').map(Number);
                      const eStart = eH * 60 + eM;
                      const eDur = parseInt(e.duration || 60, 10);
-                     return (dMins >= eStart && dMins < (eStart + eDur));
+                     // 自動生成時，只要有「施作碰緩衝」或「施作碰施作」就過濾掉
+                     return (dMins < eStart + eDur + 30 && dMins + 60 + 30 > eStart);
                 });
                 return !isOccupied;
             });
@@ -6429,37 +7095,114 @@
         }
     };
 
-    // [新增/修復] 解鎖並編輯 (將已結帳訂單退回未結帳)
+    // [新增/修復] 解鎖並編輯 (將已結帳訂單退回未結帳，並全額退還儲值金)
     window.unlockAndEdit = function(entryId) {
         if(!confirm("⚠️ 警告：此訂單已結帳！\n\n進入編輯模式將會「清除」原本的收款紀錄，且狀態將變回「未結帳」。\n\n確定要繼續嗎？")) return;
 
-        // 1. 立即清除資料庫中的結帳狀態
-        // 從全域變數 activeDateStr 抓取當前日期的資料
         let currentEntries = safeArray(financeStore.data[activeDateStr]);
         const idx = currentEntries.findIndex(e => String(e.id) === String(entryId));
         
         if(idx > -1) {
+            const entry = currentEntries[idx];
+            
+            // ★ 儲值金退款機制 (透過 bookingId 找尋唯一的扣款紀錄並退回)
+            if (entry.isVip && entry.vipPhone && financeStore.vips && financeStore.vips[entry.vipPhone]) {
+                if (financeStore.vips[entry.vipPhone].history) {
+                    // 找出該筆訂單在 VIP 歷史中的扣款紀錄
+                    const targetIdx = financeStore.vips[entry.vipPhone].history.findIndex(h => h.bookingId === entry.id && h.type === 'deduct');
+                    if (targetIdx > -1) {
+                        const deductedAmt = financeStore.vips[entry.vipPhone].history[targetIdx].amount;
+                        financeStore.vips[entry.vipPhone].balance += deductedAmt;
+                        // 將扣抵紀錄從歷史中拔除 (自動消失)
+                        financeStore.vips[entry.vipPhone].history.splice(targetIdx, 1);
+                    }
+                }
+            }
+
             // 重置狀態
             currentEntries[idx].status = 'pending'; 
             currentEntries[idx].checkoutDetails = null; 
-            // 這裡不將 price 歸零，保留原價讓編輯時參考
             
             financeStore.data[activeDateStr] = currentEntries;
             saveFinanceV2(); // 寫入 Firebase 並刷新畫面
+            
+            // ★ 新增：解鎖單據退回餘額後，立刻同步刷新 VIP 儲值金畫面
+            if (typeof updateVipLists === 'function') {
+                updateVipLists();
+            }
         }
 
-        // 2. 關閉詳情，開啟編輯視窗
         document.getElementById('bookingDetailModal').classList.add('hidden');
         
-        // 延遲一下確保資料已寫入後再開啟
         setTimeout(() => {
             openEditForm(entryId);
         }, 100);
     };
 
+    window.confirmCheckout = function() {
+        const remaining = Math.max(0, checkoutState.finalTotal - checkoutState.deposit);
+        if (!confirm(`確認結帳？\n\n總金額: $${checkoutState.finalTotal}\n扣除定金: -$${checkoutState.deposit}\n─────────\n現場實收: $${remaining} (${checkoutState.payMethod})`)) return;
+        
+        const currentEntries = safeArray(financeStore.data[activeDateStr]);
+        const idx = currentEntries.findIndex(e => String(e.id) === String(checkoutState.entry.id));
+        
+        if (idx > -1) {
+            const entry = currentEntries[idx];
+            
+            // ★ 儲值金全額扣款邏輯 (結算尾款 + 定金皆納入計算)
+            let totalVipDeduct = 0;
+            let historyNotes = [];
+            
+            if (checkoutState.payMethod === 'stored') {
+                totalVipDeduct += remaining;
+                if (remaining > 0) historyNotes.push(`尾款 $${remaining}`);
+            }
+            
+            const depAmt = parseInt(checkoutState.deposit) || 0;
+            if (entry.depositMethod === 'stored' && depAmt > 0) {
+                totalVipDeduct += depAmt;
+                historyNotes.push(`定金 $${depAmt}`);
+            }
+
+            // 若有任何項目扣除了儲值金，寫入歷史與結算
+            if (totalVipDeduct > 0 && entry.isVip && entry.vipPhone && financeStore.vips[entry.vipPhone]) {
+                const vip = financeStore.vips[entry.vipPhone];
+                if (vip.balance < totalVipDeduct) {
+                    alert(`⚠️ 儲值金餘額不足！\n\n客人剩餘儲值金: $${vip.balance}\n本次共需扣除: $${totalVipDeduct}\n\n請改用其他支付方式結帳，或請客人先進行儲值。`);
+                    return;
+                }
+                vip.balance -= totalVipDeduct;
+                vip.history.push({
+                    date: activeDateStr,
+                    type: 'deduct',
+                    amount: totalVipDeduct,
+                    bookingId: entry.id,
+                    note: `預約消費扣抵 (${historyNotes.join(' + ')})`
+                });
+            }
+
+            entry.status = 'checked';
+            entry.checkoutDetails = { items: checkoutState.items, globalDiscount: checkoutState.globalDiscount, finalTotal: checkoutState.finalTotal, paymentMethod: checkoutState.payMethod, paidDeposit: checkoutState.deposit };
+            entry.price = checkoutState.finalTotal;
+            financeStore.data[activeDateStr] = currentEntries;
+            saveFinanceV2();
+        }
+        document.getElementById('paymentModal').classList.add('hidden');
+        document.getElementById('checkoutModal').classList.add('hidden');
+        document.getElementById('bookingDetailModal').classList.add('hidden');
+        renderFinancePage();
+        renderDayDetailList();
+        
+        // ★ 新增：結帳後立刻同步刷新 VIP 儲值金畫面
+        if (typeof updateVipLists === 'function') {
+            updateVipLists();
+        }
+        
+        alert("結帳完成！");
+    }; 
+
     // [修正版] 開啟預約詳情視窗 (包含爽約切換與結帳鎖定)
-    window.openBookingDetail = function(entry) {
-        currentCheckoutEntry = entry; 
+        window.openBookingDetail = function(entry) {
         const modal = document.getElementById('bookingDetailModal');
         modal.classList.remove('hidden');
 
@@ -6481,7 +7224,7 @@
         
         const [sH, sM] = entry.time.split(':').map(Number);
         const dur = parseInt(entry.duration || 60);
-        const endMins = sH * 60 + sM + dur;
+        const endMins = sH * 60 + sM + dur + 30;
         let eH = Math.floor(endMins / 60);
         const eM = endMins % 60;
         if(eH >= 24) eH -= 24;
@@ -6879,9 +7622,17 @@
         // 將數值填入 Input
         document.getElementById('pay-dep-input').value = currentDepAmount;
 
-        // 5. 預設選取現金，並觸發一次計算 (false 代表不從輸入框重新讀取，以 state 為準)
-        selectPayMethod('cash', document.querySelector('.pay-method-row')); 
-        
+        // 5. 依據是否為 VIP 儲值客智慧預設選取支付管道
+        if (entry && entry.isVip) {
+            checkoutState.payMethod = 'stored';
+            setTimeout(() => {
+                const storedRow = document.querySelector('.pay-method-row[onclick*="stored"]');
+                if (storedRow) selectPayMethod('stored', storedRow);
+            }, 50);
+        } else {
+            selectPayMethod('cash', document.querySelector('.pay-method-row')); 
+        }
+
         // 6. 顯示視窗
         document.getElementById('paymentModal').classList.remove('hidden');
     };
@@ -6898,15 +7649,62 @@
         updatePayRemaining();
     };
 
+    // [修正版] 統一結帳邏輯：支援定金與尾款同時使用儲值金，並正確處理非VIP的贈與儲值金
     window.confirmCheckout = function() {
         const remaining = Math.max(0, checkoutState.finalTotal - checkoutState.deposit);
         if (!confirm(`確認結帳？\n\n總金額: $${checkoutState.finalTotal}\n扣除定金: -$${checkoutState.deposit}\n─────────\n現場實收: $${remaining} (${checkoutState.payMethod})`)) return;
+
         const currentEntries = safeArray(financeStore.data[activeDateStr]);
         const idx = currentEntries.findIndex(e => String(e.id) === String(checkoutState.entry.id));
+
         if (idx > -1) {
             const entry = currentEntries[idx];
+
+            // ★ 儲值金全額扣款邏輯 (結算尾款 + 定金皆納入計算)
+            let totalVipDeduct = 0;
+            let historyNotes = [];
+
+            if (checkoutState.payMethod === 'stored') {
+                totalVipDeduct += remaining;
+                if (remaining > 0) historyNotes.push(`尾款 $${remaining}`);
+            }
+
+            const depAmt = parseInt(checkoutState.deposit) || 0;
+            if (entry.depositMethod === 'stored' && depAmt > 0) {
+                totalVipDeduct += depAmt;
+                historyNotes.push(`定金 $${depAmt}`);
+            }
+
+            // 若有任何項目扣除了儲值金，寫入歷史與結算
+            if (totalVipDeduct > 0) {
+                if (entry.isVip && entry.vipPhone && financeStore.vips[entry.vipPhone]) {
+                    const vip = financeStore.vips[entry.vipPhone];
+                    if (vip.balance < totalVipDeduct) {
+                        alert(`⚠️ 儲值金餘額不足！\n\n客人剩餘儲值金: $${vip.balance}\n本次共需扣除: $${totalVipDeduct}\n\n請改用其他支付方式結帳，或請客人先進行儲值。`);
+                        return;
+                    }
+                    vip.balance -= totalVipDeduct;
+                    // ★ 防呆：確保舊 VIP 資料也有 history 陣列
+                    if (!vip.history) vip.history = [];
+                    vip.history.push({
+                        date: activeDateStr,
+                        type: 'deduct',
+                        amount: totalVipDeduct,
+                        bookingId: entry.id,
+                        note: `預約消費扣抵 (${historyNotes.join(' + ')})`
+                    });
+                }
+                // 若不是 VIP 但選了儲值金支付，則不扣款 (因無帳戶)，系統在報表中會自動轉列為「贈送的儲值金」
+            }
+
             entry.status = 'checked';
-            entry.checkoutDetails = { items: checkoutState.items, globalDiscount: checkoutState.globalDiscount, finalTotal: checkoutState.finalTotal, paymentMethod: checkoutState.payMethod, paidDeposit: checkoutState.deposit };
+            entry.checkoutDetails = {
+                items: checkoutState.items,
+                globalDiscount: checkoutState.globalDiscount,
+                finalTotal: checkoutState.finalTotal,
+                paymentMethod: checkoutState.payMethod,
+                paidDeposit: checkoutState.deposit
+            };
             entry.price = checkoutState.finalTotal;
             financeStore.data[activeDateStr] = currentEntries;
             saveFinanceV2();
@@ -6916,6 +7714,12 @@
         document.getElementById('bookingDetailModal').classList.add('hidden');
         renderFinancePage();
         renderDayDetailList();
+        
+        // ★ 新增：結帳後立刻同步刷新 VIP 儲值金畫面
+        if (typeof updateVipLists === 'function') {
+            updateVipLists();
+        }
+        
         alert("結帳完成！");
     };
 
@@ -6955,6 +7759,81 @@
         return { price: 0, duration: 60 };
     }
 
+    window.toggleVipSelect = function(el) {
+        const isActive = el.classList.contains('active');
+        if (isActive) {
+            clearVipSelect();
+        } else {
+            document.getElementById('vipSelectModal').classList.remove('hidden');
+            renderVipList();
+        }
+    };
+
+    window.clearVipSelect = function() {
+        document.getElementById('fe-is-vip').classList.remove('active');
+        document.getElementById('fe-vip-phone').value = "";
+        document.getElementById('fe-vip-info').classList.add('hidden');
+        recalcTotal(); // 重算試算餘額
+    };
+
+    window.renderVipList = function() {
+        const container = document.getElementById('vip-list-container');
+        const keyword = document.getElementById('vip-search').value.toLowerCase();
+        container.innerHTML = '';
+        
+        if (!financeStore.vips) return;
+        
+        const currentPrice = parseInt(document.getElementById('fe-price').value) || 0;
+        const discountedPrice = Math.round(currentPrice * 0.95); 
+        
+        // 套用結算級別的預估邏輯
+        const depMethod = document.getElementById('fe-dep-method').value;
+        const depAmt = parseInt(document.getElementById('fe-dep-amount').value) || 0;
+        let depositDeduction = (depMethod !== 'none' && depMethod !== 'stored') ? depAmt : 0;
+        let estimatedTail = Math.max(0, discountedPrice - depositDeduction);
+        let totalEstimatedDeduct = estimatedTail + (depMethod === 'none' ? 0 : depAmt);
+
+        Object.keys(financeStore.vips).forEach(key => {
+            const vip = financeStore.vips[key];
+            if (vip.balance <= 0) return; // 沒餘額不顯示
+            if (keyword && !vip.name.toLowerCase().includes(keyword) && !vip.phone.includes(keyword)) return;
+            
+            const remainingAfter = vip.balance - totalEstimatedDeduct; 
+            const isDeficient = remainingAfter < 0;
+
+            const div = document.createElement('div');
+            div.className = "bg-white p-3 rounded-lg shadow-sm border border-gray-200 cursor-pointer hover:bg-[rgba(201,184,150,0.1)] transition-colors";
+            div.onclick = () => {
+                document.getElementById('fe-vip-phone').value = key;
+                document.getElementById('fe-vip-name').innerText = vip.name;
+                document.getElementById('fe-is-vip').classList.add('active');
+                document.getElementById('fe-vip-info').classList.remove('hidden');
+                document.getElementById('vipSelectModal').classList.add('hidden');
+                
+                // ★ 自動帶入儲值金付定
+                const storedBtn = document.querySelector('.dep-opt-btn[onclick*="stored"]');
+                if (storedBtn) setDepositMethod('stored', storedBtn);
+                
+                recalcTotal(); // 觸發餘額精準試算
+            };
+            div.innerHTML = `
+                <div class="flex justify-between items-center mb-1">
+                    <span class="font-bold text-[#1a3a2e]">${vip.name}</span>
+                    <span class="text-xs text-gray-500">${vip.phone}</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-gray-500">目前餘額: <span class="text-[var(--gold-main)] font-bold">$${vip.balance.toLocaleString()}</span></span>
+                    <span class="${isDeficient ? 'text-red-500' : 'text-[#1a4731]'} font-bold">預估結帳後: $${remainingAfter.toLocaleString()} </span>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        
+        if(container.innerHTML === '') {
+            container.innerHTML = '<div class="text-center text-gray-400 py-4 text-xs">找不到符合的儲值客紀錄</div>';
+        }
+    };
+
     // [修改] 開啟編輯視窗 (包含定金邏輯)
     function openEditForm(entryId = null) {
         const modal = document.getElementById('finEditModal');
@@ -6980,6 +7859,7 @@
 
         const friendToggle = document.getElementById('fe-is-friend');
         if(friendToggle) friendToggle.classList.remove('active');
+        clearVipSelect(); // 預設清除 VIP
 
         const currentEntries = safeArray(financeStore.data[activeDateStr]);
         const busyHours = new Set();
@@ -7012,6 +7892,13 @@
             const entry = currentEntries.find(e => String(e.id) === String(entryId));
             if (entry) {
                 if (entry.isFriend && friendToggle) friendToggle.classList.add('active');
+                if (entry.isVip && entry.vipPhone && financeStore.vips && financeStore.vips[entry.vipPhone]) {
+                    const vip = financeStore.vips[entry.vipPhone];
+                    document.getElementById('fe-vip-phone').value = entry.vipPhone;
+                    document.getElementById('fe-vip-name').innerText = vip.name;
+                    document.getElementById('fe-is-vip').classList.add('active');
+                    document.getElementById('fe-vip-info').classList.remove('hidden');
+                }
                 const parts = (entry.time || "10:00").split(':');
                 if(parts.length === 2) { defH = parts[0]; defM = parts[1]; }
                 
@@ -7073,7 +7960,7 @@
                 currentEntries.forEach(e => {
                     const [eH, eM] = e.time.split(':').map(Number);
                     const eStart = eH * 60 + eM;
-                    const eEnd = eStart + (parseInt(e.duration || 60, 10));
+                    const eEnd = eStart + (parseInt(e.duration || 60, 10) + 30);
                     // 只要新時段落在現有預約區間內就是衝突
                     if (testStartMins < eEnd && testEndMins > eStart) {
                         isConflict = true;
@@ -7154,32 +8041,45 @@
         const newEndMins = newStartMins + duration;
 
         const currentEntries = safeArray(financeStore.data[activeDateStr]);
-        let isConflict = false;
+        let conflictType = 0; // 0: 無, 1: 緩衝碰施作(提醒), 2: 施作碰施作(警告)
         let conflictTime = "";
 
         currentEntries.forEach(e => {
-            if (editingEntryId && String(e.id) === String(editingEntryId)) return; // 排除自己
+            if (editingEntryId && String(e.id) === String(editingEntryId)) return;
             
             const [eH, eM] = e.time.split(':').map(Number);
             const eStart = eH * 60 + eM;
             const eDur = parseInt(e.duration || 60, 10);
             const eEnd = eStart + eDur;
 
-            // 判斷重疊
+            // 1. 施作時間 碰 施作時間
             if (newStartMins < eEnd && newEndMins > eStart) {
-                isConflict = true;
+                conflictType = 2;
                 conflictTime = e.time;
+            } 
+            // 2. 緩衝時間 碰 施作時間 (新施作碰舊緩衝 OR 舊施作碰新緩衝，前後30分)
+            else if (newStartMins < eEnd + 30 && newEndMins + 30 > eStart) {
+                if (conflictType < 2) {
+                    conflictType = 1;
+                    conflictTime = e.time;
+                }
             }
         });
 
-        if (isConflict) {
-            warnBox.innerText = `⚠️ 注意：與 ${conflictTime} 的預約時段重疊！`;
+        if (conflictType === 2) {
+            warnBox.innerText = `❌ 警告：施作時間與 ${conflictTime} 嚴重重疊！`;
+            warnBox.className = "mb-3 p-3 bg-red-50 text-red-600 text-xs font-bold rounded-lg text-center border border-red-200 shadow-sm";
+            warnBox.classList.remove('hidden');
+        } else if (conflictType === 1) {
+            warnBox.innerText = `⚠️ 提醒：緩衝時間與 ${conflictTime} 的預約重疊`;
+            warnBox.className = "mb-3 p-3 bg-orange-50 text-orange-500 text-xs font-bold rounded-lg text-center border border-orange-200 shadow-sm";
             warnBox.classList.remove('hidden');
         } else {
             warnBox.classList.add('hidden');
+            warnBox.className = "hidden mb-3 p-3 bg-red-50 text-red-500 text-xs font-bold rounded-lg text-center border border-red-200 shadow-sm";
         }
-    }
 
+    }
     // [修復] 關閉視窗
     function closeFinEditModal() {
         const modal = document.getElementById('finEditModal');
@@ -7193,6 +8093,9 @@
         const newDateStr = document.getElementById('fe-date').value;
         if (!newDateStr) return alert("請選擇預約日期");
 
+        const isVipCheck = document.getElementById('fe-is-vip').classList.contains('active');
+        const depMethodCheck = document.getElementById('fe-dep-method').value;
+        
         if (!financeStore.data[activeDateStr]) financeStore.data[activeDateStr] = [];
         if (!financeStore.data[newDateStr]) financeStore.data[newDateStr] = [];
         
@@ -7210,18 +8113,26 @@
         const startM = parseInt(m, 10);
         const newStartMins = startH * 60 + startM;
         const newEndMins = newStartMins + duration;
-        let isConflict = false;
+        let conflictType = 0; // 0:無, 1:緩衝碰施作, 2:施作碰施作
         
         targetEntries.forEach(e => {
             if (editingEntryId && String(e.id) === String(editingEntryId)) return;
             const [eH, eM] = e.time.split(':').map(Number);
             const eStart = eH * 60 + eM;
-            const eEnd = eStart + (parseInt(e.duration || 60, 10));
-            if (newStartMins < eEnd && newEndMins > eStart) isConflict = true; 
+            const eDur = parseInt(e.duration || 60, 10);
+            const eEnd = eStart + eDur;
+            
+            if (newStartMins < eEnd && newEndMins > eStart) {
+                conflictType = 2; // 施作碰施作
+            } else if (newStartMins < eEnd + 30 && newEndMins + 30 > eStart) {
+                if (conflictType < 2) conflictType = 1; // 緩衝碰施作
+            }
         });
 
-        if (isConflict) {
-            if(!confirm(`⚠️ 檢測到與現有帳務時間重疊 (${newDateStr} ${timeStr})\n\n確定要繼續新增嗎？`)) return;
+        if (conflictType === 2) {
+            if(!confirm(`❌ 警告：施作時間與現有預約嚴重重疊！ (${newDateStr} ${timeStr})\n\n確定要強制新增嗎？`)) return;
+        } else if (conflictType === 1) {
+            if(!confirm(`⚠️ 提醒：緩衝時間與現有預約的施作時間重疊 (${newDateStr} ${timeStr})\n\n確定要繼續新增嗎？`)) return;
         }
 
         // 舊時段釋出 (包含跨日)
@@ -7258,6 +8169,8 @@
         }
 
         const isFriend = document.getElementById('fe-is-friend').classList.contains('active');
+        const isVip = document.getElementById('fe-is-vip').classList.contains('active');
+        const vipPhone = document.getElementById('fe-vip-phone').value;
         // [新增] 只要目前清單裡有任何一個項目標記為模特，整單就視為模特單 (邊條變綠)
         const isModel = tempItems.some(i => i.isModel);
 
@@ -7265,6 +8178,8 @@
             id: editingEntryId || Date.now(),
             time: timeStr,
             isFriend: isFriend,
+            isVip: isVip,
+            vipPhone: isVip ? vipPhone : null,
             isModel: isModel, // [新增儲存屬性]
             items: tempItems.length > 0 ? tempItems.map(i => i.qty > 1 ? `${i.name} x${i.qty}` : i.name) : ['自訂項目'],
             itemsDetail: tempItems,
@@ -7405,7 +8320,7 @@
         renderSelectedList();
     };
 
-    // [核心修改] 重新計算總金額與總時長 (修正編輯時時長歸零問題)
+    // [核心修改] 重新計算總金額與總時長 (新增 VIP 定金與結算同步預估)
     window.recalcTotal = function() {
         let currentRunningTotal = 0;
         let currentTotalDuration = 0;
@@ -7413,18 +8328,14 @@
         tempItems.forEach(item => {
             const val = parseFloat(item.price) || 0;
             const dur = parseInt(item.duration) || 0;
-            const qty = parseInt(item.qty) || 1; // 取得數量
+            const qty = parseInt(item.qty) || 1; 
             
             if (!item.isPercent) {
-                // 一般金額：單價 * 數量
                 currentRunningTotal += (val * qty);
             } else {
-                // 百分比折扣：直接打折 (通常折扣不乘數量，而是作用在總額)
                 currentRunningTotal = currentRunningTotal * (val / 100);
                 currentRunningTotal = Math.round(currentRunningTotal);
             }
-
-            // 總時長：單次時長 * 數量
             currentTotalDuration += (dur * qty);
         });
 
@@ -7433,6 +8344,55 @@
         
         if (priceInput) priceInput.value = currentRunningTotal;
         if (durInput) durInput.value = currentTotalDuration;
+
+        // 即時更新 VIP 餘額預估試算 (打95折並扣除定金影響)
+        const isVip = document.getElementById('fe-is-vip').classList.contains('active');
+        const vipPhone = document.getElementById('fe-vip-phone')?.value;
+        if (isVip && vipPhone && financeStore.vips && financeStore.vips[vipPhone]) {
+            const vip = financeStore.vips[vipPhone];
+            const discountedTotal = Math.round(currentRunningTotal * 0.95);
+            
+            const depMethod = document.getElementById('fe-dep-method').value;
+            const depAmt = parseInt(document.getElementById('fe-dep-amount').value) || 0;
+            
+            // 如果定金是用現金或匯款付，尾款會減少
+            let depositDeduction = (depMethod !== 'none' && depMethod !== 'stored') ? depAmt : 0;
+            let estimatedTail = Math.max(0, discountedTotal - depositDeduction);
+            
+            // 預估結算時總共要從儲值金扣除的金額 (尾款 + 若定金也用儲值金付)
+            let totalEstimatedDeduct = estimatedTail + (depMethod === 'stored' ? depAmt : 0);
+            
+            const remaining = vip.balance - totalEstimatedDeduct;
+            const balEl = document.getElementById('fe-vip-balance');
+            if (balEl) {
+                balEl.innerHTML = `預估結帳後餘額 <span class="${remaining < 0 ? 'text-red-500' : 'text-[#1a4731]'}">$${remaining.toLocaleString()}</span>`;
+            }
+        }
+    };
+
+    // [修正] 設定定金方式 UI (支援 現金/匯款/LP/儲值/無 + VIP 防呆)
+    window.setDepositMethod = function(method, btn) {
+        const isVip = document.getElementById('fe-is-vip').classList.contains('active');
+
+        document.getElementById('fe-dep-method').value = method;
+        document.querySelectorAll('.dep-opt-btn').forEach(b => b.classList.remove('active'));
+        
+        if (btn) {
+            btn.classList.add('active');
+        } else {
+            const btns = document.querySelectorAll('.dep-opt-btn');
+            let found = false;
+            btns.forEach(b => {
+                if (b.getAttribute('onclick').includes(`'${method}'`)) {
+                    b.classList.add('active');
+                    found = true;
+                }
+            });
+            if (!found) {
+                btns[btns.length - 1].classList.add('active');
+            }
+        }
+        recalcTotal();
     };
 
     // [修改] 渲染已選清單 (新增時長輸入框)
@@ -7713,7 +8673,9 @@
             } else {
                 const finEntries = entries || [];
                 const dayOfWeek = new Date(dateStr).getDay();
-                const targetDefaults = dayOfWeek === 6 ? ["10:00", "13:00"] : DEFAULTS_TIMES;
+                const targetDefaults = dayOfWeek === 6 
+                    ? ["10:00", "11:00", "12:00", "13:00", "14:00"] 
+                    : ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"];
                 
                 calculatedSlots = targetDefaults.filter(defaultTime => {
                     const [dH, dM] = defaultTime.split(':').map(Number);
@@ -7723,11 +8685,11 @@
                          const [eH, eM] = e.time.split(':').map(Number);
                          const eStart = eH * 60 + eM;
                          const eDur = parseInt(e.duration || 60, 10);
-                         return (dMins >= eStart && dMins < (eStart + eDur));
+                         // 自動生成時，只要有「施作碰緩衝」或「施作碰施作」就過濾掉
+                         return (dMins < eStart + eDur + 30 && dMins + 60 + 30 > eStart);
                     });
-                    return !isOccupied; 
+                    return !isOccupied;
                 });
-            }
 
             const currentSlots = bookingState.data.bookings[bookingKey] || [];
             const calcStr = JSON.stringify(calculatedSlots.sort());
@@ -7739,8 +8701,9 @@
             }
 
             if (dataModified) updatedDays++;
+            };
         });
-
+        
         if (updatedDays > 0) {
             saveFinanceV2();
             saveBookingData();
@@ -7749,6 +8712,76 @@
         } else {
             alert("🎉 資料已是最新狀態，無需更新。");
         }
+    };
+
+    // 新增：後台一日設定核心演算法（智慧識別六日與國定假日上限）
+    window.generateHourlySlotsFromStart = function() {
+        const timeVal = document.getElementById('batchStartTime').value;
+        if(!timeVal) return alert("請選擇啟始時間");
+        
+        const [startH, startM] = timeVal.split(':').map(Number);
+        
+        // 拆解目前正在編輯的日期 Key (格式 YYYY-M-D, M為0-base)
+        const [y, m, d] = bookingState.editingKey.split('-').map(Number);
+        const dateObj = new Date(y, m, d);
+        const dayOfWeek = dateObj.getDay();
+        
+        let slots = [];
+        let currentMins = startH * 60 + startM;
+        
+        // 根據星期與假日，動態決定截止時間上限
+        // 週六最晚到 14:00 (14*60 = 840 分鐘)；其餘日子最晚到 19:30 (1170 分鐘)
+        const maxMins = (dayOfWeek === 6) ? (14 * 60) : (19 * 60 + 30); 
+        const maxTimeStr = (dayOfWeek === 6) ? "14:00" : "19:30";
+        
+        while(currentMins <= maxMins) {
+            const h = Math.floor(currentMins / 60);
+            const m = currentMins % 60;
+            slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+            currentMins += 60; // 每小時遞增
+        }
+        
+        if(slots.length === 0) return alert(`選取的啟始時間已超過該日上限 ${maxTimeStr} 囉！`);
+        
+        bookingState.data.bookings[bookingState.editingKey] = slots;
+        saveBookingData();
+        renderTimeChips();
+    };
+
+    // 新增：前台顧客彈出對話框控制器（已移除模式限制，允許隨時點擊查看）
+    window.openGuestTimeModal = function(month, day, key) {
+        document.getElementById('gtModalTitle').innerText = `${month}月${day}日 開放時段`;
+        document.getElementById('guestTimeModal').classList.remove('hidden');
+        renderGuestTimeChips(month, day, key);
+    };
+
+    // 新增：前台彈窗內部的時段按鈕渲染
+    window.renderGuestTimeChips = function(month, day, key) {
+        const container = document.getElementById('gtModalChips');
+        container.innerHTML = '';
+        
+        let slots = bookingState.data.bookings[key] || [];
+        if(slots.length === 0){
+            container.innerHTML = `<div class="col-span-3 text-center text-xs opacity-40 py-4">慢了一步，時段剛好滿了</div>`;
+            return;
+        }
+        
+        slots.sort().forEach(t => {
+            const labelId = `${month}/${day} ${t}`;
+            const isSelected = bookingState.selectedTimes.includes(labelId);
+            
+            const btn = document.createElement('button');
+            // 套用與原本美學一致的立體浮起感與配色
+            btn.className = `p-2 text-xs rounded-lg border font-bold transition-all ${isSelected ? 'bg-[#800020] text-white border-[#800020] scale-105' : 'border-gray-600/30 text-gray-200 bg-white/5'}`;
+            btn.textContent = t;
+            
+            btn.onclick = () => {
+                toggleTimeSelection(labelId);
+                renderGuestTimeChips(month, day, key); // 當下即時刷新按鈕狀態
+                renderCalendar(); // 異步更新底層日曆網格上的小標籤數字
+            };
+            container.appendChild(btn);
+        });
     };
 
     window.initSystem = function() {
@@ -7795,6 +8828,229 @@
     // ============================================================
     // [新增功能區] 請貼在 Script 的後段
     // ============================================================
+
+    let currentTopUpEntryId = null;
+
+    window.openVipTxDetail = function(type, date, bookingId) {
+        activeDateStr = date;
+        if (type === 'topup') {
+            viewTopUpDetail(bookingId);
+        } else {
+            jumpToBooking(date, bookingId);
+        }
+    };
+
+    window.deleteTopUpEntry = function() {
+        if (!currentTopUpEntryId) return;
+        document.getElementById('topUpModal').classList.add('hidden');
+        deleteSingleEntry(currentTopUpEntryId);
+    };
+
+    window.openTopUpModal = function() {
+        currentTopUpEntryId = null;
+        document.getElementById('tu-modal-title').innerText = '新增儲值紀錄';
+        document.getElementById('tu-name').value = '';
+        document.getElementById('tu-phone').value = '';
+        document.getElementById('tu-pay').value = '';
+        document.getElementById('tu-stored').value = '';
+        document.getElementById('tu-method').value = 'cash';
+        
+        setTopUpReadOnly(false);
+        
+        document.getElementById('tu-delete-btn').classList.add('hidden');
+        document.getElementById('tu-edit-btn').classList.add('hidden');
+        
+        const saveBtn = document.getElementById('tu-save-btn');
+        saveBtn.innerText = '確認新增儲值';
+        saveBtn.className = "col-span-2 py-3 bg-[var(--gold-main)] text-[#1a3a2e] rounded-lg font-bold text-sm shadow";
+        saveBtn.classList.remove('hidden');
+
+        document.getElementById('topUpModal').classList.remove('hidden');
+    };
+
+    window.viewTopUpDetail = function(id, event) {
+        if(event) event.stopPropagation();
+        const entry = safeArray(financeStore.data[activeDateStr]).find(e => String(e.id) === String(id));
+        if (!entry) return;
+
+        currentTopUpEntryId = id;
+        document.getElementById('tu-modal-title').innerText = '儲值紀錄明細';
+        
+        // 讀取並填入數值
+        const nameMatch = entry.items[0] ? entry.items[0].match(/儲值入帳：(.*)/) : null;
+        document.getElementById('tu-name').value = nameMatch ? nameMatch[1] : '';
+        document.getElementById('tu-phone').value = entry.vipPhone || '';
+        document.getElementById('tu-pay').value = entry.price || '';
+        
+        const storedMatch = (entry.note || '').match(/總得儲值金[^\d]*(\d+)/);
+        document.getElementById('tu-stored').value = storedMatch ? storedMatch[1] : entry.price;
+        document.getElementById('tu-method').value = entry.checkoutDetails ? entry.checkoutDetails.paymentMethod : 'cash';
+
+        // 鎖定為唯讀狀態
+        setTopUpReadOnly(true);
+
+        document.getElementById('tu-delete-btn').classList.remove('hidden');
+        document.getElementById('tu-delete-btn').className = "col-span-1 py-3 border border-red-400 text-red-500 rounded-lg font-bold text-sm shadow hover:bg-red-50";
+
+        document.getElementById('tu-edit-btn').classList.remove('hidden');
+        document.getElementById('tu-edit-btn').className = "col-span-1 py-3 border border-[var(--gold-main)] text-[var(--gold-main)] rounded-lg font-bold text-sm shadow hover:bg-gray-50";
+
+        document.getElementById('tu-save-btn').classList.add('hidden');
+
+        document.getElementById('topUpModal').classList.remove('hidden');
+    };
+
+    window.enableTopUpEdit = function() {
+        setTopUpReadOnly(false);
+        document.getElementById('tu-modal-title').innerText = '編輯儲值紀錄';
+        document.getElementById('tu-edit-btn').classList.add('hidden');
+        document.getElementById('tu-delete-btn').className = "col-span-1 py-3 border border-red-400 text-red-500 rounded-lg font-bold text-sm shadow hover:bg-red-50";
+
+        const saveBtn = document.getElementById('tu-save-btn');
+        saveBtn.innerText = '儲存';
+        saveBtn.className = "col-span-1 py-3 bg-[var(--gold-main)] text-[#1a3a2e] rounded-lg font-bold text-sm shadow";
+        saveBtn.classList.remove('hidden');
+    };
+
+    function setTopUpReadOnly(isReadonly) {
+        const inputs = ['tu-name', 'tu-phone', 'tu-pay', 'tu-stored', 'tu-method'];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.readOnly = isReadonly;
+                el.disabled = isReadonly; 
+                if (isReadonly) {
+                    el.classList.add('bg-gray-100', 'text-gray-500');
+                    el.classList.remove('bg-white');
+                } else {
+                    el.classList.remove('bg-gray-100', 'text-gray-500');
+                    el.classList.add('bg-white');
+                }
+            }
+        });
+    }
+
+    window.saveTopUpData = function() {
+        const name = document.getElementById('tu-name').value.trim() || '未具名';
+        const phone = document.getElementById('tu-phone').value.trim() || '無電話';
+        const pay = parseInt(document.getElementById('tu-pay').value) || 0;
+        const stored = parseInt(document.getElementById('tu-stored').value) || 0;
+        const method = document.getElementById('tu-method').value;
+        const bonus = Math.max(0, stored - pay);
+
+        if (!financeStore.vips) financeStore.vips = {};
+        const vipKey = phone === '無電話' ? name : phone;
+
+        let currentEntries = safeArray(financeStore.data[activeDateStr]);
+
+        if (currentTopUpEntryId) {
+            // == 編輯模式 ==
+            const idx = currentEntries.findIndex(e => String(e.id) === String(currentTopUpEntryId));
+            if (idx > -1) {
+                const oldEntry = currentEntries[idx];
+                
+                // 1. 回退舊的 VIP 儲值額度
+                const oldVipKey = oldEntry.vipPhone || (oldEntry.items[0].match(/儲值入帳：(.*)/)?.[1] || '未具名');
+                const oldStoredMatch = oldEntry.note.match(/總得儲值金[^\d]*(\d+)/);
+                const oldStored = oldStoredMatch ? parseInt(oldStoredMatch[1]) : oldEntry.price;
+                
+                if (financeStore.vips[oldVipKey]) {
+                    financeStore.vips[oldVipKey].balance -= oldStored;
+                    // 洗掉舊的歷史紀錄
+                    if (financeStore.vips[oldVipKey].history) {
+                        financeStore.vips[oldVipKey].history = financeStore.vips[oldVipKey].history.filter(h => !(h.date === activeDateStr && h.type === 'topup' && h.amount === oldStored && h.payAmount === oldEntry.price));
+                    }
+                }
+
+                // 2. 加上新的 VIP 儲值額度
+                if (!financeStore.vips[vipKey]) {
+                    financeStore.vips[vipKey] = { name: name, phone: phone, balance: 0, history: [] };
+                }
+                // ★ 關鍵防呆：確保舊 VIP 資料也有 history 陣列
+                if (!financeStore.vips[vipKey].history) {
+                    financeStore.vips[vipKey].history = [];
+                }
+                financeStore.vips[vipKey].balance += stored;
+                financeStore.vips[vipKey].name = name;
+                financeStore.vips[vipKey].history.push({
+                    date: activeDateStr,
+                    type: 'topup',
+                    amount: stored,
+                    payAmount: pay,
+                    note: `儲值入帳 (編輯)`,
+                    bookingId: currentTopUpEntryId
+                });
+
+                // 3. 更新當前 entry
+                oldEntry.vipPhone = vipKey;
+                oldEntry.items = [`💰 儲值入帳：${name}`];
+                oldEntry.price = pay;
+                oldEntry.note = `實付: $${pay}，贈送: $${bonus}，總得儲值金: $${stored}`;
+                if (oldEntry.checkoutDetails) {
+                    oldEntry.checkoutDetails.finalTotal = pay;
+                    oldEntry.checkoutDetails.paymentMethod = method;
+                }
+            }
+        } else {
+            // == 新增模式 ==
+            const newId = Date.now();
+            if (!financeStore.vips[vipKey]) {
+                financeStore.vips[vipKey] = { name: name, phone: phone, balance: 0, history: [] };
+            }
+            // ★ 關鍵防呆：確保舊 VIP 資料也有 history 陣列
+            if (!financeStore.vips[vipKey].history) {
+                financeStore.vips[vipKey].history = [];
+            }
+            financeStore.vips[vipKey].balance += stored;
+            financeStore.vips[vipKey].name = name; 
+            financeStore.vips[vipKey].history.push({
+                date: activeDateStr,
+                type: 'topup',
+                amount: stored,
+                payAmount: pay,
+                note: `儲值入帳`,
+                bookingId: newId
+            });
+
+            const entry = {
+                id: newId,
+                time: "12:00",
+                isFriend: false,
+                isVip: true,
+                isTopUp: true, 
+                vipPhone: vipKey, 
+                items: [`💰 儲值入帳：${name}`],
+                itemsDetail: [],
+                price: pay,
+                duration: 0,
+                hasDeposit: false,
+                depositMethod: 'none',
+                depositAmount: 0,
+                depositDate: null,
+                note: `實付: $${pay}，贈送: $${bonus}，總得儲值金: $${stored}`,
+                status: 'checked', 
+                checkoutDetails: { 
+                    items: [], 
+                    globalDiscount: { type: 'none', val: 0 }, 
+                    finalTotal: pay, 
+                    paymentMethod: method, 
+                    paidDeposit: 0 
+                }
+            };
+            currentEntries.push(entry);
+        }
+
+        financeStore.data[activeDateStr] = currentEntries;
+        saveFinanceV2();
+        
+        document.getElementById('topUpModal').classList.add('hidden');
+        renderDayDetailList();
+
+        // ★ 新增：如果在 VIP 報表頁面，儲存後立刻刷新名單
+        if (typeof updateVipLists === 'function') {
+            updateVipLists();
+        }
+    };
 
     // 1. 後台價目表內部分頁切換
     window.switchAdminPriceTab = function(tabName, btn) {
@@ -8864,6 +10120,11 @@
 
         if (currentTotal < 0) currentTotal = 0;
 
+        // 核心修正：如果是 VIP 儲值客，全單折完後最後再打 95 折
+        if (checkoutState.entry && checkoutState.entry.isVip) {
+            currentTotal = Math.round(currentTotal * 0.95);
+        }
+
         // 更新狀態
         checkoutState.finalTotal = currentTotal;
 
@@ -9191,43 +10452,97 @@
     // ------------------------------------------
 
     window.openSubItemSelector = function(cat, type, idx, isModel = false) {
-        const item = serviceData[cat][type][idx];
-        document.getElementById('subItemSelectTitle').innerText = item.name;
-        
-        const container = document.getElementById('subItemSelectContainer');
-        const mainDur = item.duration || 0;
-        
-        // 預設選項：純主項目 (不加任何子項目)
-        let html = `
-            <button class="p-select-btn !border-gray-500 !mb-2" onclick="confirmSubItemSelection('${item.name}', '${item.price}', ${mainDur}, '', 0, 0, ${isModel})">
-                <span class="text-gray-300">純項目 (不加子選項)</span>
-                <span class="text-gray-300">$${item.price}</span>
-            </button>
-        `;
-
-        // 渲染所有子選項
-        item.subItems.forEach(sub => {
-            const combinedPrice = (parseInt(item.price) || 0) + (parseInt(sub.price) || 0);
-            const combinedDur = mainDur + (parseInt(sub.duration) || 0);
-            const durTag = sub.duration > 0 ? `<span class="text-[10px] bg-[#2d5a47] text-white px-1 rounded ml-1">+${sub.duration}分</span>` : '';
+            const item = serviceData[cat][type][idx];
+            document.getElementById('subItemSelectTitle').innerText = item.name;
             
-            html += `
-            <button class="p-select-btn" onclick="confirmSubItemSelection('${item.name}', '${item.price}', ${mainDur}, '${sub.name}', ${sub.price}, ${sub.duration}, ${isModel})">
-                <div class="flex flex-col items-start">
-                    <span class="font-bold">${sub.name}</span>
-                    <span class="text-[10px] text-gray-400 mt-1">總計 ${combinedDur} 分鐘 ${durTag}</span>
-                </div>
-                <div class="text-right">
-                    <div class="text-xs text-[var(--gold-main)] mb-1 opacity-70">+$${sub.price}</div>
-                    <span class="text-lg font-bold">$${combinedPrice}</span>
-                </div>
-            </button>
-            `;
-        });
+            const container = document.getElementById('subItemSelectContainer');
+            const mainDur = item.duration || 0;
+            
+            // 判斷是否有第二價格 (處理美睫自然/濃密、美容原價/體驗)
+            const hasP2 = (item.price2 !== undefined && item.price2 !== "" && item.price2 != 0);
+            
+            let label1 = "方案 A";
+            let label2 = "方案 B";
+            if (cat === 'eyelash') { label1 = "自然款"; label2 = "濃密款"; }
+            else if (cat === 'skin') { label1 = "原價"; label2 = "體驗價"; }
 
-        container.innerHTML = html;
-        document.getElementById('subItemSelectModal').classList.remove('hidden');
-    };
+            let html = '';
+
+            if (hasP2) {
+                // 預設選項：純主項目 (不加任何子項目)，分別列出方案 A 與方案 B
+                html += `
+                    <button class="p-select-btn !border-gray-500 !mb-2" onclick="confirmSubItemSelection('${item.name} (${label1})', '${item.price}', ${mainDur}, '', 0, 0, ${isModel})">
+                        <span class="text-gray-300">純項目 (${label1})</span>
+                        <span class="text-gray-300">$${item.price}</span>
+                    </button>
+                    <button class="p-select-btn !border-gray-500 !mb-2" onclick="confirmSubItemSelection('${item.name} (${label2})', '${item.price2}', ${mainDur}, '', 0, 0, ${isModel})">
+                        <span class="text-gray-300">純項目 (${label2})</span>
+                        <span class="text-gray-300">$${item.price2}</span>
+                    </button>
+                `;
+
+                // 渲染所有子選項 (分別配上方案 A 與 方案 B)
+                item.subItems.forEach(sub => {
+                    const price1 = (parseInt(item.price) || 0) + (parseInt(sub.price) || 0);
+                    const price2 = (parseInt(item.price2) || 0) + (parseInt(sub.price) || 0);
+                    const combinedDur = mainDur + (parseInt(sub.duration) || 0);
+                    const durTag = sub.duration > 0 ? `<span class="text-[10px] bg-[#2d5a47] text-white px-1 rounded ml-1">+${sub.duration}分</span>` : '';
+                    
+                    html += `
+                    <button class="p-select-btn !mb-2" onclick="confirmSubItemSelection('${item.name} (${label1})', '${item.price}', ${mainDur}, '${sub.name}', ${sub.price}, ${sub.duration}, ${isModel})">
+                        <div class="flex flex-col items-start">
+                            <span class="font-bold">${sub.name} <span class="text-[10px] text-[var(--gold-main)]">(${label1})</span></span>
+                            <span class="text-[10px] text-gray-400 mt-1">總計 ${combinedDur} 分鐘 ${durTag}</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-[var(--gold-main)] mb-1 opacity-70">+$${sub.price}</div>
+                            <span class="text-lg font-bold">$${price1}</span>
+                        </div>
+                    </button>
+                    <button class="p-select-btn !mb-2" onclick="confirmSubItemSelection('${item.name} (${label2})', '${item.price2}', ${mainDur}, '${sub.name}', ${sub.price}, ${sub.duration}, ${isModel})">
+                        <div class="flex flex-col items-start">
+                            <span class="font-bold">${sub.name} <span class="text-[10px] text-[var(--gold-main)]">(${label2})</span></span>
+                            <span class="text-[10px] text-gray-400 mt-1">總計 ${combinedDur} 分鐘 ${durTag}</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-[var(--gold-main)] mb-1 opacity-70">+$${sub.price}</div>
+                            <span class="text-lg font-bold">$${price2}</span>
+                        </div>
+                    </button>
+                    `;
+                });
+            } else {
+                // 原本無 price2 的邏輯 (如美甲、睫模)
+                html += `
+                    <button class="p-select-btn !border-gray-500 !mb-2" onclick="confirmSubItemSelection('${item.name}', '${item.price}', ${mainDur}, '', 0, 0, ${isModel})">
+                        <span class="text-gray-300">純項目 (不加子選項)</span>
+                        <span class="text-gray-300">$${item.price}</span>
+                    </button>
+                `;
+
+                item.subItems.forEach(sub => {
+                    const combinedPrice = (parseInt(item.price) || 0) + (parseInt(sub.price) || 0);
+                    const combinedDur = mainDur + (parseInt(sub.duration) || 0);
+                    const durTag = sub.duration > 0 ? `<span class="text-[10px] bg-[#2d5a47] text-white px-1 rounded ml-1">+${sub.duration}分</span>` : '';
+                    
+                    html += `
+                    <button class="p-select-btn !mb-2" onclick="confirmSubItemSelection('${item.name}', '${item.price}', ${mainDur}, '${sub.name}', ${sub.price}, ${sub.duration}, ${isModel})">
+                        <div class="flex flex-col items-start">
+                            <span class="font-bold">${sub.name}</span>
+                            <span class="text-[10px] text-gray-400 mt-1">總計 ${combinedDur} 分鐘 ${durTag}</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-[var(--gold-main)] mb-1 opacity-70">+$${sub.price}</div>
+                            <span class="text-lg font-bold">$${combinedPrice}</span>
+                        </div>
+                    </button>
+                    `;
+                });
+            }
+
+            container.innerHTML = html;
+            document.getElementById('subItemSelectModal').classList.remove('hidden');
+        };    
 
     window.confirmSubItemSelection = function(mainName, mainPrice, mainDur, subName, subPrice, subDur, isModel = false) {
         document.getElementById('subItemSelectModal').classList.add('hidden');
@@ -9270,5 +10585,3 @@
     <button class="num-btn num-confirm" onclick="closeNumpad()">✓</button> 
 </div> </body>
 </html>
-
-這是原代碼
