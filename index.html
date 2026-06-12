@@ -476,21 +476,21 @@
             color: #1a3a2e !important;
             transform: scale(0.98);
         }
-        .p-select-btn span:nth-child(2) {
+        .p-select-btn > span:nth-child(2) {
             color: var(--gold-main);
             font-size: 1.1em;
         }
-        .p-select-btn:active span:nth-child(2) {
+        .p-select-btn:active > span:nth-child(2) {
             color: #1a3a2e;
         }
         /* 隱藏百分比項目的錢字號 */
         .currency-symbol.hidden-symbol { display: none; }
 
-        .p-select-btn span:last-child {
+        .p-select-btn > span:last-child {
             color: var(--gold-main); /* 價格顯示金色 */
             font-size: 1.1em;
         }
-        .p-select-btn:active span:last-child {
+        .p-select-btn:active > span:last-child {
             color: #1a3a2e;
         }
         
@@ -3638,19 +3638,14 @@
         // 高階函式：帶入 cat 和 type 以便後續抓取 subItems
         const createBtn = (cat, type) => (i, idx) => {
             const p1Disp = String(i.price).includes('%') ? i.price : `$${i.price}`;
-            const hasP2 = (i.price2 !== undefined && i.price2 !== "" && i.price2 != 0);
-            const p2Str = hasP2 ? i.price2 : "";
             const dur = i.duration || 0;
             const hasSub = i.subItems && i.subItems.length > 0;
             
             if (hasSub) {
                 // 傳遞 isTabModel
                 return `<button class="item-option-btn" onclick="openSubItemSelector('${cat}', '${type}', ${idx}, ${isTabModel})">${i.name} <span class="opacity-60 text-[10px] ml-1">選</span></button>`;
-            } else if (hasP2) {
-                // 傳遞 isTabModel
-                return `<button class="item-option-btn" onclick="openPriceSelector('${currentCat}', '${i.name}', '${i.price}', '${p2Str}', ${dur}, ${isTabModel})">${i.name} <span class="opacity-60 text-[10px] ml-1">選</span></button>`;
             } else {
-                // 傳遞 isTabModel
+                // 傳遞 isTabModel (不再理會 price2，一律以 price 為準)
                 return `<button class="item-option-btn" onclick="addItemToTemp('${i.name}', '${i.price}', ${dur}, ${isTabModel})">${i.name} <span class="opacity-60 text-[10px]">(${p1Disp})</span></button>`;
             }
         };
@@ -10454,89 +10449,36 @@
             document.getElementById('subItemSelectTitle').innerText = item.name;
             
             const container = document.getElementById('subItemSelectContainer');
-            const mainDur = item.duration || 0;
             
-            // 判斷是否有第二價格 (處理美睫自然/濃密、美容原價/體驗)
-            const hasP2 = (item.price2 !== undefined && item.price2 !== "" && item.price2 != 0);
+            // 安全取值，過濾掉所有空值與符號，避免引發 NaN 導致加總失敗
+            const safeMainPrice = parsePrice(item.price);
+            const safeMainDur = parseInt(item.duration) || 0;
+            const safeMainName = (item.name || '').replace(/'/g, "\\'");
             
-            let label1 = "方案 A";
-            let label2 = "方案 B";
-            if (cat === 'eyelash') { label1 = "自然款"; label2 = "濃密款"; }
-            else if (cat === 'skin') { label1 = "原價"; label2 = "體驗價"; }
-
             let html = '';
 
-            if (hasP2) {
-                // 預設選項：純主項目 (不加任何子項目)，分別列出方案 A 與方案 B
-                html += `
-                    <button class="p-select-btn !border-gray-500 !mb-2" onclick="confirmSubItemSelection('${item.name} (${label1})', '${item.price}', ${mainDur}, '', 0, 0, ${isModel})">
-                        <span class="text-gray-300">純項目 (${label1})</span>
-                        <span class="text-gray-300">$${item.price}</span>
-                    </button>
-                    <button class="p-select-btn !border-gray-500 !mb-2" onclick="confirmSubItemSelection('${item.name} (${label2})', '${item.price2}', ${mainDur}, '', 0, 0, ${isModel})">
-                        <span class="text-gray-300">純項目 (${label2})</span>
-                        <span class="text-gray-300">$${item.price2}</span>
-                    </button>
-                `;
+            html += `
+                <button class="p-select-btn !border-gray-500 !mb-2" onclick="confirmSubItemSelection('${safeMainName}', ${safeMainPrice}, ${safeMainDur}, '', 0, 0, ${isModel})">
+                    <span class="text-gray-300">純項目 (不加子項)</span>
+                    <span class="text-gray-300">$${safeMainPrice}</span>
+                </button>
+            `;
 
-                // 渲染所有子選項 (分別配上方案 A 與 方案 B)
-                item.subItems.forEach(sub => {
-                    const price1 = (parseInt(item.price) || 0) + (parseInt(sub.price) || 0);
-                    const price2 = (parseInt(item.price2) || 0) + (parseInt(sub.price) || 0);
-                    const combinedDur = mainDur + (parseInt(sub.duration) || 0);
-                    const durTag = sub.duration > 0 ? `<span class="text-[10px] bg-[#2d5a47] text-white px-1 rounded ml-1">+${sub.duration}分</span>` : '';
-                    
-                    html += `
-                    <button class="p-select-btn !mb-2" onclick="confirmSubItemSelection('${item.name} (${label1})', '${item.price}', ${mainDur}, '${sub.name}', ${sub.price}, ${sub.duration}, ${isModel})">
-                        <div class="flex flex-col items-start">
-                            <span class="font-bold">${sub.name} <span class="text-[10px] text-[var(--gold-main)]">(${label1})</span></span>
-                            <span class="text-[10px] text-gray-400 mt-1">總計 ${combinedDur} 分鐘 ${durTag}</span>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xs text-[var(--gold-main)] mb-1 opacity-70">+$${sub.price}</div>
-                            <span class="text-lg font-bold">$${price1}</span>
-                        </div>
-                    </button>
-                    <button class="p-select-btn !mb-2" onclick="confirmSubItemSelection('${item.name} (${label2})', '${item.price2}', ${mainDur}, '${sub.name}', ${sub.price}, ${sub.duration}, ${isModel})">
-                        <div class="flex flex-col items-start">
-                            <span class="font-bold">${sub.name} <span class="text-[10px] text-[var(--gold-main)]">(${label2})</span></span>
-                            <span class="text-[10px] text-gray-400 mt-1">總計 ${combinedDur} 分鐘 ${durTag}</span>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xs text-[var(--gold-main)] mb-1 opacity-70">+$${sub.price}</div>
-                            <span class="text-lg font-bold">$${price2}</span>
-                        </div>
-                    </button>
-                    `;
-                });
-            } else {
-                // 原本無 price2 的邏輯 (如美甲、睫模)
+            (item.subItems || []).forEach(sub => {
+                const safeSubPrice = parsePrice(sub.price);
+                const safeSubDur = parseInt(sub.duration) || 0;
+                const safeSubName = (sub.name || '').replace(/'/g, "\\'");
+                
+                const combinedPrice = safeMainPrice + safeSubPrice;
+                const combinedDur = safeMainDur + safeSubDur;
+                
                 html += `
-                    <button class="p-select-btn !border-gray-500 !mb-2" onclick="confirmSubItemSelection('${item.name}', '${item.price}', ${mainDur}, '', 0, 0, ${isModel})">
-                        <span class="text-gray-300">純項目 (不加子選項)</span>
-                        <span class="text-gray-300">$${item.price}</span>
-                    </button>
+                <button class="p-select-btn !mb-2" onclick="confirmSubItemSelection('${safeMainName}', ${safeMainPrice}, ${safeMainDur}, '${safeSubName}', ${safeSubPrice}, ${safeSubDur}, ${isModel})">
+                    <span>${sub.name} <small style="font-size:10px; opacity:0.6; margin-left:4px;">(${combinedDur}分)</small></span>
+                    <span>$${combinedPrice}</span>
+                </button>
                 `;
-
-                item.subItems.forEach(sub => {
-                    const combinedPrice = (parseInt(item.price) || 0) + (parseInt(sub.price) || 0);
-                    const combinedDur = mainDur + (parseInt(sub.duration) || 0);
-                    const durTag = sub.duration > 0 ? `<span class="text-[10px] bg-[#2d5a47] text-white px-1 rounded ml-1">+${sub.duration}分</span>` : '';
-                    
-                    html += `
-                    <button class="p-select-btn !mb-2" onclick="confirmSubItemSelection('${item.name}', '${item.price}', ${mainDur}, '${sub.name}', ${sub.price}, ${sub.duration}, ${isModel})">
-                        <div class="flex flex-col items-start">
-                            <span class="font-bold">${sub.name}</span>
-                            <span class="text-[10px] text-gray-400 mt-1">總計 ${combinedDur} 分鐘 ${durTag}</span>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xs text-[var(--gold-main)] mb-1 opacity-70">+$${sub.price}</div>
-                            <span class="text-lg font-bold">$${combinedPrice}</span>
-                        </div>
-                    </button>
-                    `;
-                });
-            }
+            });
 
             container.innerHTML = html;
             document.getElementById('subItemSelectModal').classList.remove('hidden');
@@ -10547,8 +10489,9 @@
         
         // 將名稱合併 (例如: 單色/跳色 (跳色))，這樣列表才乾淨
         const finalName = subName ? `${mainName} (${subName})` : mainName;
-        const finalPrice = (parseInt(mainPrice) || 0) + (parseInt(subPrice) || 0);
-        const finalDur = parseInt(mainDur) + (parseInt(subDur) || 0);
+        // 確保數值相加絕對是數字加上數字
+        const finalPrice = parsePrice(mainPrice) + parsePrice(subPrice);
+        const finalDur = (parseInt(mainDur) || 0) + (parseInt(subDur) || 0);
         
         // 直接將算好的合併項目丟進原本的陣列裡
         addItemToTemp(finalName, finalPrice, finalDur, isModel);
@@ -10583,3 +10526,4 @@
     <button class="num-btn num-confirm" onclick="closeNumpad()">✓</button> 
 </div> </body>
 </html>
+
