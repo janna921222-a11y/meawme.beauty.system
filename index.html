@@ -6571,7 +6571,7 @@
 
                     // 統計計算 (爽約與親友預約皆不計入 count 與總額)
                     if (e.status !== 'noshow' && !e.isFriend) {
-                        count++;
+                        if (!e.isTopUp) count++; // 儲值入帳不計入服務人數
                         totalRev += p; 
                         currentWeekTotal += p;
                         dayTotal += p; 
@@ -10526,4 +10526,3 @@
     <button class="num-btn num-confirm" onclick="closeNumpad()">✓</button> 
 </div> </body>
 </html>
-
