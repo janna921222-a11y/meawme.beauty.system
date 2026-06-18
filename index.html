@@ -2306,6 +2306,7 @@
             <h2 class="text-center text-[22px] font-bold mb-4 text-[var(--gold-main)]">時段管理</h2>
             <div class="text-center mb-4">
                 <button onclick="toggleMonthStatus()" id="admin-month-status-btn" class="border border-[var(--gold-main)] text-[var(--gold-main)] px-4 py-2 rounded-full text-xs font-bold mr-2">狀態讀取中</button>
+                <button onclick="openBatchTimeEditor()" class="bg-[var(--gold-main)] text-[#1a3a2e] px-4 py-2 rounded-full text-xs font-bold shadow-lg mr-2">調整時段</button>
                 <button onclick="exportAvailableSlots()" class="bg-[var(--gold-main)] text-[#1a3a2e] px-4 py-2 rounded-full text-xs font-bold shadow-lg">匯出空檔</button>
             </div>
             <div class="nav-header-container">
@@ -3256,6 +3257,38 @@
             <button onclick="closeEditModal()" class="w-full py-3 border border-[var(--gold-main)] text-[var(--gold-main)] font-bold rounded-lg">完成</button>
         </div>
     </div>
+    
+    <div id="batchTimeModal" class="cal-modal-overlay hidden" style="z-index: 8000;">
+        <div class="cal-modal-content" style="max-width: 320px; background: #fff; padding: 20px; text-align: left; color: #333;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-lg text-[#1a3a2e]">批次調整時段</h3>
+                <button onclick="document.getElementById('batchTimeModal').classList.add('hidden')" class="text-gray-400 text-xl">✕</button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-gray-500 font-bold block mb-1">每日啟始時間</label>
+                    <input type="time" id="batch-start-time" class="bg-gray-50 border border-gray-300 text-black p-2 rounded w-full text-sm outline-none font-bold" value="10:00">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 font-bold block mb-1">每隔多久一個時段</label>
+                    <select id="batch-interval" class="bg-gray-50 border border-gray-300 text-black p-2 rounded w-full text-sm outline-none font-bold">
+                        <option value="60">1 小時 (60分)</option>
+                        <option value="120">2 小時 (120分)</option>
+                        <option value="180">3 小時 (180分)</option>
+                        <option value="240">4 小時 (240分)</option>
+                    </select>
+                </div>
+                <div class="text-[10px] text-gray-400 leading-relaxed bg-gray-50 p-2 rounded">
+                    * 系統將自動避開：公休(週日)、國定假日、手動排休日。<br>
+                    * 預設最晚排至平日 19:30 / 週六 14:00。
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-gray-100">
+                    <button onclick="applyBatchTimes(0)" class="py-3 bg-[#1a4731] text-[var(--gold-main)] rounded-lg font-bold text-sm shadow hover:brightness-110">套用本月</button>
+                    <button onclick="applyBatchTimes(1)" class="py-3 bg-[var(--gold-main)] text-[#1a3a2e] rounded-lg font-bold text-sm shadow hover:brightness-110">套用下個月</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="overlay" onclick="toggleSheet('bottomSheet', false)" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;"></div>
@@ -3584,17 +3617,17 @@
                                     <label class="text-[9px] opacity-50">項目名稱</label>
                                     ${subBadge}
                                 </div>
-                                <input type="text" class="edit-input w-full font-bold mb-2" value="${item.name||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'name', this.value)">
+                                <input type="text" class="edit-input w-full font-bold mb-2" value="${item.name !== undefined ? item.name : ''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'name', this.value)">
                                 <div class="flex gap-2">
                                     <div class="flex-1">
                                         <label class="text-[9px] opacity-50 block">價格</label>
-                                        <input type="text" inputmode="numeric" class="edit-input w-full" value="${item.price||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price', this.value)">
+                                        <input type="text" inputmode="numeric" class="edit-input w-full" value="${item.price !== undefined ? item.price : ''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price', this.value)">
                                     </div>
                                     <div class="w-16">
                                         <label class="text-[9px] opacity-50 block">時長(分)</label>
-                                        <input type="number" inputmode="numeric" class="edit-input w-full text-center" value="${item.duration||0}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'duration', this.value)">
+                                        <input type="number" inputmode="numeric" class="edit-input w-full text-center" value="${item.duration !== undefined ? item.duration : 0}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'duration', this.value)">
                                     </div>
-                                    ${showPrice2 ? `<div class="flex-1"><label class="text-[9px] opacity-50 block">價格2</label><input type="text" class="edit-input w-full" value="${item.price2||''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price2', this.value)"></div>` : ''}
+                                    ${showPrice2 ? `<div class="flex-1"><label class="text-[9px] opacity-50 block">價格2</label><input type="text" class="edit-input w-full" value="${item.price2 !== undefined ? item.price2 : ''}" onchange="updateItemValue('${cat}', '${type}', ${index}, 'price2', this.value)"></div>` : ''}
                                 </div> 
                             </div> 
                             ${checkHtml}
@@ -3726,10 +3759,19 @@
         renderAdminList();
     }
     
-    function updateItemValue(cat, type, index, field, value) {
-        if (field === 'duration' || field === 'price' && !isNaN(value)) value = parseInt(value) || 0;
-        serviceData[cat][type][index][field] = value;
-    }
+    window.updateItemValue = function(cat, type, index, field, value) {
+        if (field === 'duration') {
+            serviceData[cat][type][index][field] = parseInt(value) || 0;
+        } else if (field === 'price' || field === 'price2') {
+            if (String(value).includes('%')) {
+                serviceData[cat][type][index][field] = value;
+            } else {
+                serviceData[cat][type][index][field] = parseInt(value) || 0;
+            }
+        } else {
+            serviceData[cat][type][index][field] = value;
+        }
+    };
     
     function deleteService(cat, type, index) {
         if(confirm("確定刪除？")) { 
@@ -8718,6 +8760,10 @@
         const [y, m, d] = bookingState.editingKey.split('-').map(Number);
         const dateObj = new Date(y, m, d);
         const dayOfWeek = dateObj.getDay();
+
+        // 抓取當天已有的預約資料
+        const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const finEntries = safeArray(financeStore.data[dateStr]);
         
         let slots = [];
         let currentMins = startH * 60 + startM;
@@ -8729,16 +8775,115 @@
         
         while(currentMins <= maxMins) {
             const h = Math.floor(currentMins / 60);
-            const m = currentMins % 60;
-            slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+            const min = currentMins % 60;
+
+            // 檢查是否與現有預約重疊
+            const isOccupied = finEntries.some(e => {
+                const [eH, eM] = e.time.split(':').map(Number);
+                const eStart = eH * 60 + eM;
+                const eDur = parseInt(e.duration || 60, 10);
+                return (currentMins < eStart + eDur + 30 && currentMins + 60 + 30 > eStart);
+            });
+
+            if (!isOccupied) {
+                slots.push(`${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`);
+            }
+
             currentMins += 60; // 每小時遞增
         }
         
-        if(slots.length === 0) return alert(`選取的啟始時間已超過該日上限 ${maxTimeStr} 囉！`);
+        if(slots.length === 0) return alert(`選取的啟始時間已超過該日上限 ${maxTimeStr} 或時段皆已衝突！`);
         
         bookingState.data.bookings[bookingState.editingKey] = slots;
         saveBookingData();
         renderTimeChips();
+    };
+
+    window.openBatchTimeEditor = function() {
+        document.getElementById('batchTimeModal').classList.remove('hidden');
+    };
+
+    window.applyBatchTimes = function(monthOffset) {
+        const startTimeStr = document.getElementById('batch-start-time').value;
+        const intervalMins = parseInt(document.getElementById('batch-interval').value);
+
+        if (!startTimeStr) return alert("請設定啟始時間");
+
+        // 取得目標月份
+        const targetDate = new Date(bookingState.viewDate.getFullYear(), bookingState.viewDate.getMonth() + monthOffset, 1);
+        const y = targetDate.getFullYear();
+        const m = targetDate.getMonth(); // 0-base
+        const lastDate = new Date(y, m + 1, 0).getDate();
+
+        const holidayMap = window.getTaiwanHolidays();
+        const [startH, startM] = startTimeStr.split(':').map(Number);
+
+        const monthName = monthOffset === 0 ? "本月" : "下個月";
+        if (!confirm(`確定要批次覆蓋【${y}年${m+1}月】(${monthName})的所有時段嗎？\n\n系統將自動避開：\n1. 星期日\n2. 國定假日\n3. 手動排休日`)) {
+            return;
+        }
+
+        let updatedCount = 0;
+
+        for (let d = 1; d <= lastDate; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const bookingKey = `${y}-${m}-${d}`;
+            const dayOfWeek = new Date(y, m, d).getDay();
+
+            const isSun = dayOfWeek === 0;
+            const isHoliday = !!holidayMap[dateStr];
+            const isManualOff = financeStore.manualOffDays.includes(dateStr);
+
+            // 避開休假日
+            if (isSun || isHoliday || isManualOff) {
+                bookingState.data.bookings[bookingKey] = [];
+                continue;
+            }
+
+            let slots = [];
+            let currentMins = startH * 60 + startM;
+            const maxMins = (dayOfWeek === 6) ? (14 * 60) : (19 * 60 + 30); // 平日最晚 19:30, 週六 14:00
+
+            // 抓取當天已有的預約資料，用來比對是否重疊
+            const finEntries = safeArray(financeStore.data[dateStr]);
+
+            while (currentMins <= maxMins) {
+                const h = Math.floor(currentMins / 60);
+                const min = currentMins % 60;
+
+                // 檢查是否與現有預約重疊
+                const isOccupied = finEntries.some(e => {
+                    const [eH, eM] = e.time.split(':').map(Number);
+                    const eStart = eH * 60 + eM;
+                    const eDur = parseInt(e.duration || 60, 10);
+                    // 檢查重疊：新時段開始時間 < 舊預約結束時間(含30分緩衝) && 新時段結束時間(含30分緩衝) > 舊預約開始時間
+                    // (這裡新時段預設以 60 分鐘長度作為防撞測試基礎)
+                    return (currentMins < eStart + eDur + 30 && currentMins + 60 + 30 > eStart);
+                });
+
+                // 沒有重疊才把時段加進去
+                if (!isOccupied) {
+                    slots.push(`${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`);
+                }
+                
+                currentMins += intervalMins;
+            }
+
+            bookingState.data.bookings[bookingKey] = slots;
+            updatedCount++;
+        }
+
+        saveBookingData();
+        document.getElementById('batchTimeModal').classList.add('hidden');
+        
+        // 若套用的是下個月，自動跳轉過去查看
+        if (monthOffset === 1) {
+            changeBookingMonth(1);
+        } else {
+            renderCalendar();
+        }
+
+        alert(`✅ 批次設定完成！共更新了 ${updatedCount} 天的時段。`);
     };
 
     // 新增：前台顧客彈出對話框控制器（已移除模式限制，允許隨時點擊查看）
