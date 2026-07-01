@@ -3324,7 +3324,7 @@
 
     function parsePrice(val) {
         if (!val) return 0;
-        const num = parseInt(String(val).replace(/[^0-9]/g, '')); 
+        const num = parseInt(String(val).replace(/[^\d\-]/g, '')); 
         return isNaN(num) ? 0 : num;
     }
 
@@ -6989,7 +6989,7 @@
                 if (financeStore.vips && financeStore.vips[oldVipKey]) {
                     financeStore.vips[oldVipKey].balance -= oldStored;
                     if (financeStore.vips[oldVipKey].history) {
-                        const targetIdx = financeStore.vips[oldVipKey].history.findIndex(h => h.date === activeDateStr && h.type === 'topup' && h.amount === oldStored && h.payAmount === targetEntry.price);
+                        const targetIdx = financeStore.vips[oldVipKey].history.findIndex(h => h.date === activeDateStr && h.type === 'topup' && parseInt(h.amount) === parseInt(oldStored) && parseInt(h.payAmount) === parseInt(targetEntry.price));
                         if (targetIdx > -1) {
                             financeStore.vips[oldVipKey].history.splice(targetIdx, 1);
                         }
@@ -8189,33 +8189,6 @@
         checkConflictUI();
     }
 
-    // [修正] 設定定金方式 UI (支援 現金/匯款/LP/儲值/無)
-    window.setDepositMethod = function(method, btn) {
-        document.getElementById('fe-dep-method').value = method;
-        document.querySelectorAll('.dep-opt-btn').forEach(b => b.classList.remove('active'));
-        
-        if (btn) {
-            // 如果是點擊觸發，直接亮起該按鈕
-            btn.classList.add('active');
-        } else {
-            // 如果是載入資料觸發，自動尋找對應的按鈕亮起
-            const btns = document.querySelectorAll('.dep-opt-btn');
-            let found = false;
-            btns.forEach(b => {
-                // 檢查按鈕的 onclick 字串中是否包含該 method
-                if (b.getAttribute('onclick').includes(`'${method}'`)) {
-                    b.classList.add('active');
-                    found = true;
-                }
-            });
-            // 防呆：如果找不到對應按鈕 (例如舊資料格式)，預設選「無」
-            if (!found) {
-                // 假設最後一個按鈕是「無/不收取」
-                btns[btns.length - 1].classList.add('active');
-            }
-        }
-    };
-
     // [新增] 即時衝突檢查 UI 顯示
     function checkConflictUI() {
         const warnBox = document.getElementById('conflict-msg');
@@ -8668,7 +8641,7 @@
             let currentEntries = safeArray(financeStore.data[activeDateStr]);
             financeStore.data[activeDateStr] = currentEntries.filter(e => e.id !== editingEntryId);
             saveFinanceV2();
-            closeFinEditForm();
+            closeFinEditModal();
         }
     }
 
@@ -8766,6 +8739,8 @@
                     renderYearlyReport(); 
                 } else if (reportState.tab === 'account') {
                     renderAccountView();
+                } else if (reportState.tab === 'vip') {
+                    renderVipReport();
                 }
             }, 50);
         }
@@ -9265,7 +9240,7 @@
                     financeStore.vips[oldVipKey].balance -= oldStored;
                     // 洗掉舊的歷史紀錄
                     if (financeStore.vips[oldVipKey].history) {
-                        financeStore.vips[oldVipKey].history = financeStore.vips[oldVipKey].history.filter(h => !(h.date === activeDateStr && h.type === 'topup' && h.amount === oldStored && h.payAmount === oldEntry.price));
+                        financeStore.vips[oldVipKey].history = financeStore.vips[oldVipKey].history.filter(h => !(h.date === activeDateStr && h.type === 'topup' && parseInt(h.amount) === parseInt(oldStored) && parseInt(h.payAmount) === parseInt(oldEntry.price)));
                     }
                 }
 
@@ -10840,3 +10815,5 @@
     <button class="num-btn num-confirm" onclick="closeNumpad()">✓</button> 
 </div> </body>
 </html>
+
+檢查此代碼中所有錯誤並修正
