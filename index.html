@@ -2339,7 +2339,10 @@
     <section id="page-admin-finance" class="page-content pb-32">
         <div class="sticky-header-wrapper">
             <div class="fin-title-container">
-                <button onclick="fixLegacyData()" class="view-toggle-btn" style="position: absolute; left: 16px; border-color: #ff6b6b; color: #ff6b6b; padding: 4px 8px; font-size: 10px;">系統校正</button>
+                <div style="position: absolute; left: 16px; display: flex; gap: 4px; align-items: center;">
+                    <button onclick="fixLegacyData()" class="view-toggle-btn" style="border-color: #ff6b6b; color: #ff6b6b; padding: 4px 8px; font-size: 10px;">系統校正</button>
+                    <button onclick="downloadMonthICS()" class="view-toggle-btn" style="border-color: #1a4731; color: #1a4731; background: rgba(26, 71, 49, 0.1); padding: 4px 8px; font-size: 10px; font-weight: bold;">+ 行事曆</button>
+                </div>
                 
                 <h2 style="margin:0 !important; font-size:20px !important;">預約管理</h2>
                 
@@ -2918,9 +2921,14 @@
                     </div>
                 </div>
             </div>
-            <div class="p-4 grid grid-cols-2 gap-3 border-t border-gray-100">
-                <button id="btn-bd-edit" class="py-3 rounded-xl border border-gray-300 text-gray-500 font-bold text-sm">編輯預約</button>
-                <button id="btn-bd-checkout" class="py-3 rounded-xl bg-[var(--gold-main)] text-[#1a3a2e] font-bold text-sm shadow-lg">結帳</button>
+            <div class="p-4 flex flex-col gap-3 border-t border-gray-100">
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="btn-bd-edit" class="py-3 rounded-xl border border-gray-300 text-gray-500 font-bold text-sm">編輯預約</button>
+                    <button id="btn-bd-checkout" class="py-3 rounded-xl bg-[var(--gold-main)] text-[#1a3a2e] font-bold text-sm shadow-lg">結帳</button>
+                </div>
+                <button id="btn-bd-calendar" class="w-full py-3 rounded-xl bg-[#1a4731] text-[var(--gold-main)] font-bold text-sm shadow-lg flex justify-center items-center gap-2">
+                    <span>加入行事曆</span>
+                </button>
             </div>
         </div>
     </div>
@@ -7339,12 +7347,21 @@
         // [按鈕邏輯]
         const btnEdit = document.getElementById('btn-bd-edit');
         const btnCheckout = document.getElementById('btn-bd-checkout');
+        const btnCalendar = document.getElementById('btn-bd-calendar');
 
         // 清除舊綁定
         const newBtnEdit = btnEdit.cloneNode(true);
         const newBtnCheckout = btnCheckout.cloneNode(true);
+        const newBtnCalendar = btnCalendar.cloneNode(true);
+        
         btnEdit.parentNode.replaceChild(newBtnEdit, btnEdit);
         btnCheckout.parentNode.replaceChild(newBtnCheckout, btnCheckout);
+        btnCalendar.parentNode.replaceChild(newBtnCalendar, btnCalendar);
+
+        // 綁定寫入行事曆事件
+        newBtnCalendar.onclick = () => {
+            downloadICS(entry, activeDateStr);
+        };
 
         if (st === 'checked') {
             // 已結帳：解鎖模式
@@ -7480,6 +7497,141 @@
              // 呼叫原本的結帳初始化函數，這會重置底部按鈕為「選擇支付方式」
              initCheckout(checkoutState.entry);
         }
+    };
+
+    // [新增] 生成 Apple/Google 行事曆 .ics 檔案
+    window.downloadICS = function(entry, dateStr) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const [h, min] = entry.time.split(':').map(Number);
+        const dur = parseInt(entry.duration || 60, 10);
+        
+        // 組合起始與結束時間
+        const startDate = new Date(y, m - 1, d, h, min);
+        const endDate = new Date(y, m - 1, d, h, min + dur);
+        
+        // ICS 需使用 UTC 時間格式 YYYYMMDDTHHMMSSZ
+        const formatICSDate = (date) => {
+            return date.getUTCFullYear() +
+                String(date.getUTCMonth() + 1).padStart(2, '0') +
+                String(date.getUTCDate()).padStart(2, '0') + 'T' +
+                String(date.getUTCHours()).padStart(2, '0') +
+                String(date.getUTCMinutes()).padStart(2, '0') +
+                String(date.getUTCSeconds()).padStart(2, '0') + 'Z';
+        };
+
+        const dtStart = formatICSDate(startDate);
+        const dtEnd = formatICSDate(endDate);
+        
+        // 抓取姓名與項目作為標題
+        let guestName = '顧客';
+        if (entry.isVip && entry.vipPhone && financeStore.vips[entry.vipPhone]) {
+            guestName = financeStore.vips[entry.vipPhone].name;
+        } else if (entry.items[0] && entry.items[0].includes('系統匯入')) {
+            const match = entry.note.match(/客人姓名:\s*([^\s(]+)/);
+            if (match) guestName = match[1];
+        }
+
+        const summary = `繆米美學：${guestName}`;
+        const description = `服務項目：${safeArray(entry.items).join(', ')}\\n備註：${entry.note ? entry.note.replace(/\n/g, '\\n') : '無'}`;
+
+        const icsContent = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//MeawMe Beauty//TW",
+            "BEGIN:VEVENT",
+            `DTSTART:${dtStart}`,
+            `DTEND:${dtEnd}`,
+            `SUMMARY:${summary}`,
+            `DESCRIPTION:${description}`,
+            "END:VEVENT",
+            "END:VCALENDAR"
+        ].join("\r\n");
+
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `MeawMe_${dateStr}_${entry.time.replace(':','')}.ics`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // [新增] 匯出整個月份的行事曆
+    window.downloadMonthICS = function() {
+        const y = financeStore.viewDate.getFullYear();
+        const m = financeStore.viewDate.getMonth();
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+        let icsContent = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//MeawMe Beauty//TW"
+        ];
+
+        let hasEvents = false;
+
+        for(let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const entries = safeArray(financeStore.data[dateStr]);
+
+            entries.forEach(entry => {
+                // 略過純儲值紀錄與無效時間
+                if (entry.isTopUp || !entry.time) return; 
+
+                const [h, min] = entry.time.split(':').map(Number);
+                const dur = parseInt(entry.duration || 60, 10);
+                
+                const startDate = new Date(y, m, d, h, min);
+                const endDate = new Date(y, m, d, h, min + dur);
+                
+                const formatICSDate = (date) => {
+                    return date.getUTCFullYear() +
+                        String(date.getUTCMonth() + 1).padStart(2, '0') +
+                        String(date.getUTCDate()).padStart(2, '0') + 'T' +
+                        String(date.getUTCHours()).padStart(2, '0') +
+                        String(date.getUTCMinutes()).padStart(2, '0') +
+                        String(date.getUTCSeconds()).padStart(2, '0') + 'Z';
+                };
+
+                let guestName = '顧客';
+                if (entry.isVip && entry.vipPhone && financeStore.vips && financeStore.vips[entry.vipPhone]) {
+                    guestName = financeStore.vips[entry.vipPhone].name;
+                } else if (entry.items[0] && entry.items[0].includes('系統匯入')) {
+                    const match = entry.note.match(/客人姓名:\s*([^\s(]+)/);
+                    if (match) guestName = match[1];
+                }
+
+                const summary = `繆米美學：${guestName}`;
+                const description = `服務項目：${safeArray(entry.items).join(', ')}\\n備註：${entry.note ? entry.note.replace(/\n/g, '\\n') : '無'}`;
+
+                icsContent.push(
+                    "BEGIN:VEVENT",
+                    `DTSTART:${formatICSDate(startDate)}`,
+                    `DTEND:${formatICSDate(endDate)}`,
+                    `SUMMARY:${summary}`,
+                    `DESCRIPTION:${description}`,
+                    "END:VEVENT"
+                );
+                hasEvents = true;
+            });
+        }
+
+        icsContent.push("END:VCALENDAR");
+
+        if (!hasEvents) {
+            alert("這個月目前沒有預約行程可以匯出喔！");
+            return;
+        }
+
+        const blob = new Blob([icsContent.join("\r\n")], { type: 'text/calendar;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `MeawMe_${y}年${m+1}月_預約總表.ics`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     // [NEW] 結帳系統核心
@@ -8288,6 +8440,15 @@
                 openBookingDetail(newData);
             }, 50);
         }
+
+        // --- 新增：儲存後自動提示加入行事曆 ---
+        setTimeout(() => {
+            if (confirm("儲存成功！\n是否要將此預約直接加入手機行事曆？")) {
+                if (typeof downloadICS === 'function') {
+                    downloadICS(newData, newDateStr);
+                }
+            }
+        }, 300);
     }
 
     // 2. [修改] 開啟價格選擇視窗 (新增 isModel 參數)
