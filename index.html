@@ -7522,8 +7522,8 @@
         const dtStart = formatICSDate(startDate);
         const dtEnd = formatICSDate(endDate);
         
-        // 抓取姓名與項目作為標題
-        let guestName = '顧客';
+        // 抓取姓名 (因標題改為項目，將姓名移至內文中)
+        let guestName = '一般顧客';
         if (entry.isVip && entry.vipPhone && financeStore.vips[entry.vipPhone]) {
             guestName = financeStore.vips[entry.vipPhone].name;
         } else if (entry.items[0] && entry.items[0].includes('系統匯入')) {
@@ -7531,18 +7531,20 @@
             if (match) guestName = match[1];
         }
 
-        const summary = `繆米美學：${guestName}`;
-        const description = `服務項目：${safeArray(entry.items).join(', ')}\\n備註：${entry.note ? entry.note.replace(/\n/g, '\\n') : '無'}`;
+        const summary = safeArray(entry.items).join(' + ');
+        const description = `顧客：${guestName}\\n備註：${entry.note ? entry.note.replace(/\n/g, '\\n') : '無'}`;
 
         const icsContent = [
             "BEGIN:VCALENDAR",
             "VERSION:2.0",
             "PRODID:-//MeawMe Beauty//TW",
+            "X-WR-CALNAME:(美業)",
             "BEGIN:VEVENT",
             `DTSTART:${dtStart}`,
             `DTEND:${dtEnd}`,
             `SUMMARY:${summary}`,
             `DESCRIPTION:${description}`,
+            `CATEGORIES:(美業)`,
             "END:VEVENT",
             "END:VCALENDAR"
         ].join("\r\n");
@@ -7566,7 +7568,8 @@
         let icsContent = [
             "BEGIN:VCALENDAR",
             "VERSION:2.0",
-            "PRODID:-//MeawMe Beauty//TW"
+            "PRODID:-//MeawMe Beauty//TW",
+            "X-WR-CALNAME:(美業)"
         ];
 
         let hasEvents = false;
@@ -7594,7 +7597,7 @@
                         String(date.getUTCSeconds()).padStart(2, '0') + 'Z';
                 };
 
-                let guestName = '顧客';
+                let guestName = '一般顧客';
                 if (entry.isVip && entry.vipPhone && financeStore.vips && financeStore.vips[entry.vipPhone]) {
                     guestName = financeStore.vips[entry.vipPhone].name;
                 } else if (entry.items[0] && entry.items[0].includes('系統匯入')) {
@@ -7602,8 +7605,8 @@
                     if (match) guestName = match[1];
                 }
 
-                const summary = `繆米美學：${guestName}`;
-                const description = `服務項目：${safeArray(entry.items).join(', ')}\\n備註：${entry.note ? entry.note.replace(/\n/g, '\\n') : '無'}`;
+                const summary = safeArray(entry.items).join(' + ');
+                const description = `顧客：${guestName}\\n備註：${entry.note ? entry.note.replace(/\n/g, '\\n') : '無'}`;
 
                 icsContent.push(
                     "BEGIN:VEVENT",
@@ -7611,6 +7614,7 @@
                     `DTEND:${formatICSDate(endDate)}`,
                     `SUMMARY:${summary}`,
                     `DESCRIPTION:${description}`,
+                    `CATEGORIES:(美業)`,
                     "END:VEVENT"
                 );
                 hasEvents = true;
