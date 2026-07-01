@@ -7540,6 +7540,8 @@
             "PRODID:-//MeawMe Beauty//TW",
             "X-WR-CALNAME:(美業)",
             "BEGIN:VEVENT",
+            `UID:booking-${entry.id}@meawme.beauty`,
+            `DTSTAMP:${formatICSDate(new Date())}`,
             `DTSTART:${dtStart}`,
             `DTEND:${dtEnd}`,
             `SUMMARY:${summary}`,
@@ -7610,6 +7612,8 @@
 
                 icsContent.push(
                     "BEGIN:VEVENT",
+                    `UID:booking-${entry.id}@meawme.beauty`,
+                    `DTSTAMP:${formatICSDate(new Date())}`,
                     `DTSTART:${formatICSDate(startDate)}`,
                     `DTEND:${formatICSDate(endDate)}`,
                     `SUMMARY:${summary}`,
